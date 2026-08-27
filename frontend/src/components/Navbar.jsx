@@ -36,14 +36,16 @@ export default function Navbar() {
   ];
 
   const navLinkClass = ({ isActive }) =>
-    `text-sm font-medium transition-colors whitespace-nowrap ${
-      isActive ? 'text-primary' : 'text-slate-600 hover:text-primary'
+    `relative text-sm font-medium whitespace-nowrap px-3 py-2 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+      isActive
+        ? 'text-white bg-primary shadow-md'
+        : 'text-slate-600 hover:text-primary hover:bg-bg-light'
     }`;
 
   return (
     <header
-      className={`sticky top-0 z-50 bg-white/95 backdrop-blur border-b transition-shadow ${
-        scrolled ? 'border-border shadow-sm' : 'border-transparent'
+      className={`sticky top-0 z-50 bg-white border-b-2 transition-shadow ${
+        scrolled ? 'border-primary/20 shadow-lg' : 'border-primary/10 shadow-sm'
       }`}
     >
       <div className="container-page flex h-16 items-center justify-between gap-4">
@@ -56,7 +58,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.to === '/'} className={navLinkClass}>
               {l.label}
@@ -68,7 +70,7 @@ export default function Navbar() {
           <button
             onClick={() => setSearchOpen(true)}
             aria-label={t('common.search')}
-            className="p-2 rounded-lg text-slate-500 hover:bg-bg-light focus-ring"
+            className="p-2 rounded-lg text-slate-500 hover:bg-bg-light hover:text-primary hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 focus-ring"
           >
             <Search className="h-5 w-5" />
           </button>
@@ -76,7 +78,7 @@ export default function Navbar() {
           <div className="relative">
             <button
               onClick={() => setLangOpen((v) => !v)}
-              className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-primary px-2 py-1.5 rounded-lg focus-ring"
+              className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-primary hover:bg-bg-light hover:-translate-y-0.5 hover:shadow-md px-2 py-1.5 rounded-lg transition-all duration-200 focus-ring"
             >
               {LANGS.find((l) => l.code === i18n.language)?.label || 'O‘zbek'}
               <ChevronDown className="h-3.5 w-3.5" />
@@ -99,7 +101,10 @@ export default function Navbar() {
             )}
           </div>
 
-          <Link to="/ariza" className="btn-primary !py-2.5 !px-4 text-sm">
+          <Link
+            to="/ariza"
+            className="btn-primary !py-2.5 !px-4 text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+          >
             {t('nav.apply')}
           </Link>
         </div>
