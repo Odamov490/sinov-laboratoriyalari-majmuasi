@@ -1,12 +1,10 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: slm_user
-      POSTGRES_PASSWORD: slm_password
+      POSTGRES_PASSWORD: 9KjG1MuYCoYwEhHjLPzvElSx
       POSTGRES_DB: slm_db
     ports:
       - '5432:5432'
@@ -23,13 +21,13 @@ services:
       context: ./backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://slm_user:slm_password@postgres:5432/slm_db?schema=public
-      JWT_SECRET: change-this-in-production
+      DATABASE_URL: postgresql://slm_user:9KjG1MuYCoYwEhHjLPzvElSx@postgres:5432/slm_db?schema=public
+      JWT_SECRET: 33b5bd0a18b5edbaa211c467141b2c38b68aa56b296999ce116b25798bfdfb8b
       JWT_EXPIRES_IN: 15m
       REFRESH_TOKEN_EXPIRES_IN: 7d
       PORT: 4000
       NODE_ENV: production
-      CLIENT_URL: http://localhost:5173
+      CLIENT_URL: https://s-lab.uz
       UPLOAD_DIR: uploads
       MAX_FILE_SIZE_MB: 10
     depends_on:
