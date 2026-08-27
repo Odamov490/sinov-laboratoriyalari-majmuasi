@@ -1,10 +1,9 @@
-FROM node:20-bookworm
+FROM node:20-alpine
 
 WORKDIR /app
 
-RUN apt-get update && \
-    apt-get install -y openssl ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
+# Prisma uchun OpenSSL
+RUN apk add --no-cache openssl libc6-compat
 
 COPY package*.json ./
 
