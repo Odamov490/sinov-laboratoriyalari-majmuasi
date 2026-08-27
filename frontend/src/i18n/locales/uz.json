@@ -1,0 +1,104 @@
+{
+  "nav": {
+    "home": "Bosh sahifa",
+    "about": "Biz haqimizda",
+    "laboratories": "Laboratoriyalar",
+    "services": "Xizmatlar",
+    "prices": "Narxlar",
+    "accreditation": "Akkreditatsiya",
+    "news": "Yangiliklar",
+    "documents": "Hujjatlar",
+    "contact": "Aloqa",
+    "standards": "Standartlar",
+    "staff": "Mutaxassislar",
+    "equipment": "Uskunalar",
+    "gallery": "Galereya",
+    "faq": "FAQ",
+    "track": "Arizani tekshirish",
+    "apply": "Ariza yuborish"
+  },
+  "hero": {
+    "title": "SINOV LABORATORIYALARI MAJMUASI",
+    "tagline": "Mahsulotlaringiz sifati va xavfsizligini ishonchli sinovlar orqali baholaymiz.",
+    "cta1": "Xizmatlarni ko‘rish",
+    "cta2": "Ariza yuborish"
+  },
+  "common": {
+    "readMore": "Batafsil",
+    "apply": "Ariza berish",
+    "search": "Qidiruv",
+    "loading": "Yuklanmoqda...",
+    "notFound": "Ma'lumot topilmadi.",
+    "dataUpdating": "Ma'lumot yangilanmoqda",
+    "errorLoading": "Ma'lumotlarni yuklashda xatolik yuz berdi.",
+    "pageNotFound": "Sahifa topilmadi.",
+    "serverError": "Serverda xatolik yuz berdi.",
+    "viewAll": "Barchasini ko‘rish",
+    "send": "Yuborish",
+    "submit": "Yuborish",
+    "close": "Yopish",
+    "back": "Orqaga",
+    "save": "Saqlash",
+    "cancel": "Bekor qilish",
+    "edit": "Tahrirlash",
+    "delete": "O‘chirish",
+    "add": "Qo‘shish",
+    "actions": "Amallar",
+    "status": "Holat",
+    "date": "Sana"
+  },
+  "whyUs": {
+    "title": "Nima uchun aynan biz",
+    "items": {
+      "accredited": "Akkreditatsiyadan o‘tgan laboratoriyalar",
+      "equipment": "Zamonaviy uskunalar",
+      "experts": "Tajribali mutaxassislar",
+      "reliable": "Ishonchli sinov natijalari",
+      "wide": "Keng sinov yo‘nalishlari",
+      "professional": "Professional yondashuv"
+    }
+  },
+  "process": {
+    "title": "Sinov jarayoni",
+    "steps": {
+      "s1": "Ariza yuborish",
+      "s2": "Namuna qabul qilish",
+      "s3": "Sinov jarayoni",
+      "s4": "Natijalarni tahlil qilish",
+      "s5": "Sinov bayonnomasini rasmiylashtirish",
+      "s6": "Natijani mijozga taqdim etish"
+    }
+  },
+  "footer": {
+    "quickLinks": "Tezkor havolalar",
+    "contactInfo": "Aloqa ma'lumotlari",
+    "rights": "Barcha huquqlar himoyalangan."
+  },
+  "application": {
+    "title": "Onlayn ariza",
+    "fullName": "F.I.Sh.",
+    "organization": "Tashkilot nomi",
+    "phone": "Telefon",
+    "email": "Email",
+    "productName": "Mahsulot nomi",
+    "productType": "Mahsulot turi",
+    "laboratory": "Laboratoriya",
+    "service": "Xizmat",
+    "testType": "Sinov turi",
+    "comment": "Izoh",
+    "file": "Fayl",
+    "success": "Arizangiz muvaffaqiyatli qabul qilindi.",
+    "number": "Ariza raqami"
+  },
+  "track": {
+    "title": "Ariza holatini tekshirish",
+    "placeholder": "SLM-2026-00001",
+    "button": "Tekshirish"
+  },
+  "admin": {
+    "login": "Admin panelga kirish",
+    "email": "Email",
+    "password": "Parol",
+    "dashboard": "Boshqaruv paneli"
+  }
+}

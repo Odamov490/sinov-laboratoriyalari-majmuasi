@@ -1,0 +1,104 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About Us",
+    "laboratories": "Laboratories",
+    "services": "Services",
+    "prices": "Prices",
+    "accreditation": "Accreditation",
+    "news": "News",
+    "documents": "Documents",
+    "contact": "Contact",
+    "standards": "Standards",
+    "staff": "Specialists",
+    "equipment": "Equipment",
+    "gallery": "Gallery",
+    "faq": "FAQ",
+    "track": "Track Application",
+    "apply": "Submit Application"
+  },
+  "hero": {
+    "title": "TESTING LABORATORIES COMPLEX",
+    "tagline": "We evaluate the quality and safety of your products through reliable testing.",
+    "cta1": "View Services",
+    "cta2": "Submit Application"
+  },
+  "common": {
+    "readMore": "Read more",
+    "apply": "Apply",
+    "search": "Search",
+    "loading": "Loading...",
+    "notFound": "No data found.",
+    "dataUpdating": "Data is being updated",
+    "errorLoading": "An error occurred while loading data.",
+    "pageNotFound": "Page not found.",
+    "serverError": "A server error occurred.",
+    "viewAll": "View all",
+    "send": "Send",
+    "submit": "Submit",
+    "close": "Close",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date"
+  },
+  "whyUs": {
+    "title": "Why choose us",
+    "items": {
+      "accredited": "Accredited laboratories",
+      "equipment": "Modern equipment",
+      "experts": "Experienced specialists",
+      "reliable": "Reliable test results",
+      "wide": "Wide range of testing directions",
+      "professional": "Professional approach"
+    }
+  },
+  "process": {
+    "title": "Testing process",
+    "steps": {
+      "s1": "Submit application",
+      "s2": "Sample acceptance",
+      "s3": "Testing process",
+      "s4": "Result analysis",
+      "s5": "Test report preparation",
+      "s6": "Result delivery to client"
+    }
+  },
+  "footer": {
+    "quickLinks": "Quick links",
+    "contactInfo": "Contact information",
+    "rights": "All rights reserved."
+  },
+  "application": {
+    "title": "Online Application",
+    "fullName": "Full name",
+    "organization": "Organization name",
+    "phone": "Phone",
+    "email": "Email",
+    "productName": "Product name",
+    "productType": "Product type",
+    "laboratory": "Laboratory",
+    "service": "Service",
+    "testType": "Test type",
+    "comment": "Comment",
+    "file": "File",
+    "success": "Your application has been successfully accepted.",
+    "number": "Application number"
+  },
+  "track": {
+    "title": "Track application status",
+    "placeholder": "SLM-2026-00001",
+    "button": "Check"
+  },
+  "admin": {
+    "login": "Admin login",
+    "email": "Email",
+    "password": "Password",
+    "dashboard": "Dashboard"
+  }
+}

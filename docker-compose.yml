@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: slm_user
+      POSTGRES_PASSWORD: slm_password
+      POSTGRES_DB: slm_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - slm_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U slm_user -d slm_db']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://slm_user:slm_password@postgres:5432/slm_db?schema=public
+      JWT_SECRET: change-this-in-production
+      JWT_EXPIRES_IN: 15m
+      REFRESH_TOKEN_EXPIRES_IN: 7d
+      PORT: 4000
+      NODE_ENV: production
+      CLIENT_URL: http://localhost:5173
+      UPLOAD_DIR: uploads
+      MAX_FILE_SIZE_MB: 10
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '4000:4000'
+    volumes:
+      - slm_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '5173:80'
+
+volumes:
+  slm_postgres_data:
+  slm_uploads:

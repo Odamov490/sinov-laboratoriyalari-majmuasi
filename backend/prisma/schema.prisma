@@ -1,0 +1,320 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  EDITOR
+}
+
+enum ApplicationStatus {
+  QABUL_QILINDI
+  KORIB_CHIQILMOQDA
+  SINOV_JARAYONIDA
+  NATIJA_TAYYOR
+  YAKUNLANDI
+  BEKOR_QILINDI
+}
+
+model User {
+  id           String   @id @default(uuid())
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EDITOR)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+}
+
+model Laboratory {
+  id                  String   @id @default(uuid())
+  slug                String   @unique
+  nameUz              String
+  nameRu              String
+  nameEn              String
+  descriptionUz       String?
+  descriptionRu       String?
+  descriptionEn       String?
+  aboutUz             String?
+  aboutRu             String?
+  aboutEn             String?
+  accreditationScope  String?
+  coverImage          String?
+  order               Int      @default(0)
+  isActive            Boolean  @default(true)
+  services            Service[]
+  equipment           Equipment[]
+  staff               Staff[]
+  standards           Standard[]
+  gallery             Gallery[]
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  deletedAt           DateTime?
+}
+
+model ServiceCategory {
+  id        String    @id @default(uuid())
+  nameUz    String
+  nameRu    String
+  nameEn    String
+  services  Service[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  nameUz          String
+  nameRu          String
+  nameEn          String
+  descriptionUz   String?
+  descriptionRu   String?
+  descriptionEn   String?
+  testObject      String?
+  testType        String?
+  durationDays    Int?
+  laboratoryId    String
+  laboratory      Laboratory @relation(fields: [laboratoryId], references: [id])
+  categoryId      String?
+  category        ServiceCategory? @relation(fields: [categoryId], references: [id])
+  standardId      String?
+  standard        Standard? @relation(fields: [standardId], references: [id])
+  prices          Price[]
+  applications    Application[]
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+}
+
+model Price {
+  id            String   @id @default(uuid())
+  serviceId     String
+  service       Service  @relation(fields: [serviceId], references: [id])
+  amount        Decimal? @db.Decimal(14, 2)
+  currency      String   @default("UZS")
+  effectiveFrom DateTime @default(now())
+  isCurrent     Boolean  @default(true)
+  history       PriceHistory[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PriceHistory {
+  id            String   @id @default(uuid())
+  priceId       String
+  price         Price    @relation(fields: [priceId], references: [id])
+  amount        Decimal? @db.Decimal(14, 2)
+  currency      String   @default("UZS")
+  changedAt     DateTime @default(now())
+}
+
+model Standard {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  nameUz        String
+  nameRu        String
+  nameEn        String
+  category      String
+  scopeUz       String?
+  scopeRu       String?
+  scopeEn       String?
+  documentUrl   String?
+  laboratoryId  String?
+  laboratory    Laboratory? @relation(fields: [laboratoryId], references: [id])
+  services      Service[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+}
+
+model NewsCategory {
+  id      String @id @default(uuid())
+  nameUz  String
+  nameRu  String
+  nameEn  String
+  news    News[]
+}
+
+model News {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  titleUz         String
+  titleRu         String
+  titleEn         String
+  descriptionUz   String?
+  descriptionRu   String?
+  descriptionEn   String?
+  contentUz       String?
+  contentRu       String?
+  contentEn       String?
+  image           String?
+  categoryId      String?
+  category        NewsCategory? @relation(fields: [categoryId], references: [id])
+  seoTitle        String?
+  seoDescription  String?
+  isPublished     Boolean  @default(false)
+  publishedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+}
+
+model DocumentCategory {
+  id        String     @id @default(uuid())
+  nameUz    String
+  nameRu    String
+  nameEn    String
+  documents Document[]
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  titleUz     String
+  titleRu     String
+  titleEn     String
+  fileUrl     String
+  categoryId  String?
+  category    DocumentCategory? @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+}
+
+model Staff {
+  id              String   @id @default(uuid())
+  fullName        String
+  position        String
+  specialization  String?
+  experienceYears Int?
+  email           String?
+  phone           String?
+  photo           String?
+  laboratoryId    String?
+  laboratory      Laboratory? @relation(fields: [laboratoryId], references: [id])
+  order           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+}
+
+model Equipment {
+  id             String   @id @default(uuid())
+  slug           String   @unique
+  name           String
+  manufacturer   String?
+  model          String?
+  specifications String?
+  application    String?
+  photo          String?
+  laboratoryId   String?
+  laboratory     Laboratory? @relation(fields: [laboratoryId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+}
+
+model GalleryCategory {
+  id      String    @id @default(uuid())
+  nameUz  String
+  nameRu  String
+  nameEn  String
+  items   Gallery[]
+}
+
+model Gallery {
+  id           String   @id @default(uuid())
+  title        String?
+  imageUrl     String
+  categoryId   String?
+  category     GalleryCategory? @relation(fields: [categoryId], references: [id])
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+model FAQ {
+  id          String   @id @default(uuid())
+  questionUz  String
+  questionRu  String
+  questionEn  String
+  answerUz    String
+  answerRu    String
+  answerEn    String
+  order       Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Application {
+  id                String   @id @default(uuid())
+  applicationNumber String   @unique
+  fullName          String
+  organization      String?
+  phone             String
+  email             String?
+  productName       String
+  productType       String?
+  laboratoryId      String?
+  serviceId         String?
+  service           Service? @relation(fields: [serviceId], references: [id])
+  testType          String?
+  comment           String?
+  status            ApplicationStatus @default(QABUL_QILINDI)
+  statusComment     String?
+  files             ApplicationFile[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ApplicationFile {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  fileUrl       String
+  originalName  String
+  mimeType      String
+  size          Int
+  createdAt     DateTime    @default(now())
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  fullName  String
+  phone     String?
+  email     String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Accreditation {
+  id                String   @id @default(uuid())
+  certificateNumber String
+  standardCode      String
+  scopeUz           String?
+  scopeRu           String?
+  scopeEn           String?
+  documentUrl       String?
+  issuedAt          DateTime?
+  validUntil        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model SiteSetting {
+  id            String   @id @default(uuid())
+  key           String   @unique
+  value         String?
+  updatedAt     DateTime @updatedAt
+}
