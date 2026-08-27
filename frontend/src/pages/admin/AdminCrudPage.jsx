@@ -69,13 +69,14 @@ export default function AdminCrudPage({ config }) {
     }
   };
 
-  const save = async () => {
+ const save = async () => {
     setSaving(true);
     try {
       const payload = { ...form };
       config.fields.forEach((f) => {
         if (f.type === 'number' && payload[f.name] !== '') payload[f.name] = Number(payload[f.name]);
         if (f.type === 'select-bool') payload[f.name] = payload[f.name] === 'true' || payload[f.name] === true;
+        if (f.name.endsWith('Id') && payload[f.name] === '') payload[f.name] = null;
       });
       if (editing) {
         await resource.update(editing.id, payload);
