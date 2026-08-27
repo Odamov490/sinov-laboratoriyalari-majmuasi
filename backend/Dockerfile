@@ -1,16 +1,12 @@
 FROM node:20-alpine
-
 WORKDIR /app
 
-# Prisma uchun OpenSSL
 RUN apk add --no-cache openssl libc6-compat
 
 COPY package*.json ./
-
 RUN npm install --omit=dev
 
 COPY . .
-
 RUN npx prisma generate
 
 RUN mkdir -p uploads
