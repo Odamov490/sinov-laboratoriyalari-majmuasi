@@ -56,7 +56,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-6 overflow-x-auto">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.to === '/'} className={navLinkClass}>
               {l.label}
