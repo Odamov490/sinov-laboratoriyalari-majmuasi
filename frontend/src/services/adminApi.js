@@ -31,6 +31,7 @@ export const adminPrices = {
   list: (params) => apiClient.get('/admin/prices', { params }).then((r) => r.data),
   create: (data) => apiClient.post('/admin/prices', data).then((r) => r.data),
   update: (id, data) => apiClient.put(`/admin/prices/${id}`, data).then((r) => r.data),
+  remove: (id) => apiClient.delete(`/admin/prices/${id}`).then((r) => r.data),
 };
 
 export const adminUsers = adminResource('users');

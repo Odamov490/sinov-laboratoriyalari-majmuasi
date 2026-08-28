@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { History } from 'lucide-react';
-import { adminPrices } from '../../services/adminApi';
+import { Plus, History, Trash2 } from 'lucide-react';
+import { adminPrices, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
-import { Modal } from '../../components/Modal.jsx';
+import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
+import { Select } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
 
@@ -14,6 +15,12 @@ export default function AdminPrices() {
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
   const [historyItem, setHistoryItem] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [services, setServices] = useState([]);
+  const [newServiceId, setNewServiceId] = useState('');
+  const [newAmount, setNewAmount] = useState('');
 
   const load = () => {
     setError(false);
@@ -21,6 +28,37 @@ export default function AdminPrices() {
   };
 
   useEffect(load, []);
+
+  const openCreate = () => {
+    setNewServiceId('');
+    setNewAmount('');
+    adminResource('services')
+      .list({ pageSize: 200 })
+      .then((d) => setServices(d.items))
+      .catch(() => setServices([]));
+    setCreateOpen(true);
+  };
+
+  const createPrice = async () => {
+    if (!newServiceId) {
+      showToast('Xizmatni tanlang.', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      await adminPrices.create({
+        serviceId: newServiceId,
+        amount: newAmount === '' ? null : Number(newAmount),
+      });
+      showToast("Narx qo'shildi.", 'success');
+      setCreateOpen(false);
+      load();
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const openEdit = (price) => {
     setEditing(price);
@@ -41,9 +79,24 @@ export default function AdminPrices() {
     }
   };
 
+  const removePrice = async (id) => {
+    try {
+      await adminPrices.remove(id);
+      showToast("O'chirildi.", 'success');
+      load();
+    } catch (err) {
+      showToast(err?.response?.data?.error || "O'chirishda xatolik.", 'error');
+    }
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink mb-2">Narxlar</h1>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+        <h1 className="text-2xl font-bold text-ink">Narxlar</h1>
+        <button onClick={openCreate} className="btn-primary !py-2.5">
+          <Plus className="h-4 w-4" /> Yangi narx qo'shish
+        </button>
+      </div>
       <p className="text-sm text-slate-500 mb-6">Eski narxlar avtomatik ravishda tarixga saqlanadi va o'chirilmaydi.</p>
 
       <div className="card overflow-x-auto">
@@ -52,9 +105,11 @@ export default function AdminPrices() {
         ) : data === null ? (
           <Loading />
         ) : data.items.length === 0 ? (
-          <EmptyState />
+          <div className="p-10 text-center">
+            <EmptyState message="Hali narx qo'shilmagan. Avval 'Xizmatlar' bo'limida xizmat yarating, so'ng shu yerda 'Yangi narx qo'shish' tugmasini bosing." />
+          </div>
         ) : (
-          <table className="w-full text-sm min-w-[800px]">
+          <table className="w-full text-sm min-w-[850px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">Xizmat</th>
@@ -73,15 +128,20 @@ export default function AdminPrices() {
                     {p.amount ? `${Number(p.amount).toLocaleString('uz-UZ')} ${p.currency}` : "Ma'lumot yangilanmoqda"}
                   </td>
                   <td className="px-4 py-3 text-slate-500">{formatDate(p.updatedAt)}</td>
-                  <td className="px-4 py-3 text-right flex justify-end gap-2">
-                    {p.history?.length > 0 && (
-                      <button onClick={() => setHistoryItem(p)} className="p-2 rounded-lg hover:bg-bg-light text-slate-500" title="Tarix">
-                        <History className="h-4 w-4" />
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      {p.history?.length > 0 && (
+                        <button onClick={() => setHistoryItem(p)} className="p-2 rounded-lg hover:bg-bg-light text-slate-500" title="Tarix">
+                          <History className="h-4 w-4" />
+                        </button>
+                      )}
+                      <button onClick={() => openEdit(p)} className="text-sm font-medium text-primary px-2">
+                        Tahrirlash
                       </button>
-                    )}
-                    <button onClick={() => openEdit(p)} className="text-sm font-medium text-primary">
-                      Tahrirlash
-                    </button>
+                      <button onClick={() => setConfirmDelete(p.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500" title="O'chirish">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -89,6 +149,32 @@ export default function AdminPrices() {
           </table>
         )}
       </div>
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi narx qo'shish" size="sm">
+        <label className="block text-sm font-medium text-ink mb-1.5">Xizmat</label>
+        <Select
+          value={newServiceId}
+          onChange={setNewServiceId}
+          placeholder="Xizmatni tanlang"
+          options={services.map((s) => ({ value: s.id, label: `${s.nameUz} (${s.laboratory?.nameUz || ''})` }))}
+        />
+        {services.length === 0 && (
+          <p className="text-xs text-slate-400 mt-2">
+            Hali birorta xizmat yaratilmagan. Avval "Xizmatlar" bo'limida xizmat yarating.
+          </p>
+        )}
+        <label className="block text-sm font-medium text-ink mb-1.5 mt-4">Narx (UZS)</label>
+        <input
+          type="number"
+          value={newAmount}
+          onChange={(e) => setNewAmount(e.target.value)}
+          placeholder="Masalan: 250000"
+          className="input-field"
+        />
+        <button onClick={createPrice} disabled={saving || services.length === 0} className="btn-primary w-full mt-6">
+          {saving ? 'Saqlanmoqda...' : "Qo'shish"}
+        </button>
+      </Modal>
 
       <Modal open={!!editing} onClose={() => setEditing(null)} title="Narxni tahrirlash" size="sm">
         <label className="block text-sm font-medium text-ink mb-1.5">Narx (UZS)</label>
@@ -110,6 +196,13 @@ export default function AdminPrices() {
           ))}
         </ul>
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => removePrice(confirmDelete)}
+        message="Ushbu narxni o'chirmoqchimisiz? Uning tarixi ham birga o'chadi. Bu amalni bekor qilib bo'lmaydi."
+      />
     </div>
   );
 }

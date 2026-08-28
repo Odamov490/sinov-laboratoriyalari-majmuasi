@@ -4,7 +4,7 @@ const { authenticate } = require('../middleware/auth');
 const { requireModule } = require('../middleware/rbac');
 const { upload, verifyFileSignature } = require('../middleware/upload');
 const { updateApplicationStatus } = require('../controllers/applicationController');
-const { updatePrice, createPrice, listPrices } = require('../controllers/priceAdminController');
+const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
 const prisma = require('../config/prisma');
@@ -46,6 +46,7 @@ router.get('/prices', requireModule('prices'), listPrices);
 router.post('/prices', requireModule('prices'), createPrice);
 router.put('/prices/:id', requireModule('prices'), updatePrice);
 router.patch('/prices/:id', requireModule('prices'), updatePrice);
+router.delete('/prices/:id', requireModule('prices'), deletePrice);
 
 // Standards
 mountCrud('standards', 'standards', 'standard', {
