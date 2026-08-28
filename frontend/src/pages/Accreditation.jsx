@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Download } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, DataUpdatingBadge } from '../components/StateViews.jsx';
+import FormattedText from '../components/FormattedText.jsx';
 import { getAccreditation, getLaboratories, getStandards } from '../services/publicApi';
 import { getLocalized, formatDate } from '../utils/localize';
 
@@ -19,6 +20,8 @@ export default function Accreditation() {
   }, []);
 
   if (acc === undefined) return <Loading />;
+
+  const scope = acc ? getLocalized(acc, 'scope', i18n.language) : '';
 
   return (
     <div className="section container-page">
@@ -42,8 +45,10 @@ export default function Accreditation() {
 
       <div className="mt-10">
         <h2 className="section-title">Scope</h2>
-        {acc && getLocalized(acc, 'scope', i18n.language) ? (
-          <p className="mt-4 text-slate-600 leading-relaxed">{getLocalized(acc, 'scope', i18n.language)}</p>
+        {scope ? (
+          <div className="mt-4 card p-6">
+            <FormattedText text={scope} />
+          </div>
         ) : (
           <div className="mt-4"><DataUpdatingBadge /></div>
         )}
