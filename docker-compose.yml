@@ -33,7 +33,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      ports:
+    ports:
       - '4000:4000'
       - '5555:5555'
     volumes:
