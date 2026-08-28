@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { History } from 'lucide-react';
-import { adminPrices } from '../../services/adminApi';
+import { Plus, History } from 'lucide-react';
+import { adminPrices, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal } from '../../components/Modal.jsx';
+import { Select } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
 
@@ -15,12 +16,48 @@ export default function AdminPrices() {
   const [saving, setSaving] = useState(false);
   const [historyItem, setHistoryItem] = useState(null);
 
+  const [createOpen, setCreateOpen] = useState(false);
+  const [services, setServices] = useState([]);
+  const [newServiceId, setNewServiceId] = useState('');
+  const [newAmount, setNewAmount] = useState('');
+
   const load = () => {
     setError(false);
     adminPrices.list().then(setData).catch(() => setError(true));
   };
 
   useEffect(load, []);
+
+  const openCreate = () => {
+    setNewServiceId('');
+    setNewAmount('');
+    adminResource('services')
+      .list({ pageSize: 200 })
+      .then((d) => setServices(d.items))
+      .catch(() => setServices([]));
+    setCreateOpen(true);
+  };
+
+  const createPrice = async () => {
+    if (!newServiceId) {
+      showToast('Xizmatni tanlang.', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      await adminPrices.create({
+        serviceId: newServiceId,
+        amount: newAmount === '' ? null : Number(newAmount),
+      });
+      showToast("Narx qo'shildi.", 'success');
+      setCreateOpen(false);
+      load();
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const openEdit = (price) => {
     setEditing(price);
@@ -43,8 +80,13 @@ export default function AdminPrices() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink mb-2">Narxlar</h1>
-      <p className="text-sm text-slate-500 mb-6">Eski narxlar avtomatik ravishda tarixga saqlanadi va o‘chirilmaydi.</p>
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+        <h1 className="text-2xl font-bold text-ink">Narxlar</h1>
+        <button onClick={openCreate} className="btn-primary !py-2.5">
+          <Plus className="h-4 w-4" /> Yangi narx qo'shish
+        </button>
+      </div>
+      <p className="text-sm text-slate-500 mb-6">Eski narxlar avtomatik ravishda tarixga saqlanadi va o'chirilmaydi.</p>
 
       <div className="card overflow-x-auto">
         {error ? (
@@ -52,7 +94,9 @@ export default function AdminPrices() {
         ) : data === null ? (
           <Loading />
         ) : data.items.length === 0 ? (
-          <EmptyState />
+          <div className="p-10 text-center">
+            <EmptyState message="Hali narx qo'shilmagan. Avval 'Xizmatlar' bo'limida xizmat yarating, so'ng shu yerda 'Yangi narx qo'shish' tugmasini bosing." />
+          </div>
         ) : (
           <table className="w-full text-sm min-w-[800px]">
             <thead>
@@ -89,6 +133,32 @@ export default function AdminPrices() {
           </table>
         )}
       </div>
+
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi narx qo'shish" size="sm">
+        <label className="block text-sm font-medium text-ink mb-1.5">Xizmat</label>
+        <Select
+          value={newServiceId}
+          onChange={setNewServiceId}
+          placeholder="Xizmatni tanlang"
+          options={services.map((s) => ({ value: s.id, label: `${s.nameUz} (${s.laboratory?.nameUz || ''})` }))}
+        />
+        {services.length === 0 && (
+          <p className="text-xs text-slate-400 mt-2">
+            Hali birorta xizmat yaratilmagan. Avval "Xizmatlar" bo'limida xizmat yarating.
+          </p>
+        )}
+        <label className="block text-sm font-medium text-ink mb-1.5 mt-4">Narx (UZS)</label>
+        <input
+          type="number"
+          value={newAmount}
+          onChange={(e) => setNewAmount(e.target.value)}
+          placeholder="Masalan: 250000"
+          className="input-field"
+        />
+        <button onClick={createPrice} disabled={saving || services.length === 0} className="btn-primary w-full mt-6">
+          {saving ? 'Saqlanmoqda...' : "Qo'shish"}
+        </button>
+      </Modal>
 
       <Modal open={!!editing} onClose={() => setEditing(null)} title="Narxni tahrirlash" size="sm">
         <label className="block text-sm font-medium text-ink mb-1.5">Narx (UZS)</label>
