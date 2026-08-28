@@ -26,7 +26,7 @@ export const laboratoryConfig = {
     { name: 'accreditationScope', label: 'Akkreditatsiya sohasi', type: 'textarea', fullWidth: true },
     { name: 'coverImage', label: 'Rasm', type: 'file' },
     { name: 'order', label: 'Tartib', type: 'number' },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
   ],
 };
 
@@ -35,15 +35,13 @@ export const serviceConfig = {
   title: 'Xizmatlar',
   columns: [
     { key: 'nameUz', label: 'Nomi' },
-    { key: 'slug', label: 'Slug' },
     { key: 'testType', label: 'Sinov turi' },
     { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") },
   ],
+  autoFillFields: { nameRu: 'nameUz', nameEn: 'nameUz' },
+  autoSlugFrom: 'nameUz',
   fields: [
-    { name: 'slug', label: 'Slug', required: true },
-    { name: 'nameUz', label: 'Nomi (UZ)', required: true },
-    { name: 'nameRu', label: 'Nomi (RU)', required: true },
-    { name: 'nameEn', label: 'Nomi (EN)', required: true },
+    { name: 'nameUz', label: 'Nomi', required: true },
     {
       name: 'laboratoryId',
       label: 'Laboratoriya',
@@ -51,27 +49,8 @@ export const serviceConfig = {
       optionsResource: 'laboratories',
       optionsLabel: (item) => item.nameUz,
     },
-    {
-      name: 'standardId',
-      label: 'Standart',
-      type: 'async-select',
-      optionsResource: 'standards',
-      optionsLabel: (item) => `${item.code} — ${item.nameUz}`,
-    },
-    {
-      name: 'categoryId',
-      label: 'Xizmat kategoriyasi',
-      type: 'async-select',
-      optionsResource: 'service-categories',
-      optionsLabel: (item) => item.nameUz,
-    },
-    { name: 'testObject', label: 'Sinov obyekti' },
     { name: 'testType', label: 'Sinov turi' },
-    { name: 'durationDays', label: 'Muddat (kun)', type: 'number' },
-    { name: 'descriptionUz', label: 'Tavsif (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionRu', label: 'Tavsif (RU)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionEn', label: 'Tavsif (EN)', type: 'textarea', fullWidth: true },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
   ],
 };
 
@@ -242,7 +221,7 @@ export const faqConfig = {
     { name: 'answerRu', label: 'Javob (RU)', required: true, type: 'textarea', fullWidth: true },
     { name: 'answerEn', label: 'Javob (EN)', required: true, type: 'textarea', fullWidth: true },
     { name: 'order', label: 'Tartib', type: 'number' },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
   ],
 };
 

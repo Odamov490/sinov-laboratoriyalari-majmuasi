@@ -6,6 +6,17 @@ import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
+function slugify(text) {
+  const base = (text || '')
+    .toLowerCase()
+    .replace(/[ʻ'’‘]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 60) || 'yozuv';
+  return `${base}-${Date.now().toString().slice(-5)}`;
+}
+
 export default function AdminCrudPage({ config }) {
   const resource = adminResource(config.path);
   const { showToast } = useToast();
@@ -49,7 +60,10 @@ export default function AdminCrudPage({ config }) {
   const openCreate = () => {
     setEditing(null);
     const initial = {};
-    config.fields.forEach((f) => (initial[f.name] = f.type === 'checkbox' ? false : ''));
+    config.fields.forEach((f) => {
+      if (f.default !== undefined) initial[f.name] = f.default;
+      else initial[f.name] = f.type === 'checkbox' ? false : '';
+    });
     setForm(initial);
     loadAsyncOptions();
     setModalOpen(true);
@@ -110,6 +124,16 @@ export default function AdminCrudPage({ config }) {
         if (f.type === 'select-bool') payload[f.name] = payload[f.name] === 'true' || payload[f.name] === true;
         if (f.name.endsWith('Id') && payload[f.name] === '') payload[f.name] = null;
       });
+
+      if (config.autoFillFields) {
+        Object.entries(config.autoFillFields).forEach(([target, source]) => {
+          if (!payload[target]) payload[target] = payload[source];
+        });
+      }
+      if (config.autoSlugFrom && !payload.slug && !editing) {
+        payload.slug = slugify(payload[config.autoSlugFrom]);
+      }
+
       if (editing) {
         await resource.update(editing.id, payload);
         showToast('Yangilandi.', 'success');
