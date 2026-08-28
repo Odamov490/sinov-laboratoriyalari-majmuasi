@@ -58,9 +58,17 @@ export default function AdminCrudPage({ config }) {
     setModalOpen(true);
   };
 
-  const openEdit = (item) => {
+   const openEdit = (item) => {
     setEditing(item);
-    setForm({ ...item });
+    // Only pull in the fields this form actually shows — the raw `item`
+    // from the API also includes nested relation objects (e.g. `laboratory`
+    // alongside `laboratoryId`), which would conflict when sent back to
+    // Prisma on save.
+    const initial = {};
+    config.fields.forEach((f) => {
+      initial[f.name] = item[f.name] ?? (f.type === 'checkbox' ? false : '');
+    });
+    setForm(initial);
     loadAsyncOptions();
     setModalOpen(true);
   };
