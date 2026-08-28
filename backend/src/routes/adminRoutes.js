@@ -14,6 +14,10 @@ const fs = require('fs');
 const router = express.Router();
 
 router.use(authenticate);
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+  next();
+});
 
 function mountCrud(path, moduleName, modelName, opts) {
   const handlers = crudFactory(modelName, opts);
