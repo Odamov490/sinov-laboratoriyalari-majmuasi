@@ -1,20 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, X as XIcon } from 'lucide-react';
 import { adminResource, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
-import { SearchBar, Pagination } from '../../components/UI.jsx';
+import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
-/**
- * config = {
- *   path: 'laboratories',
- *   title: 'Laboratoriyalar',
- *   columns: [{ key: 'nameUz', label: 'Nomi' }, ...],
- *   fields: [{ name: 'nameUz', label: 'Nomi (UZ)', type: 'text', required: true }, ...],
- *   searchable: true,
- * }
- */
 export default function AdminCrudPage({ config }) {
   const resource = adminResource(config.path);
   const { showToast } = useToast();
@@ -27,6 +18,8 @@ export default function AdminCrudPage({ config }) {
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [uploadingField, setUploadingField] = useState(null);
+  const [asyncOptions, setAsyncOptions] = useState({});
 
   const load = () => {
     setError(false);
@@ -43,17 +36,29 @@ export default function AdminCrudPage({ config }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, page]);
 
+  const loadAsyncOptions = () => {
+    const asyncFields = config.fields.filter((f) => f.type === 'async-select');
+    asyncFields.forEach((f) => {
+      adminResource(f.optionsResource)
+        .list({ pageSize: 200 })
+        .then((d) => setAsyncOptions((prev) => ({ ...prev, [f.name]: d.items })))
+        .catch(() => setAsyncOptions((prev) => ({ ...prev, [f.name]: [] })));
+    });
+  };
+
   const openCreate = () => {
     setEditing(null);
     const initial = {};
     config.fields.forEach((f) => (initial[f.name] = f.type === 'checkbox' ? false : ''));
     setForm(initial);
+    loadAsyncOptions();
     setModalOpen(true);
   };
 
   const openEdit = (item) => {
     setEditing(item);
     setForm({ ...item });
+    loadAsyncOptions();
     setModalOpen(true);
   };
 
@@ -69,7 +74,34 @@ export default function AdminCrudPage({ config }) {
     }
   };
 
- const save = async () => {
+  const handleMultiFileChange = async (name, fileList) => {
+    if (!fileList?.length) return;
+    setUploadingField(name);
+    try {
+      const res = await uploadFiles(fileList);
+      const newUrls = res.files.map((f) => f.url);
+      const existing = (form[name] || '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      handleChange(name, [...existing, ...newUrls].join(','));
+      showToast(`${newUrls.length} ta fayl yuklandi.`, 'success');
+    } catch {
+      showToast('Fayl yuklashda xatolik.', 'error');
+    } finally {
+      setUploadingField(null);
+    }
+  };
+
+  const removeMultiFileUrl = (name, urlToRemove) => {
+    const remaining = (form[name] || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((u) => u && u !== urlToRemove);
+    handleChange(name, remaining.join(','));
+  };
+
+  const save = async () => {
     setSaving(true);
     try {
       const payload = { ...form };
@@ -169,11 +201,30 @@ export default function AdminCrudPage({ config }) {
               <label className="block text-sm font-medium text-ink mb-1.5">{f.label}</label>
               {f.type === 'textarea' ? (
                 <textarea
-                  rows={3}
+                  rows={f.rows || 3}
                   className="input-field resize-none"
                   value={form[f.name] ?? ''}
                   onChange={(e) => handleChange(f.name, e.target.value)}
                 />
+              ) : f.type === 'async-select' ? (
+                <div>
+                  <Select
+                    value={form[f.name] ?? ''}
+                    onChange={(v) => handleChange(f.name, v)}
+                    placeholder={
+                      asyncOptions[f.name] === undefined ? 'Yuklanmoqda...' : `${f.label} tanlang`
+                    }
+                    options={(asyncOptions[f.name] || []).map((item) => ({
+                      value: item.id,
+                      label: f.optionsLabel ? f.optionsLabel(item) : item.nameUz || item.name || item.id,
+                    }))}
+                  />
+                  {asyncOptions[f.name] && asyncOptions[f.name].length === 0 && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.
+                    </p>
+                  )}
+                </div>
               ) : f.type === 'select' ? (
                 <select
                   className="input-field"
@@ -192,6 +243,46 @@ export default function AdminCrudPage({ config }) {
                   onChange={(e) => handleChange(f.name, e.target.checked)}
                   className="h-5 w-5 rounded border-border text-primary"
                 />
+              ) : f.type === 'multi-file' ? (
+                <div>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    onChange={(e) => handleMultiFileChange(f.name, e.target.files)}
+                    className="text-sm"
+                  />
+                  {uploadingField === f.name && (
+                    <p className="text-xs text-primary mt-1">Yuklanmoqda...</p>
+                  )}
+                  {(form[f.name] || '')
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean).length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {(form[f.name] || '')
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .map((url) => (
+                          <div key={url} className="relative group">
+                            <img
+                              src={url}
+                              alt=""
+                              className="h-16 w-16 object-cover rounded-lg border border-border"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeMultiFileUrl(f.name, url)}
+                              className="absolute -top-2 -right-2 bg-white border border-border rounded-full p-0.5 text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <XIcon className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               ) : f.type === 'file' ? (
                 <div>
                   <input type="file" onChange={(e) => handleFileChange(f.name, e.target.files)} className="text-sm" />
