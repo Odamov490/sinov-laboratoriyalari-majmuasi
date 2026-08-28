@@ -6,17 +6,6 @@ import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
-function slugify(text) {
-  const base = (text || '')
-    .toLowerCase()
-    .replace(/[ʻ'’‘]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60) || 'yozuv';
-  return `${base}-${Date.now().toString().slice(-5)}`;
-}
-
 export default function AdminCrudPage({ config }) {
   const resource = adminResource(config.path);
   const { showToast } = useToast();
@@ -129,9 +118,6 @@ export default function AdminCrudPage({ config }) {
         Object.entries(config.autoFillFields).forEach(([target, source]) => {
           if (!payload[target]) payload[target] = payload[source];
         });
-      }
-      if (config.autoSlugFrom && !payload.slug && !editing) {
-        payload.slug = slugify(payload[config.autoSlugFrom]);
       }
 
       if (editing) {
