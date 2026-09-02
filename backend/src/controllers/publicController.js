@@ -12,7 +12,13 @@ const getLaboratories = asyncHandler(async (req, res) => {
 const getLaboratoryBySlug = asyncHandler(async (req, res) => {
   const item = await prisma.laboratory.findFirst({
     where: { slug: req.params.slug, isActive: true, deletedAt: null },
-    include: { services: true, equipment: true, staff: true, standards: true, gallery: true },
+    include: {
+      services: { where: { isActive: true, deletedAt: null } },
+      equipment: { where: { deletedAt: null } },
+      staff: { where: { deletedAt: null } },
+      standards: { where: { deletedAt: null } },
+      gallery: true,
+    },
   });
   if (!item) return res.status(404).json({ error: 'Laboratoriya topilmadi.' });
   res.json(item);
