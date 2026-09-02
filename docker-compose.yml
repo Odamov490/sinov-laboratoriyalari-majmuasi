@@ -29,7 +29,7 @@ services:
       NODE_ENV: production
       CLIENT_URL: https://s-lab.uz
       UPLOAD_DIR: uploads
-      MAX_FILE_SIZE_MB: 10
+      MAX_FILE_SIZE_MB: 200
     depends_on:
       postgres:
         condition: service_healthy
