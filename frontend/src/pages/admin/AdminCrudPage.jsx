@@ -120,8 +120,11 @@ export default function AdminCrudPage({ config }) {
         if (f.type === 'number' && payload[f.name] !== '') payload[f.name] = Number(payload[f.name]);
         if (f.type === 'select-bool') payload[f.name] = payload[f.name] === 'true' || payload[f.name] === true;
         if (f.name.endsWith('Id') && payload[f.name] === '') payload[f.name] = null;
+        if (f.type === 'date') {
+          payload[f.name] = payload[f.name] ? new Date(payload[f.name]).toISOString() : null;
+        }
       });
-
+      
       if (config.autoFillFields) {
         Object.entries(config.autoFillFields).forEach(([target, source]) => {
           if (!payload[target]) payload[target] = payload[source];
