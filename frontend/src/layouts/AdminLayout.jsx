@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
+import { adminResource } from '../services/adminApi';
 
 const MENU = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] },
@@ -37,7 +38,7 @@ const MENU = [
   { to: '/admin/galereya', label: 'Galereya', icon: Image, roles: ['SUPER_ADMIN', 'EDITOR'] },
   { to: '/admin/faq', label: 'FAQ', icon: HelpCircle, roles: ['SUPER_ADMIN', 'EDITOR'] },
   { to: '/admin/akkreditatsiya', label: 'Akkreditatsiya', icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/murojaatlar', label: 'Murojaatlar', icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'] },
+  { to: '/admin/murojaatlar', label: 'Murojaatlar', icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'], badgeKey: 'unreadMessages' },
   { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
   { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
 ];
@@ -45,10 +46,30 @@ const MENU = [
 export default function AdminLayout() {
   const { user, loading, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    if (!user || !['SUPER_ADMIN', 'MANAGER'].includes(user.role)) return;
+
+    const loadUnread = () => {
+      adminResource('contact-messages')
+        .list({ pageSize: 100 })
+        .then((d) => {
+          const count = (d.items || []).filter((m) => !m.isRead).length;
+          setUnreadMessages(count);
+        })
+        .catch(() => {});
+    };
+
+    loadUnread();
+    const interval = setInterval(loadUnread, 60000); // refresh every minute
+    return () => clearInterval(interval);
+  }, [user]);
 
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/admin/login" replace />;
 
+  const badgeValues = { unreadMessages };
   const items = MENU.filter((m) => m.roles.includes(user.role));
 
   return (
@@ -65,21 +86,31 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
-          {items.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                }`
-              }
-              onClick={() => setOpen(false)}
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </NavLink>
-          ))}
+          {items.map((item) => {
+            const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  `flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                    isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+                onClick={() => setOpen(false)}
+              >
+                <span className="flex items-center gap-3">
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </span>
+                {badgeCount > 0 && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-xs font-bold text-primary">
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
           <button
             onClick={logout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white mt-4"
