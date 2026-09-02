@@ -44,6 +44,7 @@ import {
   galleryConfig,
   faqConfig,
   accreditationConfig,
+  contactMessageConfig,
 } from './pages/admin/adminConfigs.js';
 
 export default function App() {
@@ -88,6 +89,7 @@ export default function App() {
         <Route path="galereya" element={<AdminCrudPage config={galleryConfig} />} />
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
+        <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
         <Route path="sozlamalar" element={<AdminSettings />} />
       </Route>

@@ -265,3 +265,22 @@ export const accreditationConfig = {
     { name: 'validUntil', label: 'Amal qilish muddati', type: 'date' },
   ],
 };
+
+export const contactMessageConfig = {
+  path: 'contact-messages',
+  title: 'Murojaatlar',
+  columns: [
+    { key: 'fullName', label: 'F.I.Sh.' },
+    { key: 'phone', label: 'Telefon' },
+    { key: 'email', label: 'Email' },
+    { key: 'message', label: 'Xabar' },
+    { key: 'isRead', label: "O'qilgan", render: (i) => (i.isRead ? 'Ha' : "Yo'q") },
+  ],
+  fields: [
+    { name: 'fullName', label: 'F.I.Sh.', required: true },
+    { name: 'phone', label: 'Telefon' },
+    { name: 'email', label: 'Email' },
+    { name: 'message', label: 'Xabar', type: 'textarea', fullWidth: true, required: true },
+    { name: 'isRead', label: "O'qilgan", type: 'checkbox' },
+  ],
+};
