@@ -58,7 +58,7 @@ export default function AdminCrudPage({ config }) {
     setModalOpen(true);
   };
 
-   const openEdit = (item) => {
+     const openEdit = (item) => {
     setEditing(item);
     // Only pull in the fields this form actually shows — the raw `item`
     // from the API also includes nested relation objects (e.g. `laboratory`
@@ -66,7 +66,9 @@ export default function AdminCrudPage({ config }) {
     // Prisma on save.
     const initial = {};
     config.fields.forEach((f) => {
-      initial[f.name] = item[f.name] ?? (f.type === 'checkbox' ? false : '');
+      let val = item[f.name] ?? (f.type === 'checkbox' ? false : '');
+      if (f.type === 'date' && val) val = String(val).slice(0, 10);
+      initial[f.name] = val;
     });
     setForm(initial);
     loadAsyncOptions();
@@ -124,7 +126,7 @@ export default function AdminCrudPage({ config }) {
           payload[f.name] = payload[f.name] ? new Date(payload[f.name]).toISOString() : null;
         }
       });
-      
+
       if (config.autoFillFields) {
         Object.entries(config.autoFillFields).forEach(([target, source]) => {
           if (!payload[target]) payload[target] = payload[source];
