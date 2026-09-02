@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { getGallery } from '../services/publicApi';
+
+const VIDEO_EXT = ['.mp4', '.webm'];
+
+function isVideo(url) {
+  return VIDEO_EXT.some((ext) => (url || '').toLowerCase().endsWith(ext));
+}
 
 export default function Gallery() {
   const { t } = useTranslation();
@@ -39,15 +45,34 @@ export default function Gallery() {
           <EmptyState />
         ) : (
           <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 space-y-4">
-            {items.map((g, idx) => (
-              <button
-                key={g.id}
-                onClick={() => setActiveIdx(idx)}
-                className="block w-full overflow-hidden rounded-xl border border-border break-inside-avoid focus-ring"
-              >
-                <img src={g.imageUrl} alt={g.title || ''} loading="lazy" className="w-full object-cover hover:scale-105 transition-transform duration-300" />
-              </button>
-            ))}
+            {items.map((g, idx) => {
+              const video = isVideo(g.imageUrl);
+              return (
+                <button
+                  key={g.id}
+                  onClick={() => setActiveIdx(idx)}
+                  className="relative block w-full overflow-hidden rounded-xl border border-border break-inside-avoid focus-ring"
+                >
+                  {video ? (
+                    <>
+                      <video src={g.imageUrl} className="w-full object-cover" muted preload="metadata" />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-primary">
+                          <Play className="h-5 w-5 ml-0.5" fill="currentColor" />
+                        </span>
+                      </span>
+                    </>
+                  ) : (
+                    <img
+                      src={g.imageUrl}
+                      alt={g.title || ''}
+                      loading="lazy"
+                      className="w-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
@@ -63,12 +88,22 @@ export default function Gallery() {
           <button onClick={prev} className="absolute left-4 text-white/70 hover:text-white p-2">
             <ChevronLeft className="h-8 w-8" />
           </button>
-          <img
-            src={items[activeIdx].imageUrl}
-            alt=""
-            onClick={(e) => e.stopPropagation()}
-            className="max-h-[85vh] max-w-full rounded-lg object-contain"
-          />
+          {isVideo(items[activeIdx].imageUrl) ? (
+            <video
+              src={items[activeIdx].imageUrl}
+              controls
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[85vh] max-w-full rounded-lg"
+            />
+          ) : (
+            <img
+              src={items[activeIdx].imageUrl}
+              alt=""
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-[85vh] max-w-full rounded-lg object-contain"
+            />
+          )}
           <button onClick={next} className="absolute right-4 text-white/70 hover:text-white p-2">
             <ChevronRight className="h-8 w-8" />
           </button>

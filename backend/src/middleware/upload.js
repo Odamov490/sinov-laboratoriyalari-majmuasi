@@ -9,17 +9,22 @@ const ALLOWED_MIME = new Set([
   'image/jpeg',
   'image/png',
   'image/webp',
+  'video/mp4',
+  'video/webm',
 ]);
 
-const ALLOWED_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp']);
+const ALLOWED_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.mp4', '.webm']);
 
-// Minimal magic-byte signatures to reduce risk of disguised executables.
+// Magic-byte signatures to reduce risk of disguised executables. `offset`
+// defaults to 0; MP4 stores its "ftyp" box starting at byte 4, not 0.
 const SIGNATURES = [
-  { ext: '.pdf', bytes: [0x25, 0x50, 0x44, 0x46] }, // %PDF
-  { ext: '.png', bytes: [0x89, 0x50, 0x4e, 0x47] },
-  { ext: '.jpg', bytes: [0xff, 0xd8, 0xff] },
-  { ext: '.jpeg', bytes: [0xff, 0xd8, 0xff] },
-  { ext: '.webp', bytes: [0x52, 0x49, 0x46, 0x46] }, // RIFF....WEBP
+  { ext: '.pdf', bytes: [0x25, 0x50, 0x44, 0x46], offset: 0 }, // %PDF
+  { ext: '.png', bytes: [0x89, 0x50, 0x4e, 0x47], offset: 0 },
+  { ext: '.jpg', bytes: [0xff, 0xd8, 0xff], offset: 0 },
+  { ext: '.jpeg', bytes: [0xff, 0xd8, 0xff], offset: 0 },
+  { ext: '.webp', bytes: [0x52, 0x49, 0x46, 0x46], offset: 0 }, // RIFF....WEBP
+  { ext: '.mp4', bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // ....ftyp
+  { ext: '.webm', bytes: [0x1a, 0x45, 0xdf, 0xa3], offset: 0 }, // EBML header (webm/mkv)
 ];
 
 function sanitizeFilename(name) {
@@ -59,9 +64,10 @@ function verifyFileSignature(filePath) {
   const ext = path.extname(filePath).toLowerCase();
   const expected = SIGNATURES.find((s) => s.ext === ext);
   if (!expected) return false;
+  const offset = expected.offset || 0;
   const fd = fs.openSync(filePath, 'r');
   const buffer = Buffer.alloc(expected.bytes.length);
-  fs.readSync(fd, buffer, 0, expected.bytes.length, 0);
+  fs.readSync(fd, buffer, 0, expected.bytes.length, offset);
   fs.closeSync(fd);
   return expected.bytes.every((byte, i) => buffer[i] === byte);
 }
