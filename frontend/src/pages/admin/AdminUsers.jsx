@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { adminUsers } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
@@ -16,8 +16,13 @@ export default function AdminUsers() {
   const { showToast } = useToast();
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'EDITOR' });
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ fullName: '', email: '', password: '', role: 'EDITOR' });
+
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({ fullName: '', role: 'EDITOR', isActive: true, password: '' });
+
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
@@ -29,16 +34,41 @@ export default function AdminUsers() {
   useEffect(load, []);
 
   const openCreate = () => {
-    setForm({ fullName: '', email: '', password: '', role: 'EDITOR' });
-    setModalOpen(true);
+    setCreateForm({ fullName: '', email: '', password: '', role: 'EDITOR' });
+    setCreateOpen(true);
   };
 
-  const save = async () => {
+  const createUser = async () => {
     setSaving(true);
     try {
-      await adminUsers.create(form);
+      await adminUsers.create(createForm);
       showToast('Foydalanuvchi yaratildi.', 'success');
-      setModalOpen(false);
+      setCreateOpen(false);
+      load();
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openEdit = (user) => {
+    setEditingUser(user);
+    setEditForm({ fullName: user.fullName, role: user.role, isActive: user.isActive, password: '' });
+  };
+
+  const saveEdit = async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        fullName: editForm.fullName,
+        role: editForm.role,
+        isActive: editForm.isActive,
+      };
+      if (editForm.password) payload.password = editForm.password;
+      await adminUsers.update(editingUser.id, payload);
+      showToast('Yangilandi.', 'success');
+      setEditingUser(null);
       load();
     } catch (err) {
       showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
@@ -74,12 +104,13 @@ export default function AdminUsers() {
         ) : data.items.length === 0 ? (
           <EmptyState />
         ) : (
-          <table className="w-full text-sm min-w-[600px]">
+          <table className="w-full text-sm min-w-[650px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">F.I.Sh.</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Rol</th>
+                <th className="px-4 py-3">Holat</th>
                 <th className="px-4 py-3 text-right">Amallar</th>
               </tr>
             </thead>
@@ -89,10 +120,20 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 font-medium text-ink">{u.fullName}</td>
                   <td className="px-4 py-3">{u.email}</td>
                   <td className="px-4 py-3">{u.role}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-xs font-semibold ${u.isActive ? 'text-emerald-600' : 'text-red-500'}`}>
+                      {u.isActive ? 'Faol' : 'Faol emas'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => setConfirmDelete(u.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => openEdit(u)} className="p-2 rounded-lg hover:bg-bg-light text-primary">
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => setConfirmDelete(u.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -101,13 +142,81 @@ export default function AdminUsers() {
         )}
       </div>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Yangi foydalanuvchi" size="sm">
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi foydalanuvchi" size="sm">
         <div className="space-y-4">
-          <input placeholder="F.I.Sh." value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="input-field" />
-          <input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-field" />
-          <input placeholder="Parol (kamida 8 belgi)" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="input-field" />
-          <Select value={form.role} onChange={(v) => setForm({ ...form, role: v })} placeholder="Rol" options={ROLES} />
-          <button onClick={save} disabled={saving} className="btn-primary w-full">
+          <input
+            placeholder="F.I.Sh."
+            value={createForm.fullName}
+            onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })}
+            className="input-field"
+          />
+          <input
+            placeholder="Email"
+            type="email"
+            value={createForm.email}
+            onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+            className="input-field"
+          />
+          <input
+            placeholder="Parol (kamida 8 belgi)"
+            type="password"
+            value={createForm.password}
+            onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+            className="input-field"
+          />
+          <Select
+            value={createForm.role}
+            onChange={(v) => setCreateForm({ ...createForm, role: v })}
+            placeholder="Rol"
+            options={ROLES}
+          />
+          <button onClick={createUser} disabled={saving} className="btn-primary w-full">
+            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={!!editingUser} onClose={() => setEditingUser(null)} title="Foydalanuvchini tahrirlash" size="sm">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">F.I.Sh.</label>
+            <input
+              value={editForm.fullName}
+              onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">Rol</label>
+            <Select
+              value={editForm.role}
+              onChange={(v) => setEditForm({ ...editForm, role: v })}
+              placeholder="Rol"
+              options={ROLES}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={editForm.isActive}
+              onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
+              className="h-4 w-4 rounded border-border text-primary"
+            />
+            Faol
+          </label>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">
+              Yangi parol (ixtiyoriy, o'zgartirmasangiz bo'sh qoldiring)
+            </label>
+            <input
+              type="password"
+              value={editForm.password}
+              onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+              className="input-field"
+              placeholder="Kamida 8 belgi"
+            />
+          </div>
+          <button onClick={saveEdit} disabled={saving} className="btn-primary w-full">
             {saving ? 'Saqlanmoqda...' : 'Saqlash'}
           </button>
         </div>
