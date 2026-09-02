@@ -58,7 +58,7 @@ export default function AdminCrudPage({ config }) {
     setModalOpen(true);
   };
 
-     const openEdit = (item) => {
+  const openEdit = (item) => {
     setEditing(item);
     // Only pull in the fields this form actually shows — the raw `item`
     // from the API also includes nested relation objects (e.g. `laboratory`
@@ -79,11 +79,15 @@ export default function AdminCrudPage({ config }) {
 
   const handleFileChange = async (name, fileList) => {
     if (!fileList?.length) return;
+    setUploadingField(name);
     try {
       const res = await uploadFiles(fileList);
       handleChange(name, res.files[0].url);
+      showToast('Fayl yuklandi.', 'success');
     } catch {
       showToast('Fayl yuklashda xatolik.', 'error');
+    } finally {
+      setUploadingField(null);
     }
   };
 
@@ -271,12 +275,12 @@ export default function AdminCrudPage({ config }) {
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,.mp4,.webm"
                     onChange={(e) => handleMultiFileChange(f.name, e.target.files)}
                     className="text-sm"
                   />
                   {uploadingField === f.name && (
-                    <p className="text-xs text-primary mt-1">Yuklanmoqda...</p>
+                    <p className="text-xs text-primary mt-1">Yuklanmoqda, biroz kuting...</p>
                   )}
                   {(form[f.name] || '')
                     .split(',')
@@ -308,8 +312,18 @@ export default function AdminCrudPage({ config }) {
                 </div>
               ) : f.type === 'file' ? (
                 <div>
-                  <input type="file" onChange={(e) => handleFileChange(f.name, e.target.files)} className="text-sm" />
-                  {form[f.name] && <p className="text-xs text-slate-400 mt-1 truncate">{form[f.name]}</p>}
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,.mp4,.webm"
+                    onChange={(e) => handleFileChange(f.name, e.target.files)}
+                    className="text-sm"
+                  />
+                  {uploadingField === f.name && (
+                    <p className="text-xs text-primary mt-1">Yuklanmoqda, biroz kuting...</p>
+                  )}
+                  {form[f.name] && uploadingField !== f.name && (
+                    <p className="text-xs text-slate-400 mt-1 truncate">{form[f.name]}</p>
+                  )}
                 </div>
               ) : (
                 <input
@@ -324,8 +338,8 @@ export default function AdminCrudPage({ config }) {
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={() => setModalOpen(false)} className="btn-secondary">Bekor qilish</button>
-          <button onClick={save} disabled={saving} className="btn-primary">
-            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+          <button onClick={save} disabled={saving || !!uploadingField} className="btn-primary">
+            {uploadingField ? 'Fayl yuklanmoqda...' : saving ? 'Saqlanmoqda...' : 'Saqlash'}
           </button>
         </div>
       </Modal>
