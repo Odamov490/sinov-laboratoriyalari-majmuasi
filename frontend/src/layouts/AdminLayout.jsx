@@ -103,8 +103,8 @@ export default function AdminLayout() {
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </span>
-                {badgeCount > 0 && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-xs font-bold text-primary">
+                             {badgeCount > 0 && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-accent px-1.5 text-xs font-bold text-white">
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
