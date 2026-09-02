@@ -28,7 +28,7 @@ export default function Accreditation() {
       <Breadcrumb items={[{ label: t('nav.accreditation') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.accreditation')}</h1>
 
-      <div className="mt-8 card p-8 bg-primary text-white flex flex-col md:flex-row items-center gap-8">
+         <div className="mt-8 p-8 rounded-xl shadow-card bg-primary text-white flex flex-col md:flex-row items-center gap-8">
         <ShieldCheck className="h-20 w-20 text-accent shrink-0" />
         <div>
           <p className="text-2xl font-bold">{acc?.standardCode || 'O‘z DSt ISO/IEC 17025:2019'}</p>
