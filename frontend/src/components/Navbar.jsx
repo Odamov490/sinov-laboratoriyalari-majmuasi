@@ -32,6 +32,7 @@ export default function Navbar() {
     { to: '/akkreditatsiya', label: t('nav.accreditation') },
     { to: '/yangiliklar', label: t('nav.news') },
     { to: '/hujjatlar', label: t('nav.documents') },
+     { to: '/galereya', label: t('nav.gallery') },
     { to: '/aloqa', label: t('nav.contact') },
   ];
 
