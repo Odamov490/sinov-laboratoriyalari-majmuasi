@@ -5,6 +5,7 @@ import { FlaskConical } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import { ServiceCard, StaffCard, EquipmentCard } from '../components/Cards.jsx';
 import { Loading, ErrorState, DataUpdatingBadge } from '../components/StateViews.jsx';
+import FormattedText from '../components/FormattedText.jsx';
 import { getLaboratory } from '../services/publicApi';
 import { getLocalized } from '../utils/localize';
 
@@ -25,6 +26,8 @@ export default function LaboratoryDetail() {
   if (error) return <div className="section container-page"><ErrorState /></div>;
   if (!lab) return <Loading />;
 
+  const about = getLocalized(lab, 'about', i18n.language);
+
   return (
     <div>
       <div className="bg-primary py-14">
@@ -43,9 +46,9 @@ export default function LaboratoryDetail() {
       </div>
 
       <div className="section container-page">
-        {getLocalized(lab, 'about', i18n.language) ? (
-          <div className="prose max-w-none text-slate-600 leading-relaxed">
-            {getLocalized(lab, 'about', i18n.language)}
+        {about ? (
+          <div className="card p-6">
+            <FormattedText text={about} />
           </div>
         ) : (
           <DataUpdatingBadge />
@@ -54,7 +57,9 @@ export default function LaboratoryDetail() {
         {lab.accreditationScope && (
           <div className="mt-6 card p-5 bg-bg-light">
             <p className="text-sm font-semibold text-primary">Akkreditatsiya sohasi</p>
-            <p className="mt-1 text-sm text-slate-600">{lab.accreditationScope}</p>
+            <div className="mt-2">
+              <FormattedText text={lab.accreditationScope} />
+            </div>
           </div>
         )}
 
