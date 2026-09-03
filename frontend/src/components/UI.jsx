@@ -101,12 +101,12 @@ export function SearchBar({ value, onChange, placeholder }) {
   const { t } = useTranslation();
   return (
     <div className="relative">
-      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+      <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder || t('common.search')}
-        className="input-field pl-10"
+        className="input-field !pl-10"
       />
     </div>
   );
