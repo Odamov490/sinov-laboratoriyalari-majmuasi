@@ -7,6 +7,7 @@ const { updateApplicationStatus } = require('../controllers/applicationControlle
 const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
+const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction } = require('../controllers/sampleController');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
@@ -168,5 +169,13 @@ router.delete('/users/:id', requireModule('users'), deleteUser);
 
 // Settings (Super Admin only)
 router.put('/settings', requireModule('settings'), updateSettings);
+
+
+// Sample tracking (QR-based check-in/check-out between laboratories)
+router.get('/samples', requireModule('samples'), listSamples);
+router.post('/samples', requireModule('samples'), createSample);
+router.get('/samples/code/:code', requireModule('samples'), getSampleByCode);
+router.get('/samples/:id/history', requireModule('samples'), getSampleHistory);
+router.post('/samples/:id/action', requireModule('samples'), performAction);
 
 module.exports = router;

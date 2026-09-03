@@ -33,6 +33,8 @@ import AdminPrices from './pages/admin/AdminPrices.jsx';
 import AdminUsers from './pages/admin/AdminUsers.jsx';
 import AdminSettings from './pages/admin/AdminSettings.jsx';
 import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
+import AdminSamples from './pages/admin/AdminSamples.jsx';
+import AdminScanner from './pages/admin/AdminScanner.jsx';
 import {
   laboratoryConfig,
   serviceConfig,
@@ -90,6 +92,8 @@ export default function App() {
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
+        <Route path="namunalar" element={<AdminSamples />} />
+        <Route path="skanerlash" element={<AdminScanner />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
         <Route path="sozlamalar" element={<AdminSettings />} />
       </Route>

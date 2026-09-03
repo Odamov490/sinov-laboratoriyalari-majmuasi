@@ -32,6 +32,7 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
+  sampleMovements SampleMovement[]
 }
 
 model Laboratory {
@@ -55,6 +56,10 @@ model Laboratory {
   staff               Staff[]
   standards           Standard[]
   gallery             Gallery[]
+  samplesOrigin       Sample[] @relation("SampleOrigin")
+  samplesCurrent      Sample[] @relation("SampleCurrent")
+  movementsFrom       SampleMovement[] @relation("MovementFrom")
+  movementsTo         SampleMovement[] @relation("MovementTo")
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -317,4 +322,50 @@ model SiteSetting {
   key           String   @unique
   value         String?
   updatedAt     DateTime @updatedAt
+}
+
+
+enum SampleStatus {
+  LABORATORIYADA
+  TASHILMOQDA
+  YAKUNLANDI
+}
+
+enum MovementAction {
+  REGISTRATSIYA
+  CHIQARISH
+  QABUL_QILISH
+  YAKUNLASH
+}
+
+model Sample {
+  id            String       @id @default(uuid())
+  code          String       @unique
+  productName   String
+  description   String?
+  originLabId   String
+  originLab     Laboratory   @relation("SampleOrigin", fields: [originLabId], references: [id])
+  currentLabId  String?
+  currentLab    Laboratory?  @relation("SampleCurrent", fields: [currentLabId], references: [id])
+  status        SampleStatus @default(LABORATORIYADA)
+  movements     SampleMovement[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+}
+
+model SampleMovement {
+  id                String         @id @default(uuid())
+  sampleId          String
+  sample            Sample         @relation(fields: [sampleId], references: [id])
+  fromLabId         String?
+  fromLab           Laboratory?    @relation("MovementFrom", fields: [fromLabId], references: [id])
+  toLabId           String?
+  toLab             Laboratory?    @relation("MovementTo", fields: [toLabId], references: [id])
+  action            MovementAction
+  performedByUserId String?
+  performedByUser   User?          @relation(fields: [performedByUserId], references: [id])
+  performedByName   String?
+  notes             String?
+  createdAt         DateTime       @default(now())
 }
