@@ -7,8 +7,7 @@ const { updateApplicationStatus } = require('../controllers/applicationControlle
 const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
-const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats } = require('../controllers/sampleController');
-const prisma = require('../config/prisma');
+const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
 
@@ -175,6 +174,7 @@ router.get('/samples/stats', requireModule('samples'), getStats);
 router.get('/samples', requireModule('samples'), listSamples);
 router.post('/samples', requireModule('samples'), createSample);
 router.get('/samples/code/:code', requireModule('samples'), getSampleByCode);
+router.get('/samples/:id', requireModule('samples'), getSampleById);
 router.get('/samples/:id/history', requireModule('samples'), getSampleHistory);
 router.post('/samples/:id/action', requireModule('samples'), performAction);
 router.post('/samples/:id/attach', requireModule('samples'), attachFile);

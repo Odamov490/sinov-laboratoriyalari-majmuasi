@@ -231,4 +231,21 @@ const getStats = asyncHandler(async (req, res) => {
   res.json({ perLab, topLabs, inTransitCount, overdueCount, last30Days });
 });
 
-module.exports = { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats };
+
+// Full detail view for a single sample: includes movement history, linked
+// application (if any), and both lab relations.
+const getSampleById = asyncHandler(async (req, res) => {
+  const sample = await prisma.sample.findFirst({
+    where: { id: req.params.id, deletedAt: null },
+    include: {
+      originLab: true,
+      currentLab: true,
+      application: { include: { service: { include: { laboratory: true } } } },
+      movements: { include: { fromLab: true, toLab: true }, orderBy: { createdAt: 'desc' } },
+    },
+  });
+  if (!sample) return res.status(404).json({ error: 'Namuna topilmadi.' });
+  res.json(sample);
+});
+
+module.exports = { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById };

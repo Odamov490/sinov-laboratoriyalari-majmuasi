@@ -8,6 +8,7 @@ import { Select } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Link } from 'react-router-dom';
 
 const STATUS_LABELS = {
   LABORATORIYADA: 'Laboratoriyada',
@@ -182,7 +183,7 @@ export default function AdminSamples() {
             <EmptyState message="Hali namuna ro'yxatga olinmagan." />
           </div>
         ) : (
-          <table className="w-full text-sm min-w-[1000px]">
+          <table className="w-full text-sm min-w-[1100px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">Kod</th>
@@ -193,6 +194,7 @@ export default function AdminSamples() {
                 <th className="px-4 py-3">Muddat</th>
                 <th className="px-4 py-3 text-right">QR</th>
                 <th className="px-4 py-3 text-right">Harakat</th>
+                <th className="px-4 py-3 text-right">Batafsil</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -232,6 +234,11 @@ export default function AdminSamples() {
                       ) : (
                         <span className="text-xs text-slate-400">—</span>
                       )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link to={`/admin/namunalar/${s.id}`} className="text-sm font-medium text-slate-500 hover:text-primary hover:underline">
+                        Batafsil
+                      </Link>
                     </td>
                   </tr>
                 );
