@@ -170,12 +170,13 @@ router.delete('/users/:id', requireModule('users'), deleteUser);
 // Settings (Super Admin only)
 router.put('/settings', requireModule('settings'), updateSettings);
 
-
 // Sample tracking (QR-based check-in/check-out between laboratories)
+router.get('/samples/stats', requireModule('samples'), getStats);
 router.get('/samples', requireModule('samples'), listSamples);
 router.post('/samples', requireModule('samples'), createSample);
 router.get('/samples/code/:code', requireModule('samples'), getSampleByCode);
 router.get('/samples/:id/history', requireModule('samples'), getSampleHistory);
 router.post('/samples/:id/action', requireModule('samples'), performAction);
 router.post('/samples/:id/attach', requireModule('samples'), attachFile);
+
 module.exports = router;
