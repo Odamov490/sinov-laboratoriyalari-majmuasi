@@ -277,6 +277,7 @@ model Application {
   comment           String?
   status            ApplicationStatus @default(QABUL_QILINDI)
   statusComment     String?
+  samples         Sample[]
   files             ApplicationFile[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -348,6 +349,11 @@ model Sample {
   currentLabId  String?
   currentLab    Laboratory?  @relation("SampleCurrent", fields: [currentLabId], references: [id])
   status        SampleStatus @default(LABORATORIYADA)
+  dueDate       DateTime?
+  applicationId String?
+  application   Application? @relation(fields: [applicationId], references: [id])
+  photoUrl      String?
+  reportUrl     String?
   movements     SampleMovement[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt

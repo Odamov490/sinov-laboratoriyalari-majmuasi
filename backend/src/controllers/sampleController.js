@@ -21,7 +21,7 @@ const listSamples = asyncHandler(async (req, res) => {
   const [items, total] = await Promise.all([
     prisma.sample.findMany({
       where,
-      include: { originLab: true, currentLab: true },
+      include: { originLab: true, currentLab: true, application: true },
       orderBy: { createdAt: 'desc' },
       skip,
       take,
@@ -32,7 +32,7 @@ const listSamples = asyncHandler(async (req, res) => {
 });
 
 const createSample = asyncHandler(async (req, res) => {
-  const { productName, description, originLabId } = req.body;
+  const { productName, description, originLabId, dueDate, applicationId } = req.body;
   if (!productName || !originLabId) {
     return res.status(400).json({ error: 'Mahsulot nomi va laboratoriya majburiy.' });
   }
@@ -46,6 +46,8 @@ const createSample = asyncHandler(async (req, res) => {
       originLabId,
       currentLabId: originLabId,
       status: 'LABORATORIYADA',
+      dueDate: dueDate ? new Date(dueDate) : null,
+      applicationId: applicationId || null,
       movements: {
         create: {
           toLabId: originLabId,
@@ -55,7 +57,7 @@ const createSample = asyncHandler(async (req, res) => {
         },
       },
     },
-    include: { originLab: true, currentLab: true },
+    include: { originLab: true, currentLab: true, application: true },
   });
 
   res.status(201).json(sample);
@@ -166,4 +168,23 @@ const performAction = asyncHandler(async (req, res) => {
   res.status(400).json({ error: "Noma'lum amal." });
 });
 
-module.exports = { listSamples, createSample, getSampleByCode, getSampleHistory, performAction };
+
+// Attach a photo or final report/protocol file URL to a sample (uploaded
+// separately via the generic /admin/uploads endpoint, then linked here).
+const attachFile = asyncHandler(async (req, res) => {
+  const { field, url } = req.body;
+  if (!['photoUrl', 'reportUrl'].includes(field)) {
+    return res.status(400).json({ error: "Noto'g'ri maydon." });
+  }
+  const updated = await prisma.sample.update({
+    where: { id: req.params.id },
+    data: { [field]: url },
+    include: { originLab: true, currentLab: true, application: true },
+  });
+  res.json(updated);
+});
+
+
+
+
+module.exports = { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile };
