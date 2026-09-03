@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Printer, ArrowRightLeft, PackageCheck, CheckCircle2 } from 'lucide-react';
+import { Plus, Printer, ArrowRightLeft, PackageCheck, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { adminSamples, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -20,6 +20,11 @@ const STATUS_STYLES = {
   YAKUNLANDI: 'bg-slate-100 text-slate-600 border-slate-200',
 };
 
+function isOverdue(sample) {
+  if (!sample.dueDate || sample.status === 'YAKUNLANDI') return false;
+  return new Date(sample.dueDate) < new Date();
+}
+
 export default function AdminSamples() {
   const { showToast } = useToast();
   const [data, setData] = useState(null);
@@ -27,12 +32,11 @@ export default function AdminSamples() {
   const [labs, setLabs] = useState([]);
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState({ productName: '', description: '', originLabId: '' });
+  const [form, setForm] = useState({ productName: '', description: '', originLabId: '', dueDate: '' });
   const [saving, setSaving] = useState(false);
 
   const [qrItem, setQrItem] = useState(null);
 
-  // In-list action modal (send / receive / close out) — no camera needed.
   const [actionItem, setActionItem] = useState(null);
   const [destLabId, setDestLabId] = useState('');
   const [notes, setNotes] = useState('');
@@ -52,7 +56,7 @@ export default function AdminSamples() {
   }, []);
 
   const openCreate = () => {
-    setForm({ productName: '', description: '', originLabId: '' });
+    setForm({ productName: '', description: '', originLabId: '', dueDate: '' });
     setCreateOpen(true);
   };
 
@@ -63,7 +67,10 @@ export default function AdminSamples() {
     }
     setSaving(true);
     try {
-      const sample = await adminSamples.create(form);
+      const sample = await adminSamples.create({
+        ...form,
+        dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
+      });
       showToast(`Namuna ro'yxatga olindi: ${sample.code}`, 'success');
       setCreateOpen(false);
       load();
@@ -111,8 +118,7 @@ export default function AdminSamples() {
       </div>
       <p className="text-sm text-slate-500 mb-6">
         Namunani ro'yxatga oling, QR yorliqni chop eting va namunaga yopishtiring. Namunani boshqa
-        laboratoriyaga jo'natish yoki qabul qilish uchun jadvaldagi "Harakat" tugmasidan foydalaning —
-        kamera shart emas, kodni qo'lda ham kiritishingiz mumkin.
+        laboratoriyaga jo'natish yoki qabul qilish uchun jadvaldagi "Harakat" tugmasidan foydalaning.
       </p>
 
       <div className="card overflow-x-auto">
@@ -125,7 +131,7 @@ export default function AdminSamples() {
             <EmptyState message="Hali namuna ro'yxatga olinmagan." />
           </div>
         ) : (
-          <table className="w-full text-sm min-w-[950px]">
+          <table className="w-full text-sm min-w-[1000px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">Kod</th>
@@ -133,40 +139,52 @@ export default function AdminSamples() {
                 <th className="px-4 py-3">Kelib chiqishi</th>
                 <th className="px-4 py-3">Hozirgi joyi</th>
                 <th className="px-4 py-3">Holat</th>
-                <th className="px-4 py-3">Sana</th>
+                <th className="px-4 py-3">Muddat</th>
                 <th className="px-4 py-3 text-right">QR</th>
                 <th className="px-4 py-3 text-right">Harakat</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {data.items.map((s) => (
-                <tr key={s.id} className="hover:bg-bg-light/60">
-                  <td className="px-4 py-3 font-mono text-primary">{s.code}</td>
-                  <td className="px-4 py-3 font-medium text-ink">{s.productName}</td>
-                  <td className="px-4 py-3 text-slate-600">{s.originLab?.nameUz}</td>
-                  <td className="px-4 py-3 text-slate-600">{s.currentLab?.nameUz || '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[s.status]}`}>
-                      {STATUS_LABELS[s.status]}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">{formatDate(s.createdAt)}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => setQrItem(s)} className="text-sm font-medium text-primary hover:underline">
-                      QR ko'rish
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {s.status !== 'YAKUNLANDI' ? (
-                      <button onClick={() => openAction(s)} className="text-sm font-medium text-primary hover:underline">
-                        Harakat
+              {data.items.map((s) => {
+                const overdue = isOverdue(s);
+                return (
+                  <tr key={s.id} className={`hover:bg-bg-light/60 ${overdue ? 'bg-red-50/60' : ''}`}>
+                    <td className="px-4 py-3 font-mono text-primary">{s.code}</td>
+                    <td className="px-4 py-3 font-medium text-ink">{s.productName}</td>
+                    <td className="px-4 py-3 text-slate-600">{s.originLab?.nameUz}</td>
+                    <td className="px-4 py-3 text-slate-600">{s.currentLab?.nameUz || '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${STATUS_STYLES[s.status]}`}>
+                        {STATUS_LABELS[s.status]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.dueDate ? (
+                        <span className={`flex items-center gap-1.5 text-sm ${overdue ? 'text-red-600 font-semibold' : 'text-slate-600'}`}>
+                          {overdue && <AlertTriangle className="h-3.5 w-3.5" />}
+                          {formatDate(s.dueDate)}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => setQrItem(s)} className="text-sm font-medium text-primary hover:underline">
+                        QR ko'rish
                       </button>
-                    ) : (
-                      <span className="text-xs text-slate-400">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {s.status !== 'YAKUNLANDI' ? (
+                        <button onClick={() => openAction(s)} className="text-sm font-medium text-primary hover:underline">
+                          Harakat
+                        </button>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -190,6 +208,15 @@ export default function AdminSamples() {
               onChange={(v) => setForm({ ...form, originLabId: v })}
               placeholder="Laboratoriyani tanlang"
               options={labs.map((l) => ({ value: l.id, label: l.nameUz }))}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">Kutilayotgan yakunlash sanasi (ixtiyoriy)</label>
+            <input
+              type="date"
+              value={form.dueDate}
+              onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+              className="input-field"
             />
           </div>
           <div>
