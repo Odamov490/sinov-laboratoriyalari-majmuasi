@@ -165,7 +165,7 @@ export default function AdminSampleDetail() {
           <div className="card p-5">
             <h2 className="font-semibold text-ink mb-3">Yakuniy hujjat / protokol</h2>
             {sample.reportUrl && (
-              
+              <a
                 href={sample.reportUrl}
                 target="_blank"
                 rel="noreferrer"
