@@ -46,11 +46,11 @@ export const uploadFiles = (files) => {
     .then((r) => r.data);
 };
 
-
 export const adminSamples = {
   list: (params) => apiClient.get('/admin/samples', { params }).then((r) => r.data),
   create: (data) => apiClient.post('/admin/samples', data).then((r) => r.data),
   getByCode: (code) => apiClient.get(`/admin/samples/code/${code}`).then((r) => r.data),
   history: (id) => apiClient.get(`/admin/samples/${id}/history`).then((r) => r.data),
   action: (id, payload) => apiClient.post(`/admin/samples/${id}/action`, payload).then((r) => r.data),
+  stats: () => apiClient.get('/admin/samples/stats').then((r) => r.data),
 };

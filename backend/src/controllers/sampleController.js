@@ -185,6 +185,50 @@ const attachFile = asyncHandler(async (req, res) => {
 });
 
 
+// Aggregated stats for the samples dashboard: current count per lab,
+// in-transit / overdue totals, last-30-day in/out activity, and the
+// 3 busiest labs by current sample count.
+const getStats = asyncHandler(async (req, res) => {
+  const labs = await prisma.laboratory.findMany({
+    where: { isActive: true, deletedAt: null },
+    select: {
+      id: true,
+      nameUz: true,
+      _count: {
+        select: {
+          samplesCurrent: { where: { status: 'LABORATORIYADA', deletedAt: null } },
+        },
+      },
+    },
+    orderBy: { order: 'asc' },
+  });
 
+  const perLab = labs.map((l) => ({ labId: l.id, labName: l.nameUz, count: l._count.samplesCurrent }));
+  const topLabs = [...perLab].sort((a, b) => b.count - a.count).slice(0, 3);
 
-module.exports = { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile };
+  const [inTransitCount, overdueCount] = await Promise.all([
+    prisma.sample.count({ where: { status: 'TASHILMOQDA', deletedAt: null } }),
+    prisma.sample.count({
+      where: { dueDate: { lt: new Date() }, status: { not: 'YAKUNLANDI' }, deletedAt: null },
+    }),
+  ]);
+
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const movements = await prisma.sampleMovement.findMany({
+    where: { createdAt: { gte: since }, action: { in: ['REGISTRATSIYA', 'YAKUNLASH'] } },
+    select: { action: true, createdAt: true },
+  });
+
+  const byDay = {};
+  movements.forEach((m) => {
+    const day = m.createdAt.toISOString().slice(0, 10);
+    if (!byDay[day]) byDay[day] = { date: day, in: 0, out: 0 };
+    if (m.action === 'REGISTRATSIYA') byDay[day].in += 1;
+    else byDay[day].out += 1;
+  });
+  const last30Days = Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
+
+  res.json({ perLab, topLabs, inTransitCount, overdueCount, last30Days });
+});
+
+module.exports = { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats };

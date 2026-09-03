@@ -7,6 +7,7 @@ import { Modal } from '../../components/Modal.jsx';
 import { Select } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const STATUS_LABELS = {
   LABORATORIYADA: 'Laboratoriyada',
@@ -28,6 +29,7 @@ function isOverdue(sample) {
 export default function AdminSamples() {
   const { showToast } = useToast();
   const [data, setData] = useState(null);
+  const [stats, setStats] = useState(null);
   const [error, setError] = useState(false);
   const [labs, setLabs] = useState([]);
 
@@ -49,6 +51,7 @@ export default function AdminSamples() {
 
   useEffect(() => {
     load();
+    adminSamples.stats().then(setStats).catch(() => {});
     adminResource('laboratories')
       .list({ pageSize: 200 })
       .then((d) => setLabs(d.items))
@@ -120,6 +123,54 @@ export default function AdminSamples() {
         Namunani ro'yxatga oling, QR yorliqni chop eting va namunaga yopishtiring. Namunani boshqa
         laboratoriyaga jo'natish yoki qabul qilish uchun jadvaldagi "Harakat" tugmasidan foydalaning.
       </p>
+
+      {stats && (
+        <div className="mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
+            {stats.perLab.map((l) => (
+              <div key={l.labId} className="card p-4 text-center">
+                <p className="text-2xl font-bold text-primary">{l.count}</p>
+                <p className="text-xs text-slate-500 mt-1 leading-tight">{l.labName}</p>
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="card p-4 flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600 font-bold text-lg">
+                {stats.inTransitCount}
+              </div>
+              <div>
+                <p className="font-semibold text-ink">Tashilmoqda</p>
+                <p className="text-xs text-slate-500">Hozir yo'lda bo'lgan namunalar</p>
+              </div>
+            </div>
+            <div className="card p-4 flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 font-bold text-lg">
+                {stats.overdueCount}
+              </div>
+              <div>
+                <p className="font-semibold text-ink">Muddati o'tgan</p>
+                <p className="text-xs text-slate-500">Belgilangan muddatdan kechikkan</p>
+              </div>
+            </div>
+          </div>
+          {stats.last30Days.length > 0 && (
+            <div className="card p-4">
+              <p className="text-sm font-semibold text-ink mb-3">Oxirgi 30 kun: kirim / chiqim</p>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={stats.last30Days}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="in" stroke="#0B3A63" name="Ro'yxatga olindi" strokeWidth={2} />
+                  <Line type="monotone" dataKey="out" stroke="#E8A33D" name="Yakunlandi" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card overflow-x-auto">
         {error ? (
