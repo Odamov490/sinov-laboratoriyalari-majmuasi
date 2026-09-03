@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Printer } from 'lucide-react';
+import { Plus, Printer, ArrowRightLeft, PackageCheck, CheckCircle2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { adminSamples, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -31,6 +31,12 @@ export default function AdminSamples() {
   const [saving, setSaving] = useState(false);
 
   const [qrItem, setQrItem] = useState(null);
+
+  // In-list action modal (send / receive / close out) — no camera needed.
+  const [actionItem, setActionItem] = useState(null);
+  const [destLabId, setDestLabId] = useState('');
+  const [notes, setNotes] = useState('');
+  const [actionBusy, setActionBusy] = useState(false);
 
   const load = () => {
     setError(false);
@@ -71,6 +77,30 @@ export default function AdminSamples() {
 
   const printQr = () => window.print();
 
+  const openAction = (sample) => {
+    setActionItem(sample);
+    setDestLabId('');
+    setNotes('');
+  };
+
+  const doAction = async (action) => {
+    if ((action === 'CHIQARISH' || action === 'QABUL_QILISH') && !destLabId) {
+      showToast('Laboratoriyani tanlang.', 'error');
+      return;
+    }
+    setActionBusy(true);
+    try {
+      await adminSamples.action(actionItem.id, { action, toLabId: destLabId || undefined, notes });
+      showToast('Amal bajarildi.', 'success');
+      setActionItem(null);
+      load();
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
@@ -80,8 +110,9 @@ export default function AdminSamples() {
         </button>
       </div>
       <p className="text-sm text-slate-500 mb-6">
-        Namunani ro'yxatga oling, QR yorliqni chop eting va namunaga yopishtiring. Namunani
-        laboratoriyalar orasida ko'chirish uchun "Skanerlash" bo'limidan foydalaning.
+        Namunani ro'yxatga oling, QR yorliqni chop eting va namunaga yopishtiring. Namunani boshqa
+        laboratoriyaga jo'natish yoki qabul qilish uchun jadvaldagi "Harakat" tugmasidan foydalaning —
+        kamera shart emas, kodni qo'lda ham kiritishingiz mumkin.
       </p>
 
       <div className="card overflow-x-auto">
@@ -94,7 +125,7 @@ export default function AdminSamples() {
             <EmptyState message="Hali namuna ro'yxatga olinmagan." />
           </div>
         ) : (
-          <table className="w-full text-sm min-w-[850px]">
+          <table className="w-full text-sm min-w-[950px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">Kod</th>
@@ -104,6 +135,7 @@ export default function AdminSamples() {
                 <th className="px-4 py-3">Holat</th>
                 <th className="px-4 py-3">Sana</th>
                 <th className="px-4 py-3 text-right">QR</th>
+                <th className="px-4 py-3 text-right">Harakat</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -123,6 +155,15 @@ export default function AdminSamples() {
                     <button onClick={() => setQrItem(s)} className="text-sm font-medium text-primary hover:underline">
                       QR ko'rish
                     </button>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {s.status !== 'YAKUNLANDI' ? (
+                      <button onClick={() => openAction(s)} className="text-sm font-medium text-primary hover:underline">
+                        Harakat
+                      </button>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -177,6 +218,68 @@ export default function AdminSamples() {
             <button onClick={printQr} className="btn-primary w-full mt-6">
               <Printer className="h-4 w-4" /> Chop etish
             </button>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={!!actionItem} onClose={() => setActionItem(null)} title="Namunani harakatlantirish" size="sm">
+        {actionItem && (
+          <div>
+            <p className="font-mono text-primary font-bold">{actionItem.code}</p>
+            <p className="font-semibold text-ink">{actionItem.productName}</p>
+            <p className="text-sm text-slate-500 mt-1">
+              Holat: <span className="font-medium text-ink">{STATUS_LABELS[actionItem.status]}</span> —{' '}
+              Hozirgi joyi: <span className="font-medium text-ink">{actionItem.currentLab?.nameUz || '—'}</span>
+            </p>
+
+            <div className="mt-5 space-y-4">
+              {actionItem.status === 'LABORATORIYADA' && (
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1.5">Qaysi laboratoriyaga jo'natilmoqda?</label>
+                  <Select
+                    value={destLabId}
+                    onChange={setDestLabId}
+                    placeholder="Laboratoriyani tanlang"
+                    options={labs
+                      .filter((l) => l.id !== actionItem.currentLabId)
+                      .map((l) => ({ value: l.id, label: l.nameUz }))}
+                  />
+                </div>
+              )}
+              {actionItem.status === 'TASHILMOQDA' && (
+                <div>
+                  <label className="block text-sm font-medium text-ink mb-1.5">Qaysi laboratoriya qabul qilmoqda?</label>
+                  <Select
+                    value={destLabId}
+                    onChange={setDestLabId}
+                    placeholder="Laboratoriyani tanlang"
+                    options={labs.map((l) => ({ value: l.id, label: l.nameUz }))}
+                  />
+                </div>
+              )}
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1.5">Izoh (ixtiyoriy)</label>
+                <input value={notes} onChange={(e) => setNotes(e.target.value)} className="input-field" />
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                {actionItem.status === 'LABORATORIYADA' && (
+                  <>
+                    <button onClick={() => doAction('CHIQARISH')} disabled={actionBusy} className="btn-primary">
+                      <ArrowRightLeft className="h-4 w-4" /> Chiqarish
+                    </button>
+                    <button onClick={() => doAction('YAKUNLASH')} disabled={actionBusy} className="btn-secondary">
+                      <CheckCircle2 className="h-4 w-4" /> Yakunlash
+                    </button>
+                  </>
+                )}
+                {actionItem.status === 'TASHILMOQDA' && (
+                  <button onClick={() => doAction('QABUL_QILISH')} disabled={actionBusy} className="btn-primary">
+                    <PackageCheck className="h-4 w-4" /> Qabul qilish
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </Modal>

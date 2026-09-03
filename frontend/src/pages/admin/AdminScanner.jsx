@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRightLeft, PackageCheck, PackageX, CheckCircle2 } from 'lucide-react';
+import { ArrowRightLeft, PackageCheck, PackageX, CheckCircle2, Search, Camera } from 'lucide-react';
 import { adminSamples, adminResource } from '../../services/adminApi';
 import { Select } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -17,7 +17,11 @@ export default function AdminScanner() {
   const [destLabId, setDestLabId] = useState('');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
-  const [scannerActive, setScannerActive] = useState(true);
+
+  const [manualCode, setManualCode] = useState('');
+  const [lookupBusy, setLookupBusy] = useState(false);
+
+  const [cameraOpen, setCameraOpen] = useState(false);
   const scannerRef = useRef(null);
   const instanceRef = useRef(null);
 
@@ -29,7 +33,7 @@ export default function AdminScanner() {
   }, []);
 
   useEffect(() => {
-    if (!scannerActive) return undefined;
+    if (!cameraOpen) return undefined;
 
     let cancelled = false;
     import('html5-qrcode').then(({ Html5QrcodeScanner }) => {
@@ -39,7 +43,7 @@ export default function AdminScanner() {
       scanner.render(
         (decodedText) => {
           scanner.pause();
-          setScannerActive(false);
+          setCameraOpen(false);
           lookupSample(decodedText.trim());
         },
         () => {}
@@ -54,17 +58,21 @@ export default function AdminScanner() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scannerActive]);
+  }, [cameraOpen]);
 
   const lookupSample = async (code) => {
+    if (!code) return;
+    setLookupBusy(true);
     try {
       const found = await adminSamples.getByCode(code);
       setSample(found);
       setDestLabId('');
       setNotes('');
+      setManualCode('');
     } catch {
       showToast('Namuna topilmadi. Kodni qayta tekshiring.', 'error');
-      setScannerActive(true);
+    } finally {
+      setLookupBusy(false);
     }
   };
 
@@ -72,7 +80,7 @@ export default function AdminScanner() {
     setSample(null);
     setDestLabId('');
     setNotes('');
-    setScannerActive(true);
+    setManualCode('');
   };
 
   const doAction = async (action) => {
@@ -94,14 +102,48 @@ export default function AdminScanner() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink mb-2">Namunani skanerlash</h1>
+      <h1 className="text-2xl font-bold text-ink mb-2">Namunani skanerlash / qidirish</h1>
       <p className="text-sm text-slate-500 mb-6">
-        QR kodni kamera oldida ushlab turing. Aniqlangach, namuna holatiga mos amallar ko'rsatiladi.
+        Namuna kodini (masalan <span className="font-mono">SMP-2026-00001</span>) qo'lda kiriting, yoki
+        kamera orqali QR kodni skanerlang.
       </p>
 
       {!sample ? (
-        <div className="card p-4 max-w-md">
-          <div id="qr-reader" ref={scannerRef} />
+        <div className="card p-6 max-w-md space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-ink mb-1.5">Namuna kodi</label>
+            <div className="flex gap-2">
+              <input
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && lookupSample(manualCode.trim())}
+                placeholder="SMP-2026-00001"
+                className="input-field font-mono"
+              />
+              <button
+                onClick={() => lookupSample(manualCode.trim())}
+                disabled={lookupBusy || !manualCode.trim()}
+                className="btn-primary !px-4"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="text-center text-xs text-slate-400">yoki</div>
+
+          {!cameraOpen ? (
+            <button onClick={() => setCameraOpen(true)} className="btn-secondary w-full">
+              <Camera className="h-4 w-4" /> Kamera orqali skanerlash
+            </button>
+          ) : (
+            <div>
+              <div id="qr-reader" ref={scannerRef} />
+              <button onClick={() => setCameraOpen(false)} className="text-sm text-slate-500 hover:text-primary mt-3">
+                Kamerani yopish
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card p-6 max-w-lg">
@@ -169,7 +211,7 @@ export default function AdminScanner() {
             </div>
 
             <button onClick={reset} className="text-sm text-slate-500 hover:text-primary mt-2">
-              ← Boshqa namunani skanerlash
+              ← Boshqa namunani qidirish
             </button>
           </div>
         </div>
