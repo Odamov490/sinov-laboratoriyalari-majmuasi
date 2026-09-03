@@ -68,6 +68,15 @@ body {
 }
 
 
+@keyframes flash-success {
+  0% { background-color: rgba(16, 185, 129, 0.18); }
+  100% { background-color: transparent; }
+}
+
+.flash-success {
+  animation: flash-success 1.6s ease-out;
+}
+
 @media print {
   .no-print {
     display: none !important;

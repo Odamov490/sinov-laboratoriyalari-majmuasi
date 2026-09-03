@@ -28,6 +28,8 @@ model User {
   email        String   @unique
   passwordHash String
   role         Role     @default(EDITOR)
+  labId        String?
+  lab          Laboratory? @relation(fields: [labId], references: [id])
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -60,6 +62,7 @@ model Laboratory {
   samplesCurrent      Sample[] @relation("SampleCurrent")
   movementsFrom       SampleMovement[] @relation("MovementFrom")
   movementsTo         SampleMovement[] @relation("MovementTo")
+  users               User[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?

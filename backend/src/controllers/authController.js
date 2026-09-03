@@ -29,7 +29,7 @@ const login = asyncHandler(async (req, res) => {
   res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
 
   res.json({
-    user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role },
+    user: { id: user.id, fullName: user.fullName, email: user.email, role: user.role, labId: user.labId },
     accessToken,
   });
 });
@@ -41,9 +41,19 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 const me = asyncHandler(async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.user.sub } });
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.sub },
+    include: { lab: { select: { id: true, nameUz: true } } },
+  });
   if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi.' });
-  res.json({ id: user.id, fullName: user.fullName, email: user.email, role: user.role });
+  res.json({
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+    labId: user.labId,
+    labName: user.lab?.nameUz || null,
+  });
 });
 
 const refresh = asyncHandler(async (req, res) => {

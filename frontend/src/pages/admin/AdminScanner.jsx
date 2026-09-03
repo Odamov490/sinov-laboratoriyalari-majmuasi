@@ -1,21 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowRightLeft, PackageCheck, PackageX, CheckCircle2, Search, Camera } from 'lucide-react';
+import { Search, Camera } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { adminSamples, adminResource } from '../../services/adminApi';
-import { Select } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-
-const STATUS_LABELS = {
-  LABORATORIYADA: 'Laboratoriyada',
-  TASHILMOQDA: 'Tashilmoqda',
-  YAKUNLANDI: 'Yakunlandi',
-};
+import SampleStatusBadge from '../../components/samples/SampleStatusBadge.jsx';
+import SampleActionPanel from '../../components/samples/SampleActionPanel.jsx';
 
 export default function AdminScanner() {
   const { showToast } = useToast();
   const [sample, setSample] = useState(null);
   const [labs, setLabs] = useState([]);
-  const [destLabId, setDestLabId] = useState('');
-  const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
 
   const [manualCode, setManualCode] = useState('');
@@ -66,8 +60,6 @@ export default function AdminScanner() {
     try {
       const found = await adminSamples.getByCode(code);
       setSample(found);
-      setDestLabId('');
-      setNotes('');
       setManualCode('');
     } catch {
       showToast('Namuna topilmadi. Kodni qayta tekshiring.', 'error');
@@ -78,19 +70,13 @@ export default function AdminScanner() {
 
   const reset = () => {
     setSample(null);
-    setDestLabId('');
-    setNotes('');
     setManualCode('');
   };
 
-  const doAction = async (action) => {
-    if ((action === 'CHIQARISH' || action === 'QABUL_QILISH') && !destLabId) {
-      showToast('Laboratoriyani tanlang.', 'error');
-      return;
-    }
+  const doAction = async (action, { toLabId, notes }) => {
     setBusy(true);
     try {
-      const updated = await adminSamples.action(sample.id, { action, toLabId: destLabId || undefined, notes });
+      const updated = await adminSamples.action(sample.id, { action, toLabId, notes });
       showToast('Amal bajarildi.', 'success');
       setSample(updated);
     } catch (err) {
@@ -147,70 +133,27 @@ export default function AdminScanner() {
         </div>
       ) : (
         <div className="card p-6 max-w-lg">
-          <p className="font-mono text-primary font-bold">{sample.code}</p>
-          <h2 className="text-lg font-bold text-ink mt-1">{sample.productName}</h2>
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <p className="font-mono text-primary font-bold">{sample.code}</p>
+            <SampleStatusBadge status={sample.status} />
+          </div>
+          <h2 className="text-lg font-bold text-ink">{sample.productName}</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Holat: <span className="font-semibold text-ink">{STATUS_LABELS[sample.status]}</span>
-          </p>
-          <p className="text-sm text-slate-500">
             Hozirgi joyi: <span className="font-medium text-ink">{sample.currentLab?.nameUz || '—'}</span>
           </p>
           <p className="text-sm text-slate-500">
             Kelib chiqishi: <span className="font-medium text-ink">{sample.originLab?.nameUz}</span>
           </p>
 
-          <div className="mt-6 space-y-4">
-            {sample.status === 'LABORATORIYADA' && (
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">Qaysi laboratoriyaga jo'natilmoqda?</label>
-                <Select
-                  value={destLabId}
-                  onChange={setDestLabId}
-                  placeholder="Laboratoriyani tanlang"
-                  options={labs.filter((l) => l.id !== sample.currentLabId).map((l) => ({ value: l.id, label: l.nameUz }))}
-                />
-              </div>
-            )}
-            {sample.status === 'TASHILMOQDA' && (
-              <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">Qaysi laboratoriya qabul qilmoqda?</label>
-                <Select
-                  value={destLabId}
-                  onChange={setDestLabId}
-                  placeholder="Laboratoriyani tanlang"
-                  options={labs.map((l) => ({ value: l.id, label: l.nameUz }))}
-                />
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Izoh (ixtiyoriy)</label>
-              <input value={notes} onChange={(e) => setNotes(e.target.value)} className="input-field" />
-            </div>
+          <div className="mt-6">
+            <SampleActionPanel sample={sample} labs={labs} onAction={doAction} busy={busy} />
+          </div>
 
-            <div className="flex flex-wrap gap-3">
-              {sample.status === 'LABORATORIYADA' && (
-                <>
-                  <button onClick={() => doAction('CHIQARISH')} disabled={busy} className="btn-primary">
-                    <ArrowRightLeft className="h-4 w-4" /> Chiqarish
-                  </button>
-                  <button onClick={() => doAction('YAKUNLASH')} disabled={busy} className="btn-secondary">
-                    <CheckCircle2 className="h-4 w-4" /> Yakunlash
-                  </button>
-                </>
-              )}
-              {sample.status === 'TASHILMOQDA' && (
-                <button onClick={() => doAction('QABUL_QILISH')} disabled={busy} className="btn-primary">
-                  <PackageCheck className="h-4 w-4" /> Qabul qilish
-                </button>
-              )}
-              {sample.status === 'YAKUNLANDI' && (
-                <p className="text-sm text-emerald-600 font-medium flex items-center gap-2">
-                  <PackageX className="h-4 w-4" /> Ushbu namuna bo'yicha ish yakunlangan.
-                </p>
-              )}
-            </div>
-
-            <button onClick={reset} className="text-sm text-slate-500 hover:text-primary mt-2">
+          <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-border">
+            <Link to={`/admin/namunalar/${sample.id}`} className="text-sm font-medium text-primary hover:underline">
+              Batafsil sahifasini ochish
+            </Link>
+            <button onClick={reset} className="text-sm text-slate-500 hover:text-primary">
               ← Boshqa namunani qidirish
             </button>
           </div>
