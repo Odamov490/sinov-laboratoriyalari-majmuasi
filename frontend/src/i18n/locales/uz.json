@@ -26,6 +26,7 @@
   "common": {
     "readMore": "Batafsil",
     "apply": "Ariza berish",
+    "optional": "ixtiyoriy",
     "search": "Qidiruv",
     "loading": "Yuklanmoqda...",
     "notFound": "Ma'lumot topilmadi.",
@@ -88,7 +89,20 @@
     "comment": "Izoh",
     "file": "Fayl",
     "success": "Arizangiz muvaffaqiyatli qabul qilindi.",
-    "number": "Ariza raqami"
+    "number": "Ariza raqami",
+    "tnvedLabel": "TN VED kodi",
+    "tnvedPlaceholder": "Kodni kiriting yoki mahsulot nomini qidiring",
+    "tnvedSearching": "Qidirilmoqda...",
+    "tnvedNoResults": "Kodingiz tizimda topilmadi",
+    "tnvedNoResultsHint": "Mahsulotingiz haqida qisqacha yozing — mutaxassislarimiz kerakli sinov dasturini aniqlab, siz bilan bog'lanadi.",
+    "tnvedSelectedTitle": "Tanlangan mahsulot",
+    "tnvedTestProgram": "Sinov dasturi",
+    "tnvedChange": "O'zgartirish",
+    "contactTitle": "Aloqa uchun ma'lumotlaringiz",
+    "contactHint": "Bu ma'lumotlar arizani hali yubormagan bo'lsangiz ham saqlanadi — mutaxassislarimiz siz bilan bog'lanishi mumkin.",
+    "productDescription": "Mahsulot haqida qisqacha",
+    "productDescriptionPlaceholder": "Mahsulotingiz, uning tarkibi yoki qo'llanilishi haqida qisqacha yozing",
+    "unmatchedSuccessNote": "Mutaxassislarimiz mahsulotingiz uchun kerakli sinov dasturini aniqlab, siz bilan bog'lanadi."
   },
   "track": {
     "title": "Ariza holatini tekshirish",

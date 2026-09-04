@@ -37,7 +37,7 @@ export default function AdminCrudPage({ config }) {
   }, [q, page]);
 
   const loadAsyncOptions = () => {
-    const asyncFields = config.fields.filter((f) => f.type === 'async-select');
+    const asyncFields = config.fields.filter((f) => f.type === 'async-select' || f.type === 'async-multi-select');
     asyncFields.forEach((f) => {
       adminResource(f.optionsResource)
         .list({ pageSize: 200 })
@@ -51,7 +51,9 @@ export default function AdminCrudPage({ config }) {
     const initial = {};
     config.fields.forEach((f) => {
       if (f.default !== undefined) initial[f.name] = f.default;
-      else initial[f.name] = f.type === 'checkbox' ? false : '';
+      else if (f.type === 'checkbox') initial[f.name] = false;
+      else if (f.type === 'async-multi-select') initial[f.name] = [];
+      else initial[f.name] = '';
     });
     setForm(initial);
     loadAsyncOptions();
@@ -63,10 +65,15 @@ export default function AdminCrudPage({ config }) {
     // Only pull in the fields this form actually shows — the raw `item`
     // from the API also includes nested relation objects (e.g. `laboratory`
     // alongside `laboratoryId`), which would conflict when sent back to
-    // Prisma on save.
+    // Prisma on save. `fromItem` lets a field derive its form value from a
+    // differently-shaped relation on the item (e.g. a m2m array of objects).
     const initial = {};
     config.fields.forEach((f) => {
-      let val = item[f.name] ?? (f.type === 'checkbox' ? false : '');
+      let val;
+      if (f.fromItem) val = f.fromItem(item);
+      else if (f.type === 'checkbox') val = item[f.name] ?? false;
+      else if (f.type === 'async-multi-select') val = item[f.name] ?? [];
+      else val = item[f.name] ?? '';
       if (f.type === 'date' && val) val = String(val).slice(0, 10);
       initial[f.name] = val;
     });
@@ -250,6 +257,37 @@ export default function AdminCrudPage({ config }) {
                     <p className="text-xs text-slate-400 mt-1">
                       Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.
                     </p>
+                  )}
+                </div>
+              ) : f.type === 'async-multi-select' ? (
+                <div className="max-h-48 overflow-y-auto rounded-lg border border-border p-2 space-y-1">
+                  {asyncOptions[f.name] === undefined ? (
+                    <p className="text-xs text-slate-400 px-1 py-1">Yuklanmoqda...</p>
+                  ) : asyncOptions[f.name].length === 0 ? (
+                    <p className="text-xs text-slate-400 px-1 py-1">
+                      Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.
+                    </p>
+                  ) : (
+                    asyncOptions[f.name].map((item) => {
+                      const checked = (form[f.name] || []).includes(item.id);
+                      return (
+                        <label key={item.id} className="flex items-center gap-2 px-1 py-1 text-sm text-ink hover:bg-bg-light rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const current = form[f.name] || [];
+                              handleChange(
+                                f.name,
+                                e.target.checked ? [...current, item.id] : current.filter((id) => id !== item.id)
+                              );
+                            }}
+                            className="h-4 w-4 rounded border-border text-primary"
+                          />
+                          {f.optionsLabel ? f.optionsLabel(item) : item.nameUz || item.name || item.id}
+                        </label>
+                      );
+                    })
                   )}
                 </div>
               ) : f.type === 'select' ? (

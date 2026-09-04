@@ -2,6 +2,7 @@ const express = require('express');
 const ctrl = require('../controllers/publicController');
 const { createApplication, trackApplication } = require('../controllers/applicationController');
 const { createContactMessage } = require('../controllers/contactController');
+const { searchTnVed, createTnVedInquiry } = require('../controllers/tnvedController');
 const { upload } = require('../middleware/upload');
 const { applicationLimiter } = require('../middleware/rateLimit');
 
@@ -35,5 +36,8 @@ router.post('/applications', applicationLimiter, upload.array('files', 5), creat
 router.get('/applications/track/:applicationNumber', trackApplication);
 
 router.post('/contact', createContactMessage);
+
+router.get('/tnved', searchTnVed);
+router.post('/tnved/inquiry', createTnVedInquiry);
 
 module.exports = router;

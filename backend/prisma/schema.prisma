@@ -22,6 +22,12 @@ enum ApplicationStatus {
   BEKOR_QILINDI
 }
 
+enum TnVedInquiryStatus {
+  YANGI
+  BOGLANILDI
+  ARIZAGA_AYLANDI
+}
+
 model User {
   id           String   @id @default(uuid())
   fullName     String
@@ -35,6 +41,7 @@ model User {
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
   sampleMovements SampleMovement[]
+  testItemsAdded  ApplicationTestItem[]
 }
 
 model Laboratory {
@@ -63,6 +70,7 @@ model Laboratory {
   movementsFrom       SampleMovement[] @relation("MovementFrom")
   movementsTo         SampleMovement[] @relation("MovementTo")
   users               User[]
+  tnVedCodes          TnVedCode[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -98,10 +106,42 @@ model Service {
   standard        Standard? @relation(fields: [standardId], references: [id])
   prices          Price[]
   applications    Application[]
+  tnVedCodes      TnVedCode[]
+  testItems       ApplicationTestItem[]
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   deletedAt       DateTime?
+}
+
+model TnVedCode {
+  id           String      @id @default(uuid())
+  code         String      @unique
+  nameUz       String
+  nameRu       String?
+  nameEn       String?
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
+  services     Service[]
+  inquiries    TnVedInquiry[]
+  applications Application[]
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  deletedAt    DateTime?
+}
+
+model TnVedInquiry {
+  id          String              @id @default(uuid())
+  tnVedCode   String
+  tnVedCodeId String?
+  matchedCode TnVedCode?          @relation(fields: [tnVedCodeId], references: [id])
+  fullName    String
+  phone       String
+  email       String?
+  status      TnVedInquiryStatus  @default(YANGI)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 }
 
 model Price {
@@ -276,14 +316,30 @@ model Application {
   laboratoryId      String?
   serviceId         String?
   service           Service? @relation(fields: [serviceId], references: [id])
+  tnVedCode         String?
+  tnVedCodeId       String?
+  tnVedCodeRel      TnVedCode? @relation(fields: [tnVedCodeId], references: [id])
+  productDescription String?
   testType          String?
   comment           String?
   status            ApplicationStatus @default(QABUL_QILINDI)
   statusComment     String?
   samples         Sample[]
   files             ApplicationFile[]
+  testItems         ApplicationTestItem[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+model ApplicationTestItem {
+  id            String       @id @default(uuid())
+  applicationId String
+  application   Application  @relation(fields: [applicationId], references: [id])
+  serviceId     String
+  service       Service      @relation(fields: [serviceId], references: [id])
+  addedByUserId String?
+  addedByUser   User?        @relation(fields: [addedByUserId], references: [id])
+  createdAt     DateTime     @default(now())
 }
 
 model ApplicationFile {

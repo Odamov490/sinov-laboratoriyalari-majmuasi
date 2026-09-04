@@ -15,6 +15,9 @@ const applicationSchema = z.object({
   productType: z.string().optional(),
   laboratoryId: z.string().optional(),
   serviceId: z.string().optional(),
+  tnVedCode: z.string().optional(),
+  tnVedCodeId: z.string().optional(),
+  productDescription: z.string().optional(),
   testType: z.string().optional(),
   comment: z.string().optional(),
 });
@@ -33,6 +36,15 @@ const createApplication = asyncHandler(async (req, res) => {
     }
   }
 
+  let testItemServiceIds = [];
+  if (data.tnVedCodeId) {
+    const tnved = await prisma.tnVedCode.findUnique({
+      where: { id: data.tnVedCodeId },
+      include: { services: true },
+    });
+    if (tnved) testItemServiceIds = tnved.services.map((s) => s.id);
+  }
+
   const application = await prisma.application.create({
     data: {
       ...data,
@@ -46,9 +58,23 @@ const createApplication = asyncHandler(async (req, res) => {
           size: f.size,
         })),
       },
+      ...(testItemServiceIds.length
+        ? { testItems: { create: testItemServiceIds.map((serviceId) => ({ serviceId })) } }
+        : {}),
     },
-    include: { files: true },
+    include: { files: true, testItems: { include: { service: true } } },
   });
+
+  // The visitor may have left a TnVedInquiry lead earlier in this same
+  // session (search -> contact details, before finishing the form). Mark the
+  // most recent unconverted one for this phone as turned into an application.
+  const openInquiry = await prisma.tnVedInquiry.findFirst({
+    where: { phone: data.phone, status: { not: 'ARIZAGA_AYLANDI' } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (openInquiry) {
+    await prisma.tnVedInquiry.update({ where: { id: openInquiry.id }, data: { status: 'ARIZAGA_AYLANDI' } });
+  }
 
   notifyNewApplication(application).catch(() => {});
 

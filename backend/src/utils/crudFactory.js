@@ -9,11 +9,14 @@ const { asyncHandler } = require('../middleware/errorHandler');
  *  - searchFields: string[] fields to apply "q" search across (case-insensitive contains)
  *  - softDelete: boolean - if true, DELETE sets deletedAt instead of removing row
  *  - orderBy: default ordering
+ *  - buildData(body, { isUpdate }): optional transform from req.body to the
+ *    Prisma `data` payload — needed when a field must become a nested write
+ *    (e.g. an array of related IDs turned into `connect`/`set`)
  */
 function crudFactory(modelName, opts = {}) {
   const model = prisma[modelName];
   if (!model) throw new Error(`Unknown Prisma model: ${modelName}`);
-  const { include, searchFields = [], softDelete = false, orderBy = { createdAt: 'desc' } } = opts;
+  const { include, searchFields = [], softDelete = false, orderBy = { createdAt: 'desc' }, buildData } = opts;
 
   const baseWhere = () => (softDelete ? { deletedAt: null } : {});
 
@@ -47,14 +50,16 @@ function crudFactory(modelName, opts = {}) {
   });
 
   const create = asyncHandler(async (req, res) => {
-    const item = await model.create({ data: req.body, include });
+    const data = buildData ? buildData(req.body, { isUpdate: false }) : req.body;
+    const item = await model.create({ data, include });
     res.status(201).json(item);
   });
 
   const update = asyncHandler(async (req, res) => {
+    const data = buildData ? buildData(req.body, { isUpdate: true }) : req.body;
     const item = await model.update({
       where: { id: req.params.id },
-      data: req.body,
+      data,
       include,
     });
     res.json(item);

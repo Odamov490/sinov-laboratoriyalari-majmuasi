@@ -266,6 +266,40 @@ export const accreditationConfig = {
   ],
 };
 
+export const tnVedCodeConfig = {
+  path: 'tnved-codes',
+  title: 'TN VED kodlari',
+  columns: [
+    { key: 'code', label: 'Kod' },
+    { key: 'nameUz', label: 'Mahsulot nomi' },
+    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
+    { key: 'services', label: 'Sinov dasturi', render: (i) => `${i.services?.length || 0} ta xizmat` },
+  ],
+  fields: [
+    { name: 'code', label: 'TN VED kodi', required: true },
+    { name: 'nameUz', label: 'Mahsulot nomi (UZ)', required: true },
+    { name: 'nameRu', label: 'Mahsulot nomi (RU)' },
+    { name: 'nameEn', label: 'Mahsulot nomi (EN)' },
+    {
+      name: 'laboratoryId',
+      label: 'Asosiy laboratoriya',
+      type: 'async-select',
+      optionsResource: 'laboratories',
+      optionsLabel: (item) => item.nameUz,
+    },
+    {
+      name: 'serviceIds',
+      label: 'Sinov dasturi (xizmatlar)',
+      type: 'async-multi-select',
+      optionsResource: 'services',
+      optionsLabel: (item) => item.nameUz,
+      fromItem: (item) => (item.services || []).map((s) => s.id),
+      fullWidth: true,
+    },
+    { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
+  ],
+};
+
 export const contactMessageConfig = {
   path: 'contact-messages',
   title: 'Murojaatlar',

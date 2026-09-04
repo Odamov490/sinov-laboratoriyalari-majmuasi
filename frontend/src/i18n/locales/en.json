@@ -26,6 +26,7 @@
   "common": {
     "readMore": "Read more",
     "apply": "Apply",
+    "optional": "optional",
     "search": "Search",
     "loading": "Loading...",
     "notFound": "No data found.",
@@ -88,7 +89,20 @@
     "comment": "Comment",
     "file": "File",
     "success": "Your application has been successfully accepted.",
-    "number": "Application number"
+    "number": "Application number",
+    "tnvedLabel": "TN VED code",
+    "tnvedPlaceholder": "Enter the code or search by product name",
+    "tnvedSearching": "Searching...",
+    "tnvedNoResults": "Your code was not found in the system",
+    "tnvedNoResultsHint": "Briefly describe your product — our specialists will determine the required test program and contact you.",
+    "tnvedSelectedTitle": "Selected product",
+    "tnvedTestProgram": "Test program",
+    "tnvedChange": "Change",
+    "contactTitle": "Your contact details",
+    "contactHint": "This information is saved even if you haven't submitted the application yet — our specialists may reach out to you.",
+    "productDescription": "Brief product description",
+    "productDescriptionPlaceholder": "Briefly describe the product, its composition or intended use",
+    "unmatchedSuccessNote": "Our specialists will determine the required test program for your product and contact you."
   },
   "track": {
     "title": "Track application status",

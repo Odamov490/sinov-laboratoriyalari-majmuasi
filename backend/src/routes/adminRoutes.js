@@ -7,7 +7,9 @@ const { updateApplicationStatus } = require('../controllers/applicationControlle
 const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
-const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');const prisma = require('../config/prisma');
+const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');
+const { listInquiries, updateInquiryStatus, addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
+const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
 
@@ -103,6 +105,28 @@ mountCrud('accreditation', 'laboratories', 'accreditation', {});
 // Contact messages (read/manage - Super Admin + Manager since it's inbound leads)
 mountCrud('contact-messages', 'applications', 'contactMessage', { searchFields: ['fullName', 'email'] });
 
+// TN VED codes (product code -> test program mapping)
+const tnVedBuildData = (body, { isUpdate }) => {
+  const { serviceIds, ...rest } = body;
+  const data = { ...rest };
+  if (Array.isArray(serviceIds)) {
+    data.services = isUpdate
+      ? { set: serviceIds.map((id) => ({ id })) }
+      : { connect: serviceIds.map((id) => ({ id })) };
+  }
+  return data;
+};
+mountCrud('tnved-codes', 'tnved', 'tnVedCode', {
+  include: { laboratory: true, services: true },
+  searchFields: ['code', 'nameUz', 'nameRu', 'nameEn'],
+  softDelete: true,
+  buildData: tnVedBuildData,
+});
+
+// TN VED inquiries (leads captured from the application form's TN VED lookup step)
+router.get('/tnved-inquiries', requireModule('tnved'), listInquiries);
+router.patch('/tnved-inquiries/:id/status', requireModule('tnved'), updateInquiryStatus);
+
 // Applications
 router.get(
   '/applications',
@@ -134,13 +158,20 @@ router.get(
   asyncHandler(async (req, res) => {
     const item = await prisma.application.findUnique({
       where: { id: req.params.id },
-      include: { service: { include: { laboratory: true } }, files: true },
+      include: {
+        service: { include: { laboratory: true } },
+        files: true,
+        tnVedCodeRel: true,
+        testItems: { include: { service: true, addedByUser: true }, orderBy: { createdAt: 'asc' } },
+      },
     });
     if (!item) return res.status(404).json({ error: "Ariza topilmadi." });
     res.json(item);
   })
 );
 router.patch('/applications/:id/status', requireModule('applications'), updateApplicationStatus);
+router.post('/applications/:id/test-items', requireModule('applications'), addTestItem);
+router.delete('/applications/:id/test-items/:itemId', requireModule('applications'), removeTestItem);
 
 // File upload endpoint (generic, for admin content like images/PDFs on entities)
 router.post(

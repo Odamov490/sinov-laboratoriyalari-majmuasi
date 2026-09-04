@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Eye } from 'lucide-react';
-import { adminApplications } from '../../services/adminApi';
+import { Eye, X, Plus, AlertTriangle, Tag } from 'lucide-react';
+import { adminApplications, adminTestItems, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Select, Pagination, StatusBadge, APPLICATION_STATUSES, STATUS_LABELS } from '../../components/UI.jsx';
 import { Modal } from '../../components/Modal.jsx';
@@ -18,6 +18,13 @@ export default function AdminApplications() {
   const [commentDraft, setCommentDraft] = useState('');
   const [saving, setSaving] = useState(false);
 
+  const [services, setServices] = useState([]);
+  const [addServiceId, setAddServiceId] = useState('');
+  const [testItemBusy, setTestItemBusy] = useState(false);
+  const [creatingTnVed, setCreatingTnVed] = useState(false);
+  const [newTnVedName, setNewTnVedName] = useState('');
+  const [savingTnVed, setSavingTnVed] = useState(false);
+
   const load = () => {
     setError(false);
     adminApplications
@@ -32,11 +39,25 @@ export default function AdminApplications() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, page]);
 
+  useEffect(() => {
+    adminResource('services')
+      .list({ pageSize: 200 })
+      .then((d) => setServices(d.items))
+      .catch(() => setServices([]));
+  }, []);
+
   const openDetail = (item) => {
     setSelected(item);
     setStatusDraft(item.status);
     setCommentDraft(item.statusComment || '');
+    setAddServiceId('');
+    setCreatingTnVed(false);
+    setNewTnVedName(item.tnVedCode || item.productName || '');
+    // The list row doesn't carry testItems/tnVedCodeRel — fetch the full detail.
+    adminApplications.get(item.id).then(setSelected).catch(() => {});
   };
+
+  const refreshSelected = () => adminApplications.get(selected.id).then(setSelected);
 
   const saveStatus = async () => {
     setSaving(true);
@@ -49,6 +70,50 @@ export default function AdminApplications() {
       showToast('Xatolik yuz berdi.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const addTestItem = async () => {
+    if (!addServiceId) return;
+    setTestItemBusy(true);
+    try {
+      await adminTestItems.add(selected.id, addServiceId);
+      setAddServiceId('');
+      await refreshSelected();
+    } catch {
+      showToast('Xatolik yuz berdi.', 'error');
+    } finally {
+      setTestItemBusy(false);
+    }
+  };
+
+  const removeTestItem = async (itemId) => {
+    setTestItemBusy(true);
+    try {
+      await adminTestItems.remove(selected.id, itemId);
+      await refreshSelected();
+    } catch {
+      showToast('Xatolik yuz berdi.', 'error');
+    } finally {
+      setTestItemBusy(false);
+    }
+  };
+
+  const createTnVedFromApplication = async () => {
+    if (!newTnVedName.trim()) return;
+    setSavingTnVed(true);
+    try {
+      await adminResource('tnved-codes').create({
+        code: selected.tnVedCode,
+        nameUz: newTnVedName.trim(),
+        serviceIds: (selected.testItems || []).map((t) => t.serviceId),
+      });
+      showToast("TN VED yozuvi yaratildi — keyingi shu kod bilan kelgan arizalar uchun avtomatik taklif qilinadi.", 'success');
+      setCreatingTnVed(false);
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+    } finally {
+      setSavingTnVed(false);
     }
   };
 
@@ -129,6 +194,100 @@ export default function AdminApplications() {
                 </div>
               </div>
             )}
+
+            <div>
+              <p className="text-sm font-semibold text-ink mb-2">Sinov dasturi</p>
+
+              {selected.tnVedCodeId ? (
+                <div className="flex items-center gap-2 mb-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                  <Tag className="h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    TN VED: <span className="font-mono font-semibold">{selected.tnVedCodeRel?.code}</span> — {selected.tnVedCodeRel?.nameUz}
+                  </span>
+                </div>
+              ) : selected.tnVedCode ? (
+                <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                  <div className="flex items-center gap-2 text-xs text-amber-800">
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      TN VED aniqlanmagan: <span className="font-mono font-semibold">{selected.tnVedCode}</span>
+                    </span>
+                  </div>
+                  {selected.productDescription && (
+                    <p className="text-xs text-amber-700 mt-1.5">{selected.productDescription}</p>
+                  )}
+                  {creatingTnVed ? (
+                    <div className="mt-2.5 space-y-2">
+                      <input
+                        value={newTnVedName}
+                        onChange={(e) => setNewTnVedName(e.target.value)}
+                        placeholder="Mahsulot nomi"
+                        className="input-field text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={createTnVedFromApplication}
+                          disabled={savingTnVed || !newTnVedName.trim()}
+                          className="btn-primary !py-1.5 !px-3 text-xs"
+                        >
+                          {savingTnVed ? 'Saqlanmoqda...' : 'Saqlash'}
+                        </button>
+                        <button onClick={() => setCreatingTnVed(false)} className="btn-secondary !py-1.5 !px-3 text-xs">
+                          Bekor qilish
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setCreatingTnVed(true)}
+                      className="mt-2 text-xs font-medium text-amber-800 hover:underline"
+                    >
+                      + Yangi TN VED yozuvi yaratish
+                    </button>
+                  )}
+                </div>
+              ) : null}
+
+              {(selected.testItems || []).length === 0 ? (
+                <p className="text-xs text-slate-400 mb-2">Hali xizmat qo'shilmagan.</p>
+              ) : (
+                <ul className="space-y-1.5 mb-2">
+                  {selected.testItems.map((item) => (
+                    <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+                      <span className="text-ink">{item.service?.nameUz}</span>
+                      <button
+                        onClick={() => removeTestItem(item.id)}
+                        disabled={testItemBusy}
+                        className="text-slate-400 hover:text-red-500 disabled:opacity-50"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Select
+                    value={addServiceId}
+                    onChange={setAddServiceId}
+                    placeholder="Xizmat tanlang"
+                    options={services
+                      .filter((s) => !(selected.testItems || []).some((t) => t.serviceId === s.id))
+                      .map((s) => ({ value: s.id, label: s.nameUz }))}
+                  />
+                </div>
+                <button
+                  onClick={addTestItem}
+                  disabled={!addServiceId || testItemBusy}
+                  className="btn-secondary !py-2.5 !px-3 shrink-0"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-ink mb-1.5">Holat</label>
               <Select

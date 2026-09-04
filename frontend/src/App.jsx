@@ -36,6 +36,7 @@ import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
+import AdminTnVedInquiries from './pages/admin/AdminTnVedInquiries.jsx';
 import {
   laboratoryConfig,
   serviceConfig,
@@ -48,6 +49,7 @@ import {
   faqConfig,
   accreditationConfig,
   contactMessageConfig,
+  tnVedCodeConfig,
 } from './pages/admin/adminConfigs.js';
 
 export default function App() {
@@ -93,6 +95,8 @@ export default function App() {
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
+        <Route path="tn-ved" element={<AdminCrudPage config={tnVedCodeConfig} />} />
+        <Route path="tnved-sorovlari" element={<AdminTnVedInquiries />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="skanerlash" element={<AdminScanner />} />

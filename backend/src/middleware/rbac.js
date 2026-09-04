@@ -16,7 +16,8 @@ const MODULE_ACCESS = {
   equipment: ['SUPER_ADMIN', 'MANAGER'],
   users: ['SUPER_ADMIN'],
   samples: ['SUPER_ADMIN', 'MANAGER'],
-  settings: ['SUPER_ADMIN'], 
+  tnved: ['SUPER_ADMIN', 'MANAGER'],
+  settings: ['SUPER_ADMIN'],
 };
 
 function requireModule(moduleName) {

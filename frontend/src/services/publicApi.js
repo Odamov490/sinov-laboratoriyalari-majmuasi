@@ -33,3 +33,6 @@ export const trackApplication = (applicationNumber) =>
   apiClient.get(`/applications/track/${applicationNumber}`).then((r) => r.data);
 
 export const sendContactMessage = (payload) => apiClient.post('/contact', payload).then((r) => r.data);
+
+export const searchTnVed = (q) => apiClient.get('/tnved', { params: { q } }).then((r) => r.data);
+export const submitTnVedInquiry = (payload) => apiClient.post('/tnved/inquiry', payload).then((r) => r.data);

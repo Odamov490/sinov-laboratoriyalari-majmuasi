@@ -46,6 +46,19 @@ export const uploadFiles = (files) => {
     .then((r) => r.data);
 };
 
+export const adminTnVedInquiries = {
+  list: (params) => apiClient.get('/admin/tnved-inquiries', { params }).then((r) => r.data),
+  updateStatus: (id, status) =>
+    apiClient.patch(`/admin/tnved-inquiries/${id}/status`, { status }).then((r) => r.data),
+};
+
+export const adminTestItems = {
+  add: (applicationId, serviceId) =>
+    apiClient.post(`/admin/applications/${applicationId}/test-items`, { serviceId }).then((r) => r.data),
+  remove: (applicationId, itemId) =>
+    apiClient.delete(`/admin/applications/${applicationId}/test-items/${itemId}`).then((r) => r.data),
+};
+
 export const adminSamples = {
   list: (params) => apiClient.get('/admin/samples', { params }).then((r) => r.data),
   create: (data) => apiClient.post('/admin/samples', data).then((r) => r.data),
