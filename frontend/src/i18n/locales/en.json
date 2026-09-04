@@ -107,7 +107,11 @@
   "track": {
     "title": "Track application status",
     "placeholder": "SLM-2026-00001",
-    "button": "Check"
+    "phonePlaceholder": "+998 90 123 45 67",
+    "button": "Check",
+    "byPhone": "By phone number",
+    "byNumber": "By application number",
+    "noResultsPhone": "No applications found for this phone number."
   },
   "admin": {
     "login": "Admin login",

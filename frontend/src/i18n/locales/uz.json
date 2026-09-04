@@ -107,7 +107,11 @@
   "track": {
     "title": "Ariza holatini tekshirish",
     "placeholder": "SLM-2026-00001",
-    "button": "Tekshirish"
+    "phonePlaceholder": "+998 90 123 45 67",
+    "button": "Tekshirish",
+    "byPhone": "Telefon raqami orqali",
+    "byNumber": "Ariza raqami orqali",
+    "noResultsPhone": "Bu telefon raqami bo'yicha ariza topilmadi."
   },
   "admin": {
     "login": "Admin panelga kirish",

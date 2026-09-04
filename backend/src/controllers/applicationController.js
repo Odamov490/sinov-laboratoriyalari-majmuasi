@@ -97,10 +97,37 @@ const trackApplication = asyncHandler(async (req, res) => {
     applicationNumber: application.applicationNumber,
     date: application.createdAt,
     client: application.fullName,
+    productName: application.productName,
     laboratory: application.service?.laboratory?.nameUz || null,
     service: application.service?.nameUz || null,
     status: application.status,
     statusComment: application.statusComment,
+  });
+});
+
+const trackByPhone = asyncHandler(async (req, res) => {
+  const phone = (req.query.phone || '').trim();
+  if (!phone) return res.status(400).json({ error: 'Telefon raqami kiritilmagan.' });
+
+  const applications = await prisma.application.findMany({
+    where: { phone },
+    include: { service: { include: { laboratory: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 20,
+  });
+
+  // Public tracking: expose only non-sensitive fields, same shape as track-by-number.
+  res.json({
+    items: applications.map((application) => ({
+      applicationNumber: application.applicationNumber,
+      date: application.createdAt,
+      client: application.fullName,
+      productName: application.productName,
+      laboratory: application.service?.laboratory?.nameUz || null,
+      service: application.service?.nameUz || null,
+      status: application.status,
+      statusComment: application.statusComment,
+    })),
   });
 });
 
@@ -114,4 +141,4 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
   res.json(application);
 });
 
-module.exports = { createApplication, trackApplication, updateApplicationStatus };
+module.exports = { createApplication, trackApplication, trackByPhone, updateApplicationStatus };

@@ -103,6 +103,13 @@ export default function Navbar() {
           </div>
 
           <Link
+            to="/arizani-tekshirish"
+            className="text-sm font-medium text-slate-600 hover:text-primary whitespace-nowrap px-2 py-1.5 rounded-lg hover:bg-bg-light transition-all duration-200 focus-ring"
+          >
+            {t('nav.track')}
+          </Link>
+
+          <Link
             to="/ariza"
             className="btn-primary !py-2.5 !px-4 text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
           >

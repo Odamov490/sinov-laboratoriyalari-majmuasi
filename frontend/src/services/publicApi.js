@@ -32,6 +32,9 @@ export const submitApplication = (formData) =>
 export const trackApplication = (applicationNumber) =>
   apiClient.get(`/applications/track/${applicationNumber}`).then((r) => r.data);
 
+export const trackApplicationsByPhone = (phone) =>
+  apiClient.get('/applications/track-by-phone', { params: { phone } }).then((r) => r.data);
+
 export const sendContactMessage = (payload) => apiClient.post('/contact', payload).then((r) => r.data);
 
 export const searchTnVed = (q) => apiClient.get('/tnved', { params: { q } }).then((r) => r.data);

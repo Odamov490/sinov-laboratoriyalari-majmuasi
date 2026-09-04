@@ -255,20 +255,9 @@ export default function ApplicationForm() {
         {/* Step 3: rest of the form, once TN VED lookup is resolved (matched or confirmed not-found) */}
         {tnvedResolved && (
           <div className="card p-6 space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label={t('application.productName')} error={errors.productName}>
-                <input {...register('productName', { required: true })} className="input-field" />
-              </Field>
-              <Field label={t('application.organization')}>
-                <input {...register('organization')} className="input-field" />
-              </Field>
-              <Field label={t('application.productType')}>
-                <input {...register('productType')} className="input-field" />
-              </Field>
-              <Field label={t('application.testType')}>
-                <input {...register('testType')} className="input-field" />
-              </Field>
-            </div>
+            <Field label={t('application.productName')} error={errors.productName}>
+              <input {...register('productName', { required: true })} className="input-field" />
+            </Field>
 
             {notFound && (
               <Field label={t('application.productDescription')} error={errors.productDescription}>

@@ -1,6 +1,6 @@
 const express = require('express');
 const ctrl = require('../controllers/publicController');
-const { createApplication, trackApplication } = require('../controllers/applicationController');
+const { createApplication, trackApplication, trackByPhone } = require('../controllers/applicationController');
 const { createContactMessage } = require('../controllers/contactController');
 const { searchTnVed, createTnVedInquiry } = require('../controllers/tnvedController');
 const { upload } = require('../middleware/upload');
@@ -34,6 +34,7 @@ router.get('/search', ctrl.globalSearch);
 
 router.post('/applications', applicationLimiter, upload.array('files', 5), createApplication);
 router.get('/applications/track/:applicationNumber', trackApplication);
+router.get('/applications/track-by-phone', trackByPhone);
 
 router.post('/contact', createContactMessage);
 
