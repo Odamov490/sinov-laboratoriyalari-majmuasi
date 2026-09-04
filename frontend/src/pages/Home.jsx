@@ -9,6 +9,9 @@ import {
   Layers,
   Award,
   ArrowRight,
+  Search,
+  ListChecks,
+  PhoneCall,
 } from 'lucide-react';
 import Hero from '../components/Hero.jsx';
 import { LaboratoryCard, ServiceCard, NewsCard, DocumentCard } from '../components/Cards.jsx';
@@ -229,15 +232,42 @@ export default function Home() {
         </section>
       )}
 
-      {/* CTA */}
+      {/* CTA: apply for testing */}
       <section className="section">
         <div className="container-page">
-          <div className="card bg-primary text-white p-10 md:p-14 text-center rounded-2xl">
-            <h2 className="text-2xl md:text-3xl font-bold">{t('hero.cta2')}</h2>
-            <p className="mt-3 text-white/70 max-w-xl mx-auto">{t('hero.tagline')}</p>
-            <Link to="/ariza" className="btn-accent mt-8 inline-flex">
-              {t('hero.cta2')}
-            </Link>
+          <div className="bg-primary text-white p-10 md:p-14 rounded-2xl shadow-card">
+            <div className="text-center max-w-2xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold">{t('applyCta.title')}</h2>
+              <p className="mt-3 text-white/70">{t('applyCta.subtitle')}</p>
+            </div>
+
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-8">
+              {[
+                { icon: Search, title: t('applyCta.step1Title'), desc: t('applyCta.step1Desc') },
+                { icon: ListChecks, title: t('applyCta.step2Title'), desc: t('applyCta.step2Desc') },
+                { icon: PhoneCall, title: t('applyCta.step3Title'), desc: t('applyCta.step3Desc') },
+              ].map((step, idx) => (
+                <div key={idx} className="text-center sm:text-left">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-white/10 text-accent">
+                    <step.icon className="h-5 w-5" />
+                  </span>
+                  <p className="mt-3 font-semibold">{step.title}</p>
+                  <p className="mt-1 text-sm text-white/70 leading-relaxed">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+              <Link to="/ariza" className="btn-accent">
+                {t('hero.cta2')}
+              </Link>
+              <Link
+                to="/arizani-tekshirish"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                {t('applyCta.trackButton')}
+              </Link>
+            </div>
           </div>
         </div>
       </section>

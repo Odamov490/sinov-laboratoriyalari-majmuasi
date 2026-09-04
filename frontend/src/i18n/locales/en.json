@@ -70,6 +70,17 @@
       "s6": "Result delivery to client"
     }
   },
+  "applyCta": {
+    "title": "Applying is now easier",
+    "subtitle": "Using your TN VED code, the system automatically finds the right test program — submitting an application takes just a few minutes.",
+    "step1Title": "Search your TN VED code",
+    "step1Desc": "Enter your product's code — the system automatically finds a matching test program.",
+    "step2Title": "Confirm the test program",
+    "step2Desc": "Review the list of required services and leave your contact details.",
+    "step3Title": "Get a response",
+    "step3Desc": "Our specialists will reach out to you — you can check your application's status anytime by phone number.",
+    "trackButton": "Track Application"
+  },
   "footer": {
     "quickLinks": "Quick links",
     "contactInfo": "Contact information",

@@ -70,6 +70,17 @@
       "s6": "Natijani mijozga taqdim etish"
     }
   },
+  "applyCta": {
+    "title": "Ariza berish endi osonroq",
+    "subtitle": "TN VED kodingiz orqali kerakli sinov dasturini avtomatik toping va arizangizni bir necha daqiqada yuboring.",
+    "step1Title": "TN VED kodini qidiring",
+    "step1Desc": "Mahsulotingiz kodini kiriting — tizim mos sinov dasturini avtomatik topadi.",
+    "step2Title": "Sinov dasturini tasdiqlang",
+    "step2Desc": "Kerakli xizmatlar ro'yxatini ko'rib chiqing va aloqa ma'lumotlaringizni qoldiring.",
+    "step3Title": "Javobni oling",
+    "step3Desc": "Mutaxassislarimiz siz bilan bog'lanadi — arizangiz holatini istalgan vaqtda telefon raqamingiz orqali tekshirishingiz mumkin.",
+    "trackButton": "Arizani tekshirish"
+  },
   "footer": {
     "quickLinks": "Tezkor havolalar",
     "contactInfo": "Aloqa ma'lumotlari",
