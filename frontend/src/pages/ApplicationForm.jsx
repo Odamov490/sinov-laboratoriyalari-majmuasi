@@ -57,7 +57,7 @@ export default function ApplicationForm() {
   }, [tnQuery]);
 
   const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
-  const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
+  const declarationMatch = tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
   const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
   // A mandatory-certificate match is a hard stop — this online form cannot
   // be used to continue; there is no "proceed anyway" escape hatch.
@@ -182,7 +182,7 @@ export default function ApplicationForm() {
           </div>
         )}
 
-        {!mandatoryMatch && declarationMatch && (
+        {declarationMatch && (
           <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3.5">
             <div className="flex items-start gap-2.5">
               <Info className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
