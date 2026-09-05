@@ -105,11 +105,6 @@ export default function AdminTnVedInquiries() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-mono text-primary">{inq.tnVedCode}</span>
-                    {inq.matchedCode ? (
-                      <div className="text-xs text-slate-500 truncate max-w-[220px]">{inq.matchedCode.nameUz}</div>
-                    ) : (
-                      <div className="text-xs text-amber-600">tizimda topilmagan</div>
-                    )}
                   </td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDate(inq.createdAt)}</td>
                   <td className="px-4 py-3">

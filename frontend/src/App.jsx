@@ -49,7 +49,6 @@ import {
   faqConfig,
   accreditationConfig,
   contactMessageConfig,
-  tnVedCodeConfig,
   tnVedRegulationConfig,
 } from './pages/admin/adminConfigs.js';
 
@@ -96,7 +95,6 @@ export default function App() {
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
-        <Route path="tn-ved" element={<AdminCrudPage config={tnVedCodeConfig} />} />
         <Route path="tnved-sorovlari" element={<AdminTnVedInquiries />} />
         <Route path="tnved-reglament" element={<AdminCrudPage config={tnVedRegulationConfig} />} />
         <Route path="namunalar" element={<AdminSamples />} />

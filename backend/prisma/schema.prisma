@@ -70,7 +70,6 @@ model Laboratory {
   movementsFrom       SampleMovement[] @relation("MovementFrom")
   movementsTo         SampleMovement[] @relation("MovementTo")
   users               User[]
-  tnVedCodes          TnVedCode[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -106,7 +105,6 @@ model Service {
   standard        Standard? @relation(fields: [standardId], references: [id])
   prices          Price[]
   applications    Application[]
-  tnVedCodes      TnVedCode[]
   testItems       ApplicationTestItem[]
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
@@ -114,28 +112,9 @@ model Service {
   deletedAt       DateTime?
 }
 
-model TnVedCode {
-  id           String      @id @default(uuid())
-  code         String      @unique
-  nameUz       String
-  nameRu       String?
-  nameEn       String?
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  services     Service[]
-  inquiries    TnVedInquiry[]
-  applications Application[]
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  deletedAt    DateTime?
-}
-
 model TnVedInquiry {
   id          String              @id @default(uuid())
   tnVedCode   String
-  tnVedCodeId String?
-  matchedCode TnVedCode?          @relation(fields: [tnVedCodeId], references: [id])
   fullName    String
   phone       String
   email       String?
@@ -317,8 +296,6 @@ model Application {
   serviceId         String?
   service           Service? @relation(fields: [serviceId], references: [id])
   tnVedCode         String?
-  tnVedCodeId       String?
-  tnVedCodeRel      TnVedCode? @relation(fields: [tnVedCodeId], references: [id])
   productDescription String?
   testType          String?
   comment           String?

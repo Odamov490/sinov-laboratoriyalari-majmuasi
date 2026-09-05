@@ -21,9 +21,6 @@ export default function AdminApplications() {
   const [services, setServices] = useState([]);
   const [addServiceId, setAddServiceId] = useState('');
   const [testItemBusy, setTestItemBusy] = useState(false);
-  const [creatingTnVed, setCreatingTnVed] = useState(false);
-  const [newTnVedName, setNewTnVedName] = useState('');
-  const [savingTnVed, setSavingTnVed] = useState(false);
 
   const load = () => {
     setError(false);
@@ -51,9 +48,7 @@ export default function AdminApplications() {
     setStatusDraft(item.status);
     setCommentDraft(item.statusComment || '');
     setAddServiceId('');
-    setCreatingTnVed(false);
-    setNewTnVedName(item.tnVedCode || item.productName || '');
-    // The list row doesn't carry testItems/tnVedCodeRel — fetch the full detail.
+    // The list row doesn't carry testItems — fetch the full detail.
     adminApplications.get(item.id).then(setSelected).catch(() => {});
   };
 
@@ -96,24 +91,6 @@ export default function AdminApplications() {
       showToast('Xatolik yuz berdi.', 'error');
     } finally {
       setTestItemBusy(false);
-    }
-  };
-
-  const createTnVedFromApplication = async () => {
-    if (!newTnVedName.trim()) return;
-    setSavingTnVed(true);
-    try {
-      await adminResource('tnved-codes').create({
-        code: selected.tnVedCode,
-        nameUz: newTnVedName.trim(),
-        serviceIds: (selected.testItems || []).map((t) => t.serviceId),
-      });
-      showToast("TN VED yozuvi yaratildi — keyingi shu kod bilan kelgan arizalar uchun avtomatik taklif qilinadi.", 'success');
-      setCreatingTnVed(false);
-    } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
-    } finally {
-      setSavingTnVed(false);
     }
   };
 
@@ -218,55 +195,17 @@ export default function AdminApplications() {
             <div>
               <p className="text-sm font-semibold text-ink mb-2">Sinov dasturi</p>
 
-              {selected.tnVedCodeId ? (
-                <div className="flex items-center gap-2 mb-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                  <Tag className="h-3.5 w-3.5 shrink-0" />
+              {selected.tnVedCode && (
+                <div className="flex items-center gap-2 mb-3 text-xs text-ink bg-bg-light border border-border rounded-lg px-3 py-2">
+                  <Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                   <span>
-                    TN VED: <span className="font-mono font-semibold">{selected.tnVedCodeRel?.code}</span> — {selected.tnVedCodeRel?.nameUz}
+                    TN VED kodi: <span className="font-mono font-semibold">{selected.tnVedCode}</span>
                   </span>
                 </div>
-              ) : selected.tnVedCode ? (
-                <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-xs text-amber-800">
-                    <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                    <span>
-                      TN VED aniqlanmagan: <span className="font-mono font-semibold">{selected.tnVedCode}</span>
-                    </span>
-                  </div>
-                  {selected.productDescription && (
-                    <p className="text-xs text-amber-700 mt-1.5">{selected.productDescription}</p>
-                  )}
-                  {creatingTnVed ? (
-                    <div className="mt-2.5 space-y-2">
-                      <input
-                        value={newTnVedName}
-                        onChange={(e) => setNewTnVedName(e.target.value)}
-                        placeholder="Mahsulot nomi"
-                        className="input-field text-sm"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={createTnVedFromApplication}
-                          disabled={savingTnVed || !newTnVedName.trim()}
-                          className="btn-primary !py-1.5 !px-3 text-xs"
-                        >
-                          {savingTnVed ? 'Saqlanmoqda...' : 'Saqlash'}
-                        </button>
-                        <button onClick={() => setCreatingTnVed(false)} className="btn-secondary !py-1.5 !px-3 text-xs">
-                          Bekor qilish
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setCreatingTnVed(true)}
-                      className="mt-2 text-xs font-medium text-amber-800 hover:underline"
-                    >
-                      + Yangi TN VED yozuvi yaratish
-                    </button>
-                  )}
-                </div>
-              ) : null}
+              )}
+              {selected.productDescription && (
+                <p className="text-xs text-slate-500 mb-3">{selected.productDescription}</p>
+              )}
 
               {(selected.testItems || []).length === 0 ? (
                 <p className="text-xs text-slate-400 mb-2">Hali xizmat qo'shilmagan.</p>

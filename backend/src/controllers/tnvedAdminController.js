@@ -13,7 +13,6 @@ const listInquiries = asyncHandler(async (req, res) => {
   const [items, total] = await Promise.all([
     prisma.tnVedInquiry.findMany({
       where,
-      include: { matchedCode: true },
       orderBy: { createdAt: 'desc' },
       skip,
       take,

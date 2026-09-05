@@ -105,24 +105,6 @@ mountCrud('accreditation', 'laboratories', 'accreditation', {});
 // Contact messages (read/manage - Super Admin + Manager since it's inbound leads)
 mountCrud('contact-messages', 'applications', 'contactMessage', { searchFields: ['fullName', 'email'] });
 
-// TN VED codes (product code -> test program mapping)
-const tnVedBuildData = (body, { isUpdate }) => {
-  const { serviceIds, ...rest } = body;
-  const data = { ...rest };
-  if (Array.isArray(serviceIds)) {
-    data.services = isUpdate
-      ? { set: serviceIds.map((id) => ({ id })) }
-      : { connect: serviceIds.map((id) => ({ id })) };
-  }
-  return data;
-};
-mountCrud('tnved-codes', 'tnved', 'tnVedCode', {
-  include: { laboratory: true, services: true },
-  searchFields: ['code', 'nameUz', 'nameRu', 'nameEn'],
-  softDelete: true,
-  buildData: tnVedBuildData,
-});
-
 // TN VED conformity regulations (resolutions 502/43 reference table — view/search, edit if needed)
 mountCrud('tnved-reglament', 'applications', 'tnVedRegulation', {
   searchFields: ['item', 'nameUz', 'tnVedRaw'],
@@ -167,7 +149,6 @@ router.get(
       include: {
         service: { include: { laboratory: true } },
         files: true,
-        tnVedCodeRel: true,
         testItems: { include: { service: true, addedByUser: true }, orderBy: { createdAt: 'asc' } },
       },
     });

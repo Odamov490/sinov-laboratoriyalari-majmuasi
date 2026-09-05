@@ -16,7 +16,6 @@ const applicationSchema = z.object({
   laboratoryId: z.string().optional(),
   serviceId: z.string().optional(),
   tnVedCode: z.string().optional(),
-  tnVedCodeId: z.string().optional(),
   productDescription: z.string().optional(),
   testType: z.string().optional(),
   comment: z.string().optional(),
@@ -38,15 +37,6 @@ const createApplication = asyncHandler(async (req, res) => {
     }
   }
 
-  let testItemServiceIds = [];
-  if (data.tnVedCodeId) {
-    const tnved = await prisma.tnVedCode.findUnique({
-      where: { id: data.tnVedCodeId },
-      include: { services: true },
-    });
-    if (tnved) testItemServiceIds = tnved.services.map((s) => s.id);
-  }
-
   const application = await prisma.application.create({
     data: {
       ...data,
@@ -61,9 +51,6 @@ const createApplication = asyncHandler(async (req, res) => {
           size: f.size,
         })),
       },
-      ...(testItemServiceIds.length
-        ? { testItems: { create: testItemServiceIds.map((serviceId) => ({ serviceId })) } }
-        : {}),
     },
     include: { files: true, testItems: { include: { service: true } } },
   });

@@ -2,28 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Copy, Search, Loader2, PackageSearch, AlertTriangle, Info } from 'lucide-react';
+import { CheckCircle2, Copy, AlertTriangle, Info } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import FileUploader from '../components/FileUploader.jsx';
-import { submitApplication, searchTnVed, submitTnVedInquiry, checkTnVedRegulation } from '../services/publicApi';
-import { getLocalized } from '../utils/localize';
+import { submitApplication, submitTnVedInquiry, checkTnVedRegulation } from '../services/publicApi';
 import { useToast } from '../context/ToastContext.jsx';
 
 export default function ApplicationForm() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [searchParams] = useSearchParams();
   const [files, setFiles] = useState([]);
   const [result, setResult] = useState(null);
-  const [wasUnmatched, setWasUnmatched] = useState(false);
 
-  // --- TN VED lookup state ---
   const [tnQuery, setTnQuery] = useState('');
-  const [tnResults, setTnResults] = useState(null); // null = not searched yet
-  const [tnSearching, setTnSearching] = useState(false);
-  const [tnDropdownOpen, setTnDropdownOpen] = useState(false);
-  const [selectedCode, setSelectedCode] = useState(null);
-  const [hasSearched, setHasSearched] = useState(false);
   const sentInquiryKeys = useRef(new Set());
 
   // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
@@ -35,7 +27,6 @@ export default function ApplicationForm() {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { serviceId: searchParams.get('serviceId') || '' },
@@ -45,42 +36,18 @@ export default function ApplicationForm() {
   const phone = watch('phone');
   const email = watch('email');
 
-  // Clear stale search results / regulation check whenever the code text
-  // changes — both are now explicit, button-triggered lookups (not
-  // debounced-as-you-type), so a result from a previous code must not
+  // Clear a stale regulation check whenever the code text changes — it's a
+  // button-triggered lookup, so a result from a previous code must not
   // linger once the visitor starts editing it again.
   useEffect(() => {
-    setTnResults(null);
-    setHasSearched(false);
-    setTnDropdownOpen(false);
     setTnRegulation(null);
     setRegulationAck(false);
   }, [tnQuery]);
 
-  const runSearch = () => {
-    const q = tnQuery.trim();
-    if (q.length < 2) return;
-    setTnSearching(true);
-    searchTnVed(q)
-      .then((d) => {
-        setTnResults(d.items);
-        setHasSearched(true);
-        setTnDropdownOpen(true);
-      })
-      .catch(() => {
-        setTnResults([]);
-        setHasSearched(true);
-      })
-      .finally(() => setTnSearching(false));
-  };
-
-  const notFound = hasSearched && !selectedCode && !tnSearching && tnResults?.length === 0;
-  const tnvedResolved = !!selectedCode || notFound;
-
   // Approximate conformity-requirement check (4-digit HS heading match only
   // — see backend parseTnVedRanges), run on demand via its own button.
   const runRegulationCheck = () => {
-    const code = (selectedCode?.code || tnQuery).replace(/\D/g, '');
+    const code = tnQuery.replace(/\D/g, '');
     if (code.length < 4) return;
     setTnChecking(true);
     checkTnVedRegulation(code)
@@ -92,10 +59,11 @@ export default function ApplicationForm() {
   const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
   const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
   const regulationBlocking = !!mandatoryMatch && !regulationAck;
-  const regulationCheckable = (selectedCode?.code || tnQuery).replace(/\D/g, '').length >= 4;
+  const regulationCheckable = tnQuery.replace(/\D/g, '').length >= 4;
 
-  // Fire the background lead-capture inquiry once contact details are valid,
-  // the moment a TN VED search has happened — whether or not it matched.
+  // Fire the background lead-capture inquiry once contact details are valid
+  // and a TN VED code has been entered — captures a lead even if the
+  // visitor never submits the full application.
   useEffect(() => {
     const code = tnQuery.trim();
     if (code.length < 2) return;
@@ -109,7 +77,6 @@ export default function ApplicationForm() {
       sentInquiryKeys.current.add(key);
       submitTnVedInquiry({
         tnVedCode: code,
-        tnVedCodeId: selectedCode?.id,
         fullName: fullName.trim(),
         phone: phone.trim(),
         email: email || undefined,
@@ -121,34 +88,18 @@ export default function ApplicationForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tnQuery, fullName, phone]);
 
-  const selectCode = (code) => {
-    setSelectedCode(code);
-    setTnQuery(code.code);
-    setTnDropdownOpen(false);
-    setValue('productName', getLocalized(code, 'name', i18n.language) || code.nameUz);
-  };
-
-  const clearSelection = () => {
-    setSelectedCode(null);
-    setTnQuery('');
-    setTnResults(null);
-    setValue('productName', '');
-  };
-
   const onSubmit = async (values) => {
     try {
       const formData = new FormData();
       const payload = {
         ...values,
         tnVedCode: tnQuery.trim() || undefined,
-        tnVedCodeId: selectedCode?.id,
         tnVedWarningShown: !!(mandatoryMatch || declarationMatch),
         tnVedWarningCategory: mandatoryMatch ? 'SERTIFIKAT' : declarationMatch ? 'DEKLARATSIYA' : undefined,
       };
       Object.entries(payload).forEach(([k, v]) => v && formData.append(k, v));
       files.forEach((f) => formData.append('files', f));
       const data = await submitApplication(formData);
-      setWasUnmatched(!selectedCode);
       setResult(data);
     } catch (err) {
       showToast(err?.response?.data?.error || t('common.errorLoading'), 'error');
@@ -160,9 +111,6 @@ export default function ApplicationForm() {
       <div className="section container-page max-w-xl text-center">
         <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto" />
         <h1 className="mt-6 text-2xl font-bold text-ink">{t('application.success')}</h1>
-        {wasUnmatched && (
-          <p className="mt-3 text-sm text-slate-600 max-w-md mx-auto">{t('application.unmatchedSuccessNote')}</p>
-        )}
         <div className="mt-4 card p-5 inline-flex items-center gap-3">
           <span className="text-sm text-slate-500">{t('application.number')}:</span>
           <span className="font-mono font-bold text-primary">{result.applicationNumber}</span>
@@ -194,87 +142,15 @@ export default function ApplicationForm() {
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('application.title')}</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
-        {/* Step 1: TN VED lookup */}
+        {/* TN VED code + optional conformity-requirement check */}
         <div className="card p-6">
           <label className="block text-sm font-medium text-ink mb-1.5">{t('application.tnvedLabel')}</label>
-          {selectedCode ? (
-            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs text-slate-500">{t('application.tnvedSelectedTitle')}</p>
-                  <p className="font-mono text-sm text-primary font-semibold">{selectedCode.code}</p>
-                  <p className="font-medium text-ink">{getLocalized(selectedCode, 'name', i18n.language) || selectedCode.nameUz}</p>
-                </div>
-                <button type="button" onClick={clearSelection} className="text-xs text-slate-500 hover:text-primary underline shrink-0">
-                  {t('application.tnvedChange')}
-                </button>
-              </div>
-              {selectedCode.services?.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-primary/20">
-                  <p className="text-xs text-slate-500 mb-1.5">{t('application.tnvedTestProgram')}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedCode.services.map((s) => (
-                      <span key={s.id} className="inline-flex rounded-full bg-white border border-primary/20 px-2.5 py-1 text-xs text-ink">
-                        {getLocalized(s, 'name', i18n.language) || s.nameUz}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  value={tnQuery}
-                  onChange={(e) => setTnQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      runSearch();
-                    }
-                  }}
-                  onBlur={() => setTimeout(() => setTnDropdownOpen(false), 150)}
-                  placeholder={t('application.tnvedPlaceholder')}
-                  className="input-field !pl-10"
-                />
-                {tnDropdownOpen && hasSearched && !tnSearching && tnResults?.length > 0 && (
-                  <div className="absolute z-20 mt-1.5 w-full max-h-72 overflow-y-auto rounded-lg border border-border bg-white py-1.5 shadow-2xl">
-                    {tnResults.map((code) => (
-                      <button
-                        key={code.id}
-                        type="button"
-                        onMouseDown={() => selectCode(code)}
-                        className="block w-full px-3.5 py-2.5 text-left hover:bg-bg-light"
-                      >
-                        <span className="font-mono text-sm text-primary font-semibold">{code.code}</span>
-                        <span className="block text-sm text-ink">{getLocalized(code, 'name', i18n.language) || code.nameUz}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={runSearch}
-                disabled={tnSearching || tnQuery.trim().length < 2}
-                className="btn-secondary !px-4 shrink-0"
-              >
-                {tnSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "So'rov yuborish"}
-              </button>
-            </div>
-          )}
-
-          {notFound && (
-            <div className="mt-3 flex items-start gap-2.5 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
-              <PackageSearch className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-amber-800">{t('application.tnvedNoResults')}</p>
-                <p className="text-xs text-amber-700 mt-0.5">{t('application.tnvedNoResultsHint')}</p>
-              </div>
-            </div>
-          )}
+          <input
+            value={tnQuery}
+            onChange={(e) => setTnQuery(e.target.value)}
+            placeholder={t('application.tnvedPlaceholder')}
+            className="input-field"
+          />
 
           {regulationCheckable && (
             <div className="mt-3 pt-3 border-t border-border">
@@ -346,55 +222,51 @@ export default function ApplicationForm() {
           </div>
         )}
 
-        {/* Step 2: contact capture — shown once TN VED lookup is resolved, captured as a lead in the background */}
-        {tnvedResolved && !regulationBlocking && (
-          <div className="card p-6">
-            <p className="text-sm font-semibold text-ink">{t('application.contactTitle')}</p>
-            <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('application.contactHint')}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label={t('application.fullName')} error={errors.fullName}>
-                <input {...register('fullName', { required: true, minLength: 2 })} className="input-field" />
-              </Field>
-              <Field label={t('application.phone')} error={errors.phone}>
-                <input {...register('phone', { required: true, minLength: 5 })} className="input-field" placeholder="+998" />
-              </Field>
-              <Field label={`${t('application.email')} (${t('common.optional')})`}>
-                <input {...register('email')} type="email" className="input-field" />
-              </Field>
+        {!regulationBlocking && (
+          <>
+            <div className="card p-6">
+              <p className="text-sm font-semibold text-ink">{t('application.contactTitle')}</p>
+              <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('application.contactHint')}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <Field label={t('application.fullName')} error={errors.fullName}>
+                  <input {...register('fullName', { required: true, minLength: 2 })} className="input-field" />
+                </Field>
+                <Field label={t('application.phone')} error={errors.phone}>
+                  <input {...register('phone', { required: true, minLength: 5 })} className="input-field" placeholder="+998" />
+                </Field>
+                <Field label={`${t('application.email')} (${t('common.optional')})`}>
+                  <input {...register('email')} type="email" className="input-field" />
+                </Field>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Step 3: rest of the form, once TN VED lookup is resolved (matched or confirmed not-found) */}
-        {tnvedResolved && !regulationBlocking && (
-          <div className="card p-6 space-y-5">
-            <Field label={t('application.productName')} error={errors.productName}>
-              <input {...register('productName', { required: true })} className="input-field" />
-            </Field>
+            <div className="card p-6 space-y-5">
+              <Field label={t('application.productName')} error={errors.productName}>
+                <input {...register('productName', { required: true })} className="input-field" />
+              </Field>
 
-            {notFound && (
-              <Field label={t('application.productDescription')} error={errors.productDescription}>
+              <Field label={`${t('application.productDescription')} (${t('common.optional')})`}>
                 <textarea
-                  {...register('productDescription', { required: notFound, minLength: 5 })}
+                  {...register('productDescription')}
                   rows={3}
                   placeholder={t('application.productDescriptionPlaceholder')}
                   className="input-field resize-none"
                 />
               </Field>
-            )}
 
-            <Field label={t('application.comment')}>
-              <textarea {...register('comment')} rows={4} className="input-field resize-none" />
-            </Field>
+              <Field label={t('application.comment')}>
+                <textarea {...register('comment')} rows={4} className="input-field resize-none" />
+              </Field>
 
-            <Field label={t('application.file')}>
-              <FileUploader files={files} onChange={setFiles} />
-            </Field>
+              <Field label={t('application.file')}>
+                <FileUploader files={files} onChange={setFiles} />
+              </Field>
 
-            <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-              {t('common.submit')}
-            </button>
-          </div>
+              <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+                {t('common.submit')}
+              </button>
+            </div>
+          </>
         )}
       </form>
     </div>
