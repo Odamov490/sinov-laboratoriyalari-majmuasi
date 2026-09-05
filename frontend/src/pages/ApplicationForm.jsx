@@ -23,10 +23,12 @@ export default function ApplicationForm() {
   const [tnSearching, setTnSearching] = useState(false);
   const [tnDropdownOpen, setTnDropdownOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const sentInquiryKeys = useRef(new Set());
 
   // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
   const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
+  const [tnChecking, setTnChecking] = useState(false);
   const [regulationAck, setRegulationAck] = useState(false);
 
   const {
@@ -43,50 +45,54 @@ export default function ApplicationForm() {
   const phone = watch('phone');
   const email = watch('email');
 
-  // Debounced TN VED search-as-you-type.
+  // Clear stale search results / regulation check whenever the code text
+  // changes — both are now explicit, button-triggered lookups (not
+  // debounced-as-you-type), so a result from a previous code must not
+  // linger once the visitor starts editing it again.
   useEffect(() => {
-    const q = tnQuery.trim();
-    if (q.length < 2) {
-      setTnResults(null);
-      setTnSearching(false);
-      return undefined;
-    }
-    setTnSearching(true);
-    const handle = setTimeout(() => {
-      searchTnVed(q)
-        .then((d) => setTnResults(d.items))
-        .catch(() => setTnResults([]))
-        .finally(() => setTnSearching(false));
-    }, 350);
-    return () => clearTimeout(handle);
+    setTnResults(null);
+    setHasSearched(false);
+    setTnDropdownOpen(false);
+    setTnRegulation(null);
+    setRegulationAck(false);
   }, [tnQuery]);
 
-  const searchAttempted = tnQuery.trim().length >= 2;
-  const notFound = searchAttempted && !selectedCode && !tnSearching && tnResults?.length === 0;
+  const runSearch = () => {
+    const q = tnQuery.trim();
+    if (q.length < 2) return;
+    setTnSearching(true);
+    searchTnVed(q)
+      .then((d) => {
+        setTnResults(d.items);
+        setHasSearched(true);
+        setTnDropdownOpen(true);
+      })
+      .catch(() => {
+        setTnResults([]);
+        setHasSearched(true);
+      })
+      .finally(() => setTnSearching(false));
+  };
+
+  const notFound = hasSearched && !selectedCode && !tnSearching && tnResults?.length === 0;
   const tnvedResolved = !!selectedCode || notFound;
 
-  // Debounced conformity-requirement check — approximate, 4-digit HS heading
-  // match only (see backend parseTnVedRanges). Re-checks whenever the code
-  // changes and resets the "acknowledged" state, so a changed code can't
-  // silently ride on a stale acknowledgement.
-  useEffect(() => {
+  // Approximate conformity-requirement check (4-digit HS heading match only
+  // — see backend parseTnVedRanges), run on demand via its own button.
+  const runRegulationCheck = () => {
     const code = (selectedCode?.code || tnQuery).replace(/\D/g, '');
-    setRegulationAck(false);
-    if (code.length < 4) {
-      setTnRegulation(null);
-      return undefined;
-    }
-    const handle = setTimeout(() => {
-      checkTnVedRegulation(code)
-        .then(setTnRegulation)
-        .catch(() => setTnRegulation(null));
-    }, 400);
-    return () => clearTimeout(handle);
-  }, [tnQuery, selectedCode]);
+    if (code.length < 4) return;
+    setTnChecking(true);
+    checkTnVedRegulation(code)
+      .then(setTnRegulation)
+      .catch(() => setTnRegulation(null))
+      .finally(() => setTnChecking(false));
+  };
 
   const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
   const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
   const regulationBlocking = !!mandatoryMatch && !regulationAck;
+  const regulationCheckable = (selectedCode?.code || tnQuery).replace(/\D/g, '').length >= 4;
 
   // Fire the background lead-capture inquiry once contact details are valid,
   // the moment a TN VED search has happened — whether or not it matched.
@@ -217,37 +223,46 @@ export default function ApplicationForm() {
               )}
             </div>
           ) : (
-            <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                value={tnQuery}
-                onChange={(e) => {
-                  setTnQuery(e.target.value);
-                  setTnDropdownOpen(true);
-                }}
-                onFocus={() => setTnDropdownOpen(true)}
-                onBlur={() => setTimeout(() => setTnDropdownOpen(false), 150)}
-                placeholder={t('application.tnvedPlaceholder')}
-                className="input-field !pl-10"
-              />
-              {tnSearching && (
-                <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />
-              )}
-              {tnDropdownOpen && searchAttempted && !tnSearching && tnResults?.length > 0 && (
-                <div className="absolute z-20 mt-1.5 w-full max-h-72 overflow-y-auto rounded-lg border border-border bg-white py-1.5 shadow-2xl">
-                  {tnResults.map((code) => (
-                    <button
-                      key={code.id}
-                      type="button"
-                      onMouseDown={() => selectCode(code)}
-                      className="block w-full px-3.5 py-2.5 text-left hover:bg-bg-light"
-                    >
-                      <span className="font-mono text-sm text-primary font-semibold">{code.code}</span>
-                      <span className="block text-sm text-ink">{getLocalized(code, 'name', i18n.language) || code.nameUz}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  value={tnQuery}
+                  onChange={(e) => setTnQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      runSearch();
+                    }
+                  }}
+                  onBlur={() => setTimeout(() => setTnDropdownOpen(false), 150)}
+                  placeholder={t('application.tnvedPlaceholder')}
+                  className="input-field !pl-10"
+                />
+                {tnDropdownOpen && hasSearched && !tnSearching && tnResults?.length > 0 && (
+                  <div className="absolute z-20 mt-1.5 w-full max-h-72 overflow-y-auto rounded-lg border border-border bg-white py-1.5 shadow-2xl">
+                    {tnResults.map((code) => (
+                      <button
+                        key={code.id}
+                        type="button"
+                        onMouseDown={() => selectCode(code)}
+                        className="block w-full px-3.5 py-2.5 text-left hover:bg-bg-light"
+                      >
+                        <span className="font-mono text-sm text-primary font-semibold">{code.code}</span>
+                        <span className="block text-sm text-ink">{getLocalized(code, 'name', i18n.language) || code.nameUz}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={runSearch}
+                disabled={tnSearching || tnQuery.trim().length < 2}
+                className="btn-secondary !px-4 shrink-0"
+              >
+                {tnSearching ? <Loader2 className="h-4 w-4 animate-spin" /> : "So'rov yuborish"}
+              </button>
             </div>
           )}
 
@@ -258,6 +273,28 @@ export default function ApplicationForm() {
                 <p className="text-sm font-medium text-amber-800">{t('application.tnvedNoResults')}</p>
                 <p className="text-xs text-amber-700 mt-0.5">{t('application.tnvedNoResultsHint')}</p>
               </div>
+            </div>
+          )}
+
+          {regulationCheckable && (
+            <div className="mt-3 pt-3 border-t border-border">
+              {!tnRegulation ? (
+                <button
+                  type="button"
+                  onClick={runRegulationCheck}
+                  disabled={tnChecking}
+                  className="btn-secondary !py-2 !px-4 text-xs"
+                >
+                  {tnChecking ? 'Tekshirilmoqda...' : 'Muvofiqlik talablarini tekshirish'}
+                </button>
+              ) : (
+                !mandatoryMatch &&
+                !declarationMatch && (
+                  <p className="text-xs text-emerald-600 flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Maxsus muvofiqlik talabi topilmadi.
+                  </p>
+                )
+              )}
             </div>
           )}
         </div>
@@ -309,8 +346,8 @@ export default function ApplicationForm() {
           </div>
         )}
 
-        {/* Step 2: contact capture — shown right after a search happens, captured as a lead in the background */}
-        {searchAttempted && !regulationBlocking && (
+        {/* Step 2: contact capture — shown once TN VED lookup is resolved, captured as a lead in the background */}
+        {tnvedResolved && !regulationBlocking && (
           <div className="card p-6">
             <p className="text-sm font-semibold text-ink">{t('application.contactTitle')}</p>
             <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('application.contactHint')}</p>
