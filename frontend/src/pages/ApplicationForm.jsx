@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Copy, AlertTriangle, Info } from 'lucide-react';
+import { CheckCircle2, Copy, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import FileUploader from '../components/FileUploader.jsx';
 import { submitApplication, submitTnVedInquiry, checkTnVedRegulation } from '../services/publicApi';
@@ -36,30 +36,32 @@ export default function ApplicationForm() {
   const phone = watch('phone');
   const email = watch('email');
 
-  // Clear a stale regulation check whenever the code text changes — it's a
-  // button-triggered lookup, so a result from a previous code must not
-  // linger once the visitor starts editing it again.
+  // Approximate conformity-requirement check (4-digit HS heading match only
+  // — see backend parseTnVedRanges), fired automatically as the code is
+  // typed. A changed code always clears the previous result first, so a
+  // stale banner never lingers on top of a code it no longer matches.
   useEffect(() => {
+    const code = tnQuery.replace(/\D/g, '');
     setTnRegulation(null);
     setRegulationAck(false);
-  }, [tnQuery]);
-
-  // Approximate conformity-requirement check (4-digit HS heading match only
-  // — see backend parseTnVedRanges), run on demand via its own button.
-  const runRegulationCheck = () => {
-    const code = tnQuery.replace(/\D/g, '');
-    if (code.length < 4) return;
+    if (code.length < 4) {
+      setTnChecking(false);
+      return undefined;
+    }
     setTnChecking(true);
-    checkTnVedRegulation(code)
-      .then(setTnRegulation)
-      .catch(() => setTnRegulation(null))
-      .finally(() => setTnChecking(false));
-  };
+    const handle = setTimeout(() => {
+      checkTnVedRegulation(code)
+        .then(setTnRegulation)
+        .catch(() => setTnRegulation(null))
+        .finally(() => setTnChecking(false));
+    }, 450);
+    return () => clearTimeout(handle);
+  }, [tnQuery]);
 
   const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
   const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
+  const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
   const regulationBlocking = !!mandatoryMatch && !regulationAck;
-  const regulationCheckable = tnQuery.replace(/\D/g, '').length >= 4;
 
   // Fire the background lead-capture inquiry once contact details are valid
   // and a TN VED code has been entered — captures a lead even if the
@@ -152,26 +154,10 @@ export default function ApplicationForm() {
             className="input-field"
           />
 
-          {regulationCheckable && (
-            <div className="mt-3 pt-3 border-t border-border">
-              {!tnRegulation ? (
-                <button
-                  type="button"
-                  onClick={runRegulationCheck}
-                  disabled={tnChecking}
-                  className="btn-secondary !py-2 !px-4 text-xs"
-                >
-                  {tnChecking ? 'Tekshirilmoqda...' : 'Muvofiqlik talablarini tekshirish'}
-                </button>
-              ) : (
-                !mandatoryMatch &&
-                !declarationMatch && (
-                  <p className="text-xs text-emerald-600 flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Maxsus muvofiqlik talabi topilmadi.
-                  </p>
-                )
-              )}
-            </div>
+          {tnChecking && (
+            <p className="mt-3 pt-3 border-t border-border text-xs text-slate-400 flex items-center gap-1.5">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Tekshirilmoqda...
+            </p>
           )}
         </div>
 
@@ -205,15 +191,32 @@ export default function ApplicationForm() {
         )}
 
         {!mandatoryMatch && declarationMatch && (
-          <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3.5">
+          <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3.5">
             <div className="flex items-start gap-2.5">
-              <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+              <Info className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-blue-800">
+                <p className="text-sm font-medium text-emerald-800">
                   Ma'lumot: bu TN VED kodi bo'yicha muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi (
                   {declarationMatch.decision}-son qaror, {declarationMatch.item}-band).
                 </p>
-                <p className="text-xs text-blue-700 mt-2">
+                <p className="text-xs text-emerald-700 mt-2">
+                  Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy
+                  ma'lumot uchun mutaxassislarimiz bilan bog'laning.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {checkedNoMatch && (
+          <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3.5">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-amber-800">
+                  Ushbu TN VED kodi bo'yicha maxsus muvofiqlik talabi (sertifikat yoki deklaratsiya) topilmadi.
+                </p>
+                <p className="text-xs text-amber-700 mt-2">
                   Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy
                   ma'lumot uchun mutaxassislarimiz bilan bog'laning.
                 </p>
