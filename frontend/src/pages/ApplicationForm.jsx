@@ -21,7 +21,6 @@ export default function ApplicationForm() {
   // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
   const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
   const [tnChecking, setTnChecking] = useState(false);
-  const [regulationAck, setRegulationAck] = useState(false);
 
   const {
     register,
@@ -43,7 +42,6 @@ export default function ApplicationForm() {
   useEffect(() => {
     const code = tnQuery.replace(/\D/g, '');
     setTnRegulation(null);
-    setRegulationAck(false);
     if (code.length < 4) {
       setTnChecking(false);
       return undefined;
@@ -61,7 +59,9 @@ export default function ApplicationForm() {
   const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
   const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
   const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
-  const regulationBlocking = !!mandatoryMatch && !regulationAck;
+  // A mandatory-certificate match is a hard stop — this online form cannot
+  // be used to continue; there is no "proceed anyway" escape hatch.
+  const regulationBlocking = !!mandatoryMatch;
 
   // Fire the background lead-capture inquiry once contact details are valid
   // and a TN VED code has been entered — captures a lead even if the
@@ -173,18 +173,10 @@ export default function ApplicationForm() {
                   lozim (band: {mandatoryMatch.item}, {mandatoryMatch.nameUz}).
                 </p>
                 <p className="text-xs text-red-700 mt-2">
-                  Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy
-                  ma'lumot uchun mutaxassislarimiz bilan bog'laning.
+                  Ushbu TN VED kodi bo'yicha ariza onlayn tizim orqali qabul qilinmaydi. Aniq talab mahsulotning
+                  to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi — sertifikat rasmiylashtirish
+                  bo'yicha mutaxassislarimiz bilan bog'laning.
                 </p>
-                {!regulationAck && (
-                  <button
-                    type="button"
-                    onClick={() => setRegulationAck(true)}
-                    className="btn-secondary !border-red-600 !text-red-700 hover:!bg-red-100 mt-3 !py-2 !px-4 text-xs"
-                  >
-                    Tushundim, davom etaman
-                  </button>
-                )}
               </div>
             </div>
           </div>
