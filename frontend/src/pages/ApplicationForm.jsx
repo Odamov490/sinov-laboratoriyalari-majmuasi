@@ -196,8 +196,9 @@ export default function ApplicationForm() {
               <Info className="h-5 w-5 text-emerald-600 mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-emerald-800">
-                  Ma'lumot: bu TN VED kodi bo'yicha muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi (
-                  {declarationMatch.decision}-son qaror, {declarationMatch.item}-band).
+                  Ma'lumot: kiritilgan TN VED kodi bo'yicha O'zbekiston Respublikasi Vazirlar Mahkamasining{' '}
+                  {declarationMatch.decision}-son qarori asosida MUVOFIQLIK DEKLARATSIYASI rasmiylashtirilishi
+                  tavsiya etiladi (band: {declarationMatch.item}, {declarationMatch.nameUz}).
                 </p>
                 <p className="text-xs text-emerald-700 mt-2">
                   Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy
