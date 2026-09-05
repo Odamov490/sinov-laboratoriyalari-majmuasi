@@ -300,6 +300,34 @@ export const tnVedCodeConfig = {
   ],
 };
 
+export const tnVedRegulationConfig = {
+  path: 'tnved-reglament',
+  title: 'TN VED reglament',
+  fields: [
+    { name: 'item', label: 'Band raqami', required: true },
+    { name: 'nameUz', label: 'Mahsulot nomi', type: 'textarea', fullWidth: true, required: true },
+    { name: 'tnVedRaw', label: 'TN VED kodi/oralig\'i', type: 'textarea', fullWidth: true, required: true },
+    {
+      name: 'category',
+      label: 'Talab turi',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'SERTIFIKAT', label: 'Majburiy sertifikat' },
+        { value: 'DEKLARATSIYA', label: 'Deklaratsiya' },
+      ],
+    },
+    { name: 'decision', label: "Qaror raqami (502 yoki 43)", required: true },
+  ],
+  columns: [
+    { key: 'item', label: 'Band' },
+    { key: 'nameUz', label: 'Mahsulot nomi' },
+    { key: 'tnVedRaw', label: 'TN VED' },
+    { key: 'category', label: 'Talab', render: (i) => (i.category === 'SERTIFIKAT' ? 'Sertifikat' : 'Deklaratsiya') },
+    { key: 'decision', label: 'Qaror' },
+  ],
+};
+
 export const contactMessageConfig = {
   path: 'contact-messages',
   title: 'Murojaatlar',

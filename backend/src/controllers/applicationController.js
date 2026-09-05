@@ -20,6 +20,8 @@ const applicationSchema = z.object({
   productDescription: z.string().optional(),
   testType: z.string().optional(),
   comment: z.string().optional(),
+  tnVedWarningShown: z.string().optional(),
+  tnVedWarningCategory: z.enum(['SERTIFIKAT', 'DEKLARATSIYA']).optional(),
 });
 
 const createApplication = asyncHandler(async (req, res) => {
@@ -49,6 +51,7 @@ const createApplication = asyncHandler(async (req, res) => {
     data: {
       ...data,
       email: data.email || null,
+      tnVedWarningShown: data.tnVedWarningShown === 'true',
       applicationNumber,
       files: {
         create: files.map((f) => ({

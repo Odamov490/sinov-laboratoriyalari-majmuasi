@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Copy, Search, Loader2, PackageSearch } from 'lucide-react';
+import { CheckCircle2, Copy, Search, Loader2, PackageSearch, AlertTriangle, Info } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import FileUploader from '../components/FileUploader.jsx';
-import { submitApplication, searchTnVed, submitTnVedInquiry } from '../services/publicApi';
+import { submitApplication, searchTnVed, submitTnVedInquiry, checkTnVedRegulation } from '../services/publicApi';
 import { getLocalized } from '../utils/localize';
 import { useToast } from '../context/ToastContext.jsx';
 
@@ -24,6 +24,10 @@ export default function ApplicationForm() {
   const [tnDropdownOpen, setTnDropdownOpen] = useState(false);
   const [selectedCode, setSelectedCode] = useState(null);
   const sentInquiryKeys = useRef(new Set());
+
+  // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
+  const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
+  const [regulationAck, setRegulationAck] = useState(false);
 
   const {
     register,
@@ -60,6 +64,29 @@ export default function ApplicationForm() {
   const searchAttempted = tnQuery.trim().length >= 2;
   const notFound = searchAttempted && !selectedCode && !tnSearching && tnResults?.length === 0;
   const tnvedResolved = !!selectedCode || notFound;
+
+  // Debounced conformity-requirement check — approximate, 4-digit HS heading
+  // match only (see backend parseTnVedRanges). Re-checks whenever the code
+  // changes and resets the "acknowledged" state, so a changed code can't
+  // silently ride on a stale acknowledgement.
+  useEffect(() => {
+    const code = (selectedCode?.code || tnQuery).replace(/\D/g, '');
+    setRegulationAck(false);
+    if (code.length < 4) {
+      setTnRegulation(null);
+      return undefined;
+    }
+    const handle = setTimeout(() => {
+      checkTnVedRegulation(code)
+        .then(setTnRegulation)
+        .catch(() => setTnRegulation(null));
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [tnQuery, selectedCode]);
+
+  const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
+  const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
+  const regulationBlocking = !!mandatoryMatch && !regulationAck;
 
   // Fire the background lead-capture inquiry once contact details are valid,
   // the moment a TN VED search has happened — whether or not it matched.
@@ -109,6 +136,8 @@ export default function ApplicationForm() {
         ...values,
         tnVedCode: tnQuery.trim() || undefined,
         tnVedCodeId: selectedCode?.id,
+        tnVedWarningShown: !!(mandatoryMatch || declarationMatch),
+        tnVedWarningCategory: mandatoryMatch ? 'SERTIFIKAT' : declarationMatch ? 'DEKLARATSIYA' : undefined,
       };
       Object.entries(payload).forEach(([k, v]) => v && formData.append(k, v));
       files.forEach((f) => formData.append('files', f));
@@ -233,8 +262,55 @@ export default function ApplicationForm() {
           )}
         </div>
 
+        {/* TN VED conformity-requirement notice — approximate, HS-heading-level match */}
+        {mandatoryMatch && (
+          <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3.5">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-red-800">
+                  Diqqat! Kiritilgan TN VED kodi bo'yicha O'zbekiston Respublikasi Vazirlar Mahkamasining{' '}
+                  {mandatoryMatch.decision}-son qarori asosida MAJBURIY MUVOFIQLIK SERTIFIKATI rasmiylashtirilishi
+                  lozim (band: {mandatoryMatch.item}, {mandatoryMatch.nameUz}).
+                </p>
+                <p className="text-xs text-red-700 mt-2">
+                  Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy
+                  ma'lumot uchun mutaxassislarimiz bilan bog'laning.
+                </p>
+                {!regulationAck && (
+                  <button
+                    type="button"
+                    onClick={() => setRegulationAck(true)}
+                    className="btn-secondary !border-red-600 !text-red-700 hover:!bg-red-100 mt-3 !py-2 !px-4 text-xs"
+                  >
+                    Tushundim, davom etaman
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!mandatoryMatch && declarationMatch && (
+          <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3.5">
+            <div className="flex items-start gap-2.5">
+              <Info className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">
+                  Ma'lumot: bu TN VED kodi bo'yicha muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi (
+                  {declarationMatch.decision}-son qaror, {declarationMatch.item}-band).
+                </p>
+                <p className="text-xs text-blue-700 mt-2">
+                  Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy
+                  ma'lumot uchun mutaxassislarimiz bilan bog'laning.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Step 2: contact capture — shown right after a search happens, captured as a lead in the background */}
-        {searchAttempted && (
+        {searchAttempted && !regulationBlocking && (
           <div className="card p-6">
             <p className="text-sm font-semibold text-ink">{t('application.contactTitle')}</p>
             <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('application.contactHint')}</p>
@@ -253,7 +329,7 @@ export default function ApplicationForm() {
         )}
 
         {/* Step 3: rest of the form, once TN VED lookup is resolved (matched or confirmed not-found) */}
-        {tnvedResolved && (
+        {tnvedResolved && !regulationBlocking && (
           <div className="card p-6 space-y-5">
             <Field label={t('application.productName')} error={errors.productName}>
               <input {...register('productName', { required: true })} className="input-field" />

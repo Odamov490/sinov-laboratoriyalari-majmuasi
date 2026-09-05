@@ -123,6 +123,12 @@ mountCrud('tnved-codes', 'tnved', 'tnVedCode', {
   buildData: tnVedBuildData,
 });
 
+// TN VED conformity regulations (resolutions 502/43 reference table — view/search, edit if needed)
+mountCrud('tnved-reglament', 'applications', 'tnVedRegulation', {
+  searchFields: ['item', 'nameUz', 'tnVedRaw'],
+  orderBy: { createdAt: 'asc' },
+});
+
 // TN VED inquiries (leads captured from the application form's TN VED lookup step)
 router.get('/tnved-inquiries', requireModule('tnved'), listInquiries);
 router.patch('/tnved-inquiries/:id/status', requireModule('tnved'), updateInquiryStatus);

@@ -322,6 +322,8 @@ model Application {
   productDescription String?
   testType          String?
   comment           String?
+  tnVedWarningShown    Boolean @default(false)
+  tnVedWarningCategory String?
   status            ApplicationStatus @default(QABUL_QILINDI)
   statusComment     String?
   samples         Sample[]
@@ -433,4 +435,24 @@ model SampleMovement {
   performedByName   String?
   notes             String?
   createdAt         DateTime       @default(now())
+}
+
+enum TnVedRegulationCategory {
+  SERTIFIKAT
+  DEKLARATSIYA
+}
+
+// Reference table for mandatory conformity requirements (Cabinet of Ministers
+// resolutions 502 and 43): which HS/TN VED code ranges require a mandatory
+// certificate vs. a declaration of conformity. tnVedRaw keeps the original
+// legal-text range/exception wording verbatim (see parseTnVedRanges — it is
+// only approximately machine-parseable at the 4-digit heading level).
+model TnVedRegulation {
+  id        String                  @id @default(uuid())
+  item      String
+  nameUz    String
+  tnVedRaw  String
+  category  TnVedRegulationCategory
+  decision  String
+  createdAt DateTime                @default(now())
 }

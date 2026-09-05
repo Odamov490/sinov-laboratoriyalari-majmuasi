@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, X, Plus, AlertTriangle, Tag } from 'lucide-react';
+import { Eye, X, Plus, AlertTriangle, Tag, Info } from 'lucide-react';
 import { adminApplications, adminTestItems, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Select, Pagination, StatusBadge, APPLICATION_STATUSES, STATUS_LABELS } from '../../components/UI.jsx';
@@ -182,6 +182,26 @@ export default function AdminApplications() {
             <Row label="Email" value={selected.email} />
             <Row label="Mahsulot" value={selected.productName} />
             <Row label="Izoh" value={selected.comment} />
+
+            {selected.tnVedWarningShown && (
+              <div
+                className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium ${
+                  selected.tnVedWarningCategory === 'SERTIFIKAT'
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-blue-50 border-blue-200 text-blue-700'
+                }`}
+              >
+                {selected.tnVedWarningCategory === 'SERTIFIKAT' ? (
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <Info className="h-3.5 w-3.5 shrink-0" />
+                )}
+                {selected.tnVedWarningCategory === 'SERTIFIKAT'
+                  ? 'TN VED: Sertifikat talab qilinadi'
+                  : 'TN VED: Deklaratsiya tavsiya etiladi'}
+              </div>
+            )}
+
             {selected.files?.length > 0 && (
               <div>
                 <p className="text-sm text-slate-500 mb-1">Fayllar</p>
