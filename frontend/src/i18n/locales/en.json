@@ -15,17 +15,17 @@
     "gallery": "Gallery",
     "faq": "FAQ",
     "track": "Track Application",
-    "apply": "Submit Application"
+    "apply": "Check TN VED Code"
   },
   "hero": {
     "title": "TESTING LABORATORIES COMPLEX",
     "tagline": "We evaluate the quality and safety of your products through reliable testing.",
     "cta1": "View Services",
-    "cta2": "Submit Application"
+    "cta2": "Check TN VED Code"
   },
   "common": {
     "readMore": "Read more",
-    "apply": "Apply",
+    "apply": "Check TN VED Code",
     "optional": "optional",
     "search": "Search",
     "loading": "Loading...",
@@ -87,7 +87,7 @@
     "rights": "All rights reserved."
   },
   "application": {
-    "title": "Online Application",
+    "title": "TN VED Compliance Check",
     "fullName": "Full name",
     "organization": "Organization name",
     "phone": "Phone",
@@ -102,7 +102,7 @@
     "success": "Your application has been successfully accepted.",
     "number": "Application number",
     "tnvedLabel": "TN VED code",
-    "tnvedPlaceholder": "Enter the code or search by product name",
+    "tnvedPlaceholder": "Enter the TN VED code",
     "tnvedSearching": "Searching...",
     "tnvedNoResults": "Your code was not found in the system",
     "tnvedNoResultsHint": "Briefly describe your product — our specialists will determine the required test program and contact you.",

@@ -15,17 +15,17 @@
     "gallery": "Galereya",
     "faq": "FAQ",
     "track": "Arizani tekshirish",
-    "apply": "Ariza yuborish"
+    "apply": "TN VED tekshirish"
   },
   "hero": {
     "title": "SINOV LABORATORIYALARI MAJMUASI",
     "tagline": "Mahsulotlaringiz sifati va xavfsizligini ishonchli sinovlar orqali baholaymiz.",
     "cta1": "Xizmatlarni ko‘rish",
-    "cta2": "Ariza yuborish"
+    "cta2": "TN VED tekshirish"
   },
   "common": {
     "readMore": "Batafsil",
-    "apply": "Ariza berish",
+    "apply": "TN VED tekshirish",
     "optional": "ixtiyoriy",
     "search": "Qidiruv",
     "loading": "Yuklanmoqda...",
@@ -87,7 +87,7 @@
     "rights": "Barcha huquqlar himoyalangan."
   },
   "application": {
-    "title": "Onlayn ariza",
+    "title": "TN VED muvofiqlik tekshiruvi",
     "fullName": "F.I.Sh.",
     "organization": "Tashkilot nomi",
     "phone": "Telefon",
@@ -102,7 +102,7 @@
     "success": "Arizangiz muvaffaqiyatli qabul qilindi.",
     "number": "Ariza raqami",
     "tnvedLabel": "TN VED kodi",
-    "tnvedPlaceholder": "Kodni kiriting yoki mahsulot nomini qidiring",
+    "tnvedPlaceholder": "TN VED kodini kiriting",
     "tnvedSearching": "Qidirilmoqda...",
     "tnvedNoResults": "Kodingiz tizimda topilmadi",
     "tnvedNoResultsHint": "Mahsulotingiz haqida qisqacha yozing — mutaxassislarimiz kerakli sinov dasturini aniqlab, siz bilan bog'lanadi.",
