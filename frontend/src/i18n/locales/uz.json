@@ -15,17 +15,18 @@
     "gallery": "Galereya",
     "faq": "FAQ",
     "track": "Arizani tekshirish",
-    "apply": "TN VED tekshirish"
+    "apply": "Ariza yuborish",
+    "tnvedCheck": "TN VED tekshirish"
   },
   "hero": {
     "title": "SINOV LABORATORIYALARI MAJMUASI",
     "tagline": "Mahsulotlaringiz sifati va xavfsizligini ishonchli sinovlar orqali baholaymiz.",
     "cta1": "Xizmatlarni ko‘rish",
-    "cta2": "TN VED tekshirish"
+    "cta2": "Ariza yuborish"
   },
   "common": {
     "readMore": "Batafsil",
-    "apply": "TN VED tekshirish",
+    "apply": "Ariza berish",
     "optional": "ixtiyoriy",
     "search": "Qidiruv",
     "loading": "Yuklanmoqda...",
@@ -87,7 +88,8 @@
     "rights": "Barcha huquqlar himoyalangan."
   },
   "application": {
-    "title": "TN VED muvofiqlik tekshiruvi",
+    "title": "Onlayn ariza",
+    "tnvedCheckHint": "TN VED kodi bo'yicha sertifikat/deklaratsiya talabini bilmoqchimisiz? TN VED tekshirish sahifasidan foydalaning",
     "fullName": "F.I.Sh.",
     "organization": "Tashkilot nomi",
     "phone": "Telefon",
@@ -102,7 +104,7 @@
     "success": "Arizangiz muvaffaqiyatli qabul qilindi.",
     "number": "Ariza raqami",
     "tnvedLabel": "TN VED kodi",
-    "tnvedPlaceholder": "TN VED kodini kiriting",
+    "tnvedPlaceholder": "Masalan: 8501310000",
     "tnvedSearching": "Qidirilmoqda...",
     "tnvedNoResults": "Kodingiz tizimda topilmadi",
     "tnvedNoResultsHint": "Mahsulotingiz haqida qisqacha yozing — mutaxassislarimiz kerakli sinov dasturini aniqlab, siz bilan bog'lanadi.",
@@ -114,6 +116,13 @@
     "productDescription": "Mahsulot haqida qisqacha",
     "productDescriptionPlaceholder": "Mahsulotingiz, uning tarkibi yoki qo'llanilishi haqida qisqacha yozing",
     "unmatchedSuccessNote": "Mutaxassislarimiz mahsulotingiz uchun kerakli sinov dasturini aniqlab, siz bilan bog'lanadi."
+  },
+  "tnvedCheck": {
+    "title": "TN VED muvofiqlik tekshiruvi",
+    "subtitle": "TN VED kodini kiriting — tizim majburiy sertifikat yoki deklaratsiya talab qilinishini avtomatik tekshiradi.",
+    "label": "TN VED kodi",
+    "placeholder": "TN VED kodini kiriting",
+    "checking": "Tekshirilmoqda..."
   },
   "track": {
     "title": "Ariza holatini tekshirish",

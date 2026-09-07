@@ -1,184 +1,141 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Info, Loader2 } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { CheckCircle2, Copy, ShieldCheck } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
-import { checkTnVedRegulation } from '../services/publicApi';
-
-const NOTICE_TONES = {
-  red: {
-    box: 'bg-red-50 border-red-200',
-    icon: 'text-red-600',
-    title: 'text-red-900',
-    chip: 'bg-red-100 text-red-700',
-    detailBox: 'bg-white border-red-200',
-    detailText: 'text-red-800',
-    note: 'border-red-200 text-red-700',
-    link: 'text-red-700',
-  },
-  emerald: {
-    box: 'bg-emerald-50 border-emerald-200',
-    icon: 'text-emerald-600',
-    title: 'text-emerald-900',
-    chip: 'bg-emerald-100 text-emerald-700',
-    detailBox: 'bg-white border-emerald-200',
-    detailText: 'text-emerald-800',
-    note: 'border-emerald-200 text-emerald-700',
-    link: 'text-emerald-700',
-  },
-  amber: {
-    box: 'bg-amber-50 border-amber-200',
-    icon: 'text-amber-600',
-    title: 'text-amber-900',
-    chip: 'bg-amber-100 text-amber-700',
-    detailBox: 'bg-white border-amber-200',
-    detailText: 'text-amber-800',
-    note: 'border-amber-200 text-amber-700',
-    link: 'text-amber-700',
-  },
-};
-
-const DETAIL_PREVIEW_LENGTH = 220;
-
-// Renders one TN VED conformity-check result: a headline, the resolution/band
-// reference as chips, the (often very long) legal item description in its
-// own collapsible box, and a muted disclaimer footnote — shared layout for
-// all three outcomes (mandatory cert / declaration / nothing found).
-function RegulationNotice({ tone, icon: Icon, title, chips, detail, note }) {
-  const [expanded, setExpanded] = useState(false);
-  const c = NOTICE_TONES[tone];
-  const isLong = detail && detail.length > DETAIL_PREVIEW_LENGTH;
-  const shownDetail = isLong && !expanded ? `${detail.slice(0, DETAIL_PREVIEW_LENGTH)}…` : detail;
-
-  return (
-    <div className={`rounded-xl border px-4 py-4 ${c.box}`}>
-      <div className="flex items-start gap-3">
-        <Icon className={`h-5 w-5 mt-0.5 shrink-0 ${c.icon}`} />
-        <div className="min-w-0 flex-1">
-          <p className={`text-sm font-semibold ${c.title}`}>{title}</p>
-
-          {chips?.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {chips.map((chip) => (
-                <span key={chip} className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${c.chip}`}>
-                  {chip}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {detail && (
-            <div className={`mt-3 rounded-lg border px-3.5 py-3 text-xs leading-relaxed ${c.detailBox} ${c.detailText}`}>
-              {shownDetail}
-              {isLong && (
-                <button
-                  type="button"
-                  onClick={() => setExpanded((v) => !v)}
-                  className={`block mt-2 text-[11px] font-semibold underline underline-offset-2 ${c.link}`}
-                >
-                  {expanded ? 'Qisqartirish' : "To'liq matnni ko'rsatish"}
-                </button>
-              )}
-            </div>
-          )}
-
-          {note && <p className={`mt-3 pt-3 border-t text-[11px] leading-relaxed ${c.note}`}>{note}</p>}
-        </div>
-      </div>
-    </div>
-  );
-}
+import FileUploader from '../components/FileUploader.jsx';
+import { submitApplication } from '../services/publicApi';
+import { useToast } from '../context/ToastContext.jsx';
 
 export default function ApplicationForm() {
   const { t } = useTranslation();
-  const [tnQuery, setTnQuery] = useState('');
+  const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
+  const [files, setFiles] = useState([]);
+  const [result, setResult] = useState(null);
 
-  // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
-  const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
-  const [tnChecking, setTnChecking] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: { serviceId: searchParams.get('serviceId') || '' },
+  });
 
-  // Approximate conformity-requirement check (4-digit HS heading match only
-  // — see backend parseTnVedRanges), fired automatically as the code is
-  // typed. A changed code always clears the previous result first, so a
-  // stale banner never lingers on top of a code it no longer matches.
-  useEffect(() => {
-    const code = tnQuery.replace(/\D/g, '');
-    setTnRegulation(null);
-    if (code.length < 4) {
-      setTnChecking(false);
-      return undefined;
+  const onSubmit = async (values) => {
+    try {
+      const formData = new FormData();
+      Object.entries(values).forEach(([k, v]) => v && formData.append(k, v));
+      files.forEach((f) => formData.append('files', f));
+      const data = await submitApplication(formData);
+      setResult(data);
+    } catch (err) {
+      showToast(err?.response?.data?.error || t('common.errorLoading'), 'error');
     }
-    setTnChecking(true);
-    const handle = setTimeout(() => {
-      checkTnVedRegulation(code)
-        .then(setTnRegulation)
-        .catch(() => setTnRegulation(null))
-        .finally(() => setTnChecking(false));
-    }, 450);
-    return () => clearTimeout(handle);
-  }, [tnQuery]);
+  };
 
-  const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
-  const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
-  const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
-
-  const legalDisclaimer =
-    "Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy ma'lumot uchun mutaxassislarimiz bilan bog'laning.";
+  if (result) {
+    return (
+      <div className="section container-page max-w-xl text-center">
+        <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto" />
+        <h1 className="mt-6 text-2xl font-bold text-ink">{t('application.success')}</h1>
+        <div className="mt-4 card p-5 inline-flex items-center gap-3">
+          <span className="text-sm text-slate-500">{t('application.number')}:</span>
+          <span className="font-mono font-bold text-primary">{result.applicationNumber}</span>
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(result.applicationNumber);
+              showToast('Nusxalandi', 'success');
+            }}
+            className="text-slate-400 hover:text-primary"
+          >
+            <Copy className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-8 flex justify-center gap-3">
+          <Link to={`/arizani-tekshirish?n=${result.applicationNumber}`} className="btn-secondary">
+            {t('nav.track')}
+          </Link>
+          <Link to="/" className="btn-primary">
+            {t('nav.home')}
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="section container-page max-w-2xl">
       <Breadcrumb items={[{ label: t('nav.apply') }]} />
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('application.title')}</h1>
 
-      <div className="mt-8 space-y-5">
-        {/* TN VED code + conformity-requirement check */}
-        <div className="card p-6">
-          <label className="block text-sm font-medium text-ink mb-1.5">{t('application.tnvedLabel')}</label>
-          <input
-            value={tnQuery}
-            onChange={(e) => setTnQuery(e.target.value)}
-            placeholder={t('application.tnvedPlaceholder')}
-            className="input-field"
-          />
+      <Link
+        to="/tnved-tekshirish"
+        className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline"
+      >
+        <ShieldCheck className="h-4 w-4" />
+        {t('application.tnvedCheckHint')}
+      </Link>
 
-          {tnChecking && (
-            <p className="mt-3 pt-3 border-t border-border text-xs text-slate-400 flex items-center gap-1.5">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Tekshirilmoqda...
-            </p>
-          )}
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
+        <div className="card p-6">
+          <p className="text-sm font-semibold text-ink">{t('application.contactTitle')}</p>
+          <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('application.contactHint')}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <Field label={t('application.fullName')} error={errors.fullName}>
+              <input {...register('fullName', { required: true, minLength: 2 })} className="input-field" />
+            </Field>
+            <Field label={t('application.phone')} error={errors.phone}>
+              <input {...register('phone', { required: true, minLength: 5 })} className="input-field" placeholder="+998" />
+            </Field>
+            <Field label={`${t('application.email')} (${t('common.optional')})`}>
+              <input {...register('email')} type="email" className="input-field" />
+            </Field>
+          </div>
         </div>
 
-        {/* TN VED conformity-requirement notice — approximate, HS-heading-level match */}
-        {mandatoryMatch && (
-          <RegulationNotice
-            tone="red"
-            icon={AlertTriangle}
-            title="Diqqat! Majburiy muvofiqlik sertifikati talab qilinadi"
-            chips={[`${mandatoryMatch.decision}-son qaror`, `${mandatoryMatch.item}-band`]}
-            detail={mandatoryMatch.nameUz}
-            note={`Ushbu TN VED kodi bo'yicha ariza onlayn tizim orqali qabul qilinmaydi. ${legalDisclaimer}`}
-          />
-        )}
+        <div className="card p-6 space-y-5">
+          <Field label={t('application.productName')} error={errors.productName}>
+            <input {...register('productName', { required: true })} className="input-field" />
+          </Field>
 
-        {!mandatoryMatch && declarationMatch && (
-          <RegulationNotice
-            tone="emerald"
-            icon={Info}
-            title="Muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi"
-            chips={[`${declarationMatch.decision}-son qaror`, `${declarationMatch.item}-band`]}
-            detail={declarationMatch.nameUz}
-            note={legalDisclaimer}
-          />
-        )}
+          <Field label={`${t('application.tnvedLabel')} (${t('common.optional')})`}>
+            <input {...register('tnVedCode')} placeholder={t('application.tnvedPlaceholder')} className="input-field" />
+          </Field>
 
-        {checkedNoMatch && (
-          <RegulationNotice
-            tone="amber"
-            icon={AlertTriangle}
-            title="Maxsus muvofiqlik talabi (sertifikat yoki deklaratsiya) topilmadi"
-            note={legalDisclaimer}
-          />
-        )}
-      </div>
+          <Field label={`${t('application.productDescription')} (${t('common.optional')})`}>
+            <textarea
+              {...register('productDescription')}
+              rows={3}
+              placeholder={t('application.productDescriptionPlaceholder')}
+              className="input-field resize-none"
+            />
+          </Field>
+
+          <Field label={t('application.comment')}>
+            <textarea {...register('comment')} rows={4} className="input-field resize-none" />
+          </Field>
+
+          <Field label={t('application.file')}>
+            <FileUploader files={files} onChange={setFiles} />
+          </Field>
+
+          <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
+            {t('common.submit')}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function Field({ label, error, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-ink mb-1.5">{label}</label>
+      {children}
+      {error && <p className="text-xs text-red-500 mt-1">Majburiy maydon</p>}
     </div>
   );
 }

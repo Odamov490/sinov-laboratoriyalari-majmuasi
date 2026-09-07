@@ -39,6 +39,9 @@ export default function Hero() {
             {t('hero.cta2')}
           </Link>
         </div>
+        <Link to="/tnved-tekshirish" className="mt-5 inline-block text-sm font-medium text-white/70 hover:text-white underline underline-offset-2">
+          {t('nav.tnvedCheck')}
+        </Link>
       </div>
     </section>
   );

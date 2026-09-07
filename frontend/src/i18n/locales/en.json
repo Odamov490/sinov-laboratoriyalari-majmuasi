@@ -15,17 +15,18 @@
     "gallery": "Gallery",
     "faq": "FAQ",
     "track": "Track Application",
-    "apply": "Check TN VED Code"
+    "apply": "Submit Application",
+    "tnvedCheck": "Check TN VED Code"
   },
   "hero": {
     "title": "TESTING LABORATORIES COMPLEX",
     "tagline": "We evaluate the quality and safety of your products through reliable testing.",
     "cta1": "View Services",
-    "cta2": "Check TN VED Code"
+    "cta2": "Submit Application"
   },
   "common": {
     "readMore": "Read more",
-    "apply": "Check TN VED Code",
+    "apply": "Submit Application",
     "optional": "optional",
     "search": "Search",
     "loading": "Loading...",
@@ -87,7 +88,8 @@
     "rights": "All rights reserved."
   },
   "application": {
-    "title": "TN VED Compliance Check",
+    "title": "Online Application",
+    "tnvedCheckHint": "Want to know the certificate/declaration requirement for your TN VED code? Use the TN VED check page",
     "fullName": "Full name",
     "organization": "Organization name",
     "phone": "Phone",
@@ -102,7 +104,7 @@
     "success": "Your application has been successfully accepted.",
     "number": "Application number",
     "tnvedLabel": "TN VED code",
-    "tnvedPlaceholder": "Enter the TN VED code",
+    "tnvedPlaceholder": "e.g. 8501310000",
     "tnvedSearching": "Searching...",
     "tnvedNoResults": "Your code was not found in the system",
     "tnvedNoResultsHint": "Briefly describe your product — our specialists will determine the required test program and contact you.",
@@ -114,6 +116,13 @@
     "productDescription": "Brief product description",
     "productDescriptionPlaceholder": "Briefly describe the product, its composition or intended use",
     "unmatchedSuccessNote": "Our specialists will determine the required test program for your product and contact you."
+  },
+  "tnvedCheck": {
+    "title": "TN VED Compliance Check",
+    "subtitle": "Enter your TN VED code — the system automatically checks whether a mandatory certificate or declaration is required.",
+    "label": "TN VED code",
+    "placeholder": "Enter the TN VED code",
+    "checking": "Checking..."
   },
   "track": {
     "title": "Track application status",

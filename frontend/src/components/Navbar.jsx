@@ -103,8 +103,14 @@ export default function Navbar() {
           </div>
 
           <Link
+            to="/tnved-tekshirish"
+            className="btn-secondary !py-2.5 !px-4 text-sm whitespace-nowrap hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
+          >
+            {t('nav.tnvedCheck')}
+          </Link>
+          <Link
             to="/ariza"
-            className="btn-primary !py-2.5 !px-4 text-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+            className="btn-primary !py-2.5 !px-4 text-sm whitespace-nowrap hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
           >
             {t('nav.apply')}
           </Link>
@@ -157,7 +163,10 @@ export default function Navbar() {
                 </button>
               ))}
             </div>
-            <Link to="/ariza" onClick={() => setOpen(false)} className="btn-primary mt-3 w-full">
+            <Link to="/tnved-tekshirish" onClick={() => setOpen(false)} className="btn-secondary mt-3 w-full">
+              {t('nav.tnvedCheck')}
+            </Link>
+            <Link to="/ariza" onClick={() => setOpen(false)} className="btn-primary mt-2 w-full">
               {t('nav.apply')}
             </Link>
           </div>

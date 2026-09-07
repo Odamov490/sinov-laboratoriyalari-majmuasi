@@ -23,6 +23,7 @@ import Gallery from './pages/Gallery.jsx';
 import Faq from './pages/Faq.jsx';
 import Contact from './pages/Contact.jsx';
 import ApplicationForm from './pages/ApplicationForm.jsx';
+import TnVedCheck from './pages/TnVedCheck.jsx';
 import TrackApplication from './pages/TrackApplication.jsx';
 import NotFound from './pages/NotFound.jsx';
 
@@ -74,6 +75,7 @@ export default function App() {
         <Route path="/faq" element={<Faq />} />
         <Route path="/arizani-tekshirish" element={<TrackApplication />} />
         <Route path="/ariza" element={<ApplicationForm />} />
+        <Route path="/tnved-tekshirish" element={<TnVedCheck />} />
         <Route path="/aloqa" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Route>
