@@ -1,33 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams, Link } from 'react-router-dom';
-import { CheckCircle2, Copy, AlertTriangle, Info, Loader2 } from 'lucide-react';
+import { AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
-import FileUploader from '../components/FileUploader.jsx';
-import { submitApplication, checkTnVedRegulation } from '../services/publicApi';
-import { useToast } from '../context/ToastContext.jsx';
+import { checkTnVedRegulation } from '../services/publicApi';
 
 export default function ApplicationForm() {
   const { t } = useTranslation();
-  const { showToast } = useToast();
-  const [searchParams] = useSearchParams();
-  const [files, setFiles] = useState([]);
-  const [result, setResult] = useState(null);
-
   const [tnQuery, setTnQuery] = useState('');
 
   // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
   const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
   const [tnChecking, setTnChecking] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    defaultValues: { serviceId: searchParams.get('serviceId') || '' },
-  });
 
   // Approximate conformity-requirement check (4-digit HS heading match only
   // — see backend parseTnVedRanges), fired automatically as the code is
@@ -53,65 +36,14 @@ export default function ApplicationForm() {
   const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
   const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
   const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
-  // A mandatory-certificate match is a hard stop — this online form cannot
-  // be used to continue; there is no "proceed anyway" escape hatch.
-  const regulationBlocking = !!mandatoryMatch;
-
-  const onSubmit = async (values) => {
-    try {
-      const formData = new FormData();
-      const payload = {
-        ...values,
-        tnVedCode: tnQuery.trim() || undefined,
-        tnVedWarningShown: !!(mandatoryMatch || declarationMatch),
-        tnVedWarningCategory: mandatoryMatch ? 'SERTIFIKAT' : declarationMatch ? 'DEKLARATSIYA' : undefined,
-      };
-      Object.entries(payload).forEach(([k, v]) => v && formData.append(k, v));
-      files.forEach((f) => formData.append('files', f));
-      const data = await submitApplication(formData);
-      setResult(data);
-    } catch (err) {
-      showToast(err?.response?.data?.error || t('common.errorLoading'), 'error');
-    }
-  };
-
-  if (result) {
-    return (
-      <div className="section container-page max-w-xl text-center">
-        <CheckCircle2 className="h-16 w-16 text-emerald-500 mx-auto" />
-        <h1 className="mt-6 text-2xl font-bold text-ink">{t('application.success')}</h1>
-        <div className="mt-4 card p-5 inline-flex items-center gap-3">
-          <span className="text-sm text-slate-500">{t('application.number')}:</span>
-          <span className="font-mono font-bold text-primary">{result.applicationNumber}</span>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(result.applicationNumber);
-              showToast('Nusxalandi', 'success');
-            }}
-            className="text-slate-400 hover:text-primary"
-          >
-            <Copy className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="mt-8 flex justify-center gap-3">
-          <Link to={`/arizani-tekshirish?n=${result.applicationNumber}`} className="btn-secondary">
-            {t('nav.track')}
-          </Link>
-          <Link to="/" className="btn-primary">
-            {t('nav.home')}
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="section container-page max-w-2xl">
       <Breadcrumb items={[{ label: t('nav.apply') }]} />
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('application.title')}</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5">
-        {/* TN VED code + optional conformity-requirement check */}
+      <div className="mt-8 space-y-5">
+        {/* TN VED code + conformity-requirement check */}
         <div className="card p-6">
           <label className="block text-sm font-medium text-ink mb-1.5">{t('application.tnvedLabel')}</label>
           <input
@@ -140,9 +72,8 @@ export default function ApplicationForm() {
                   lozim (band: {mandatoryMatch.item}, {mandatoryMatch.nameUz}).
                 </p>
                 <p className="text-xs text-red-700 mt-2">
-                  Ushbu TN VED kodi bo'yicha ariza onlayn tizim orqali qabul qilinmaydi. Aniq talab mahsulotning
-                  to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi — sertifikat rasmiylashtirish
-                  bo'yicha mutaxassislarimiz bilan bog'laning.
+                  Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi — sertifikat
+                  rasmiylashtirish bo'yicha mutaxassislarimiz bilan bog'laning.
                 </p>
               </div>
             </div>
@@ -184,64 +115,7 @@ export default function ApplicationForm() {
             </div>
           </div>
         )}
-
-        {!regulationBlocking && (
-          <>
-            <div className="card p-6">
-              <p className="text-sm font-semibold text-ink">{t('application.contactTitle')}</p>
-              <p className="text-xs text-slate-500 mt-0.5 mb-4">{t('application.contactHint')}</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <Field label={t('application.fullName')} error={errors.fullName}>
-                  <input {...register('fullName', { required: true, minLength: 2 })} className="input-field" />
-                </Field>
-                <Field label={t('application.phone')} error={errors.phone}>
-                  <input {...register('phone', { required: true, minLength: 5 })} className="input-field" placeholder="+998" />
-                </Field>
-                <Field label={`${t('application.email')} (${t('common.optional')})`}>
-                  <input {...register('email')} type="email" className="input-field" />
-                </Field>
-              </div>
-            </div>
-
-            <div className="card p-6 space-y-5">
-              <Field label={t('application.productName')} error={errors.productName}>
-                <input {...register('productName', { required: true })} className="input-field" />
-              </Field>
-
-              <Field label={`${t('application.productDescription')} (${t('common.optional')})`}>
-                <textarea
-                  {...register('productDescription')}
-                  rows={3}
-                  placeholder={t('application.productDescriptionPlaceholder')}
-                  className="input-field resize-none"
-                />
-              </Field>
-
-              <Field label={t('application.comment')}>
-                <textarea {...register('comment')} rows={4} className="input-field resize-none" />
-              </Field>
-
-              <Field label={t('application.file')}>
-                <FileUploader files={files} onChange={setFiles} />
-              </Field>
-
-              <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
-                {t('common.submit')}
-              </button>
-            </div>
-          </>
-        )}
-      </form>
-    </div>
-  );
-}
-
-function Field({ label, error, children }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-ink mb-1.5">{label}</label>
-      {children}
-      {error && <p className="text-xs text-red-500 mt-1">Majburiy maydon</p>}
+      </div>
     </div>
   );
 }
