@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, FlaskConical, ChevronDown, Search } from 'lucide-react';
+import { Menu, X, FlaskConical, ChevronDown, Search, ShieldCheck } from 'lucide-react';
 import SearchOverlay from './SearchOverlay.jsx';
 
 const LANGS = [
@@ -49,7 +49,7 @@ export default function Navbar() {
         scrolled ? 'border-primary/20 shadow-lg' : 'border-primary/10 shadow-sm'
       }`}
     >
-      <div className="container-page flex h-16 items-center justify-between gap-4">
+      <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-4">
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
             <FlaskConical className="h-5 w-5" />
@@ -59,7 +59,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+        <nav className="hidden min-[1560px]:flex items-center gap-1">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.to === '/'} className={navLinkClass}>
               {l.label}
@@ -67,7 +67,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden lg:flex items-center gap-3">
+        <div className="hidden min-[1560px]:flex items-center gap-3 shrink-0">
           <button
             onClick={() => setSearchOpen(true)}
             aria-label={t('common.search')}
@@ -75,6 +75,15 @@ export default function Navbar() {
           >
             <Search className="h-5 w-5" />
           </button>
+
+          <Link
+            to="/tnved-tekshirish"
+            title={t('nav.tnvedCheck')}
+            aria-label={t('nav.tnvedCheck')}
+            className="p-2 rounded-lg text-slate-500 hover:bg-bg-light hover:text-primary hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 focus-ring"
+          >
+            <ShieldCheck className="h-5 w-5" />
+          </Link>
 
           <div className="relative">
             <button
@@ -102,22 +111,13 @@ export default function Navbar() {
             )}
           </div>
 
-          <Link
-            to="/tnved-tekshirish"
-            className="btn-secondary !py-2.5 !px-4 text-sm whitespace-nowrap hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
-          >
-            {t('nav.tnvedCheck')}
-          </Link>
-          <Link
-            to="/ariza"
-            className="btn-primary !py-2.5 !px-4 text-sm whitespace-nowrap hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
-          >
+          <Link to="/ariza" className="btn-primary !py-2.5 !px-4 text-sm whitespace-nowrap">
             {t('nav.apply')}
           </Link>
         </div>
 
         <button
-          className="lg:hidden p-2 text-slate-600 focus-ring rounded-lg"
+          className="min-[1560px]:hidden p-2 text-slate-600 focus-ring rounded-lg"
           onClick={() => setOpen((v) => !v)}
           aria-label="menu"
         >
@@ -126,7 +126,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="lg:hidden border-t border-border bg-white">
+        <div className="min-[1560px]:hidden border-t border-border bg-white">
           <div className="container-page py-4 flex flex-col gap-1">
             {links.map((l) => (
               <NavLink
