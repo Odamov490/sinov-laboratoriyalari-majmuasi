@@ -22,12 +22,6 @@ enum ApplicationStatus {
   BEKOR_QILINDI
 }
 
-enum TnVedInquiryStatus {
-  YANGI
-  BOGLANILDI
-  ARIZAGA_AYLANDI
-}
-
 model User {
   id           String   @id @default(uuid())
   fullName     String
@@ -110,17 +104,6 @@ model Service {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   deletedAt       DateTime?
-}
-
-model TnVedInquiry {
-  id          String              @id @default(uuid())
-  tnVedCode   String
-  fullName    String
-  phone       String
-  email       String?
-  status      TnVedInquiryStatus  @default(YANGI)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
 }
 
 model Price {

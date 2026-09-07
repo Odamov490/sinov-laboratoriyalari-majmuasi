@@ -55,17 +55,6 @@ const createApplication = asyncHandler(async (req, res) => {
     include: { files: true, testItems: { include: { service: true } } },
   });
 
-  // The visitor may have left a TnVedInquiry lead earlier in this same
-  // session (search -> contact details, before finishing the form). Mark the
-  // most recent unconverted one for this phone as turned into an application.
-  const openInquiry = await prisma.tnVedInquiry.findFirst({
-    where: { phone: data.phone, status: { not: 'ARIZAGA_AYLANDI' } },
-    orderBy: { createdAt: 'desc' },
-  });
-  if (openInquiry) {
-    await prisma.tnVedInquiry.update({ where: { id: openInquiry.id }, data: { status: 'ARIZAGA_AYLANDI' } });
-  }
-
   notifyNewApplication(application).catch(() => {});
 
   res.status(201).json({

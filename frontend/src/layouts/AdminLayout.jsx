@@ -21,7 +21,6 @@ import {
   Mail,
   Package,
   ScanLine,
-  FileSearch,
   ScrollText,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -35,7 +34,6 @@ const MENU = [
   { to: '/admin/xizmatlar', label: 'Xizmatlar', icon: Wrench, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/narxlar', label: 'Narxlar', icon: Tag, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/standartlar', label: 'Standartlar', icon: BookOpen, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/tnved-sorovlari', label: "TN VED so'rovlari", icon: FileSearch, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/tnved-reglament', label: 'TN VED reglament', icon: ScrollText, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/yangiliklar', label: 'Yangiliklar', icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR'] },
   { to: '/admin/hujjatlar', label: 'Hujjatlar', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR'] },

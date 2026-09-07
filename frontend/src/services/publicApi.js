@@ -37,5 +37,4 @@ export const trackApplicationsByPhone = (phone) =>
 
 export const sendContactMessage = (payload) => apiClient.post('/contact', payload).then((r) => r.data);
 
-export const submitTnVedInquiry = (payload) => apiClient.post('/tnved/inquiry', payload).then((r) => r.data);
 export const checkTnVedRegulation = (code) => apiClient.get('/tnved-check', { params: { code } }).then((r) => r.data);

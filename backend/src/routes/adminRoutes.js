@@ -8,7 +8,7 @@ const { updatePrice, createPrice, listPrices, deletePrice } = require('../contro
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
 const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');
-const { listInquiries, updateInquiryStatus, addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
+const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
@@ -110,10 +110,6 @@ mountCrud('tnved-reglament', 'applications', 'tnVedRegulation', {
   searchFields: ['item', 'nameUz', 'tnVedRaw'],
   orderBy: { createdAt: 'asc' },
 });
-
-// TN VED inquiries (leads captured from the application form's TN VED lookup step)
-router.get('/tnved-inquiries', requireModule('tnved'), listInquiries);
-router.patch('/tnved-inquiries/:id/status', requireModule('tnved'), updateInquiryStatus);
 
 // Applications
 router.get(

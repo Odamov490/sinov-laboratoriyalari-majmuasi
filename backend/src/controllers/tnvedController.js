@@ -1,25 +1,6 @@
-const { z } = require('zod');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { parseTnVedRanges } = require('../utils/tnvedRanges');
-
-const inquirySchema = z.object({
-  tnVedCode: z.string().min(1),
-  fullName: z.string().min(2),
-  phone: z.string().min(5),
-  email: z.string().email().optional().or(z.literal('')),
-});
-
-// Fired in the background from the application form the moment contact
-// details are filled in after a TN VED search — captures a lead even if the
-// visitor never submits the full application.
-const createTnVedInquiry = asyncHandler(async (req, res) => {
-  const data = inquirySchema.parse(req.body);
-  const inquiry = await prisma.tnVedInquiry.create({
-    data: { ...data, email: data.email || null },
-  });
-  res.status(201).json(inquiry);
-});
 
 // Approximate conformity-requirement lookup for the application form: does
 // this TN VED code fall under a mandatory certificate or declaration
@@ -51,4 +32,4 @@ const checkTnVedRegulation = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { createTnVedInquiry, checkTnVedRegulation };
+module.exports = { checkTnVedRegulation };

@@ -46,12 +46,6 @@ export const uploadFiles = (files) => {
     .then((r) => r.data);
 };
 
-export const adminTnVedInquiries = {
-  list: (params) => apiClient.get('/admin/tnved-inquiries', { params }).then((r) => r.data),
-  updateStatus: (id, status) =>
-    apiClient.patch(`/admin/tnved-inquiries/${id}/status`, { status }).then((r) => r.data),
-};
-
 export const adminTestItems = {
   add: (applicationId, serviceId) =>
     apiClient.post(`/admin/applications/${applicationId}/test-items`, { serviceId }).then((r) => r.data),

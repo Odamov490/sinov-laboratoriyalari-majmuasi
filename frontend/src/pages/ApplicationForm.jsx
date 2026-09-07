@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, Copy, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { Breadcrumb } from '../components/UI.jsx';
 import FileUploader from '../components/FileUploader.jsx';
-import { submitApplication, submitTnVedInquiry, checkTnVedRegulation } from '../services/publicApi';
+import { submitApplication, checkTnVedRegulation } from '../services/publicApi';
 import { useToast } from '../context/ToastContext.jsx';
 
 export default function ApplicationForm() {
@@ -16,7 +16,6 @@ export default function ApplicationForm() {
   const [result, setResult] = useState(null);
 
   const [tnQuery, setTnQuery] = useState('');
-  const sentInquiryKeys = useRef(new Set());
 
   // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
   const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
@@ -25,15 +24,10 @@ export default function ApplicationForm() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { serviceId: searchParams.get('serviceId') || '' },
   });
-
-  const fullName = watch('fullName');
-  const phone = watch('phone');
-  const email = watch('email');
 
   // Approximate conformity-requirement check (4-digit HS heading match only
   // — see backend parseTnVedRanges), fired automatically as the code is
@@ -62,33 +56,6 @@ export default function ApplicationForm() {
   // A mandatory-certificate match is a hard stop — this online form cannot
   // be used to continue; there is no "proceed anyway" escape hatch.
   const regulationBlocking = !!mandatoryMatch;
-
-  // Fire the background lead-capture inquiry once contact details are valid
-  // and a TN VED code has been entered — captures a lead even if the
-  // visitor never submits the full application.
-  useEffect(() => {
-    const code = tnQuery.trim();
-    if (code.length < 2) return;
-    if (!fullName || fullName.trim().length < 2) return;
-    if (!phone || phone.trim().length < 5) return;
-
-    const key = `${code}|${phone.trim()}`;
-    if (sentInquiryKeys.current.has(key)) return;
-
-    const handle = setTimeout(() => {
-      sentInquiryKeys.current.add(key);
-      submitTnVedInquiry({
-        tnVedCode: code,
-        fullName: fullName.trim(),
-        phone: phone.trim(),
-        email: email || undefined,
-      }).catch(() => {
-        sentInquiryKeys.current.delete(key);
-      });
-    }, 900);
-    return () => clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tnQuery, fullName, phone]);
 
   const onSubmit = async (values) => {
     try {
