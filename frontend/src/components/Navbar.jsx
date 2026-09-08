@@ -37,7 +37,7 @@ export default function Navbar() {
   ];
 
   const navLinkClass = ({ isActive }) =>
-    `relative text-sm font-medium whitespace-nowrap px-3 py-2 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+    `relative text-sm font-medium whitespace-nowrap px-2 py-2 rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
       isActive
         ? 'text-white bg-primary shadow-md'
         : 'text-slate-600 hover:text-primary hover:bg-bg-light'
@@ -49,7 +49,7 @@ export default function Navbar() {
         scrolled ? 'border-primary/20 shadow-lg' : 'border-primary/10 shadow-sm'
       }`}
     >
-      <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-4">
+      <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
             <FlaskConical className="h-5 w-5" />
@@ -59,7 +59,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden min-[1560px]:flex items-center gap-1">
+        <nav className="hidden xl:flex items-center gap-0.5">
           {links.map((l) => (
             <NavLink key={l.to} to={l.to} end={l.to === '/'} className={navLinkClass}>
               {l.label}
@@ -67,7 +67,7 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div className="hidden min-[1560px]:flex items-center gap-3 shrink-0">
+        <div className="hidden xl:flex items-center gap-2 shrink-0">
           <button
             onClick={() => setSearchOpen(true)}
             aria-label={t('common.search')}
@@ -88,9 +88,10 @@ export default function Navbar() {
           <div className="relative">
             <button
               onClick={() => setLangOpen((v) => !v)}
-              className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-primary hover:bg-bg-light hover:-translate-y-0.5 hover:shadow-md px-2 py-1.5 rounded-lg transition-all duration-200 focus-ring"
+              aria-label="language"
+              className="flex items-center gap-0.5 text-sm font-medium text-slate-600 hover:text-primary hover:bg-bg-light hover:-translate-y-0.5 hover:shadow-md px-1.5 py-1.5 rounded-lg transition-all duration-200 focus-ring uppercase"
             >
-              {LANGS.find((l) => l.code === i18n.language)?.label || 'O‘zbek'}
+              {i18n.language}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
             {langOpen && (
@@ -111,13 +112,13 @@ export default function Navbar() {
             )}
           </div>
 
-          <Link to="/ariza" className="btn-primary !py-2.5 !px-4 text-sm whitespace-nowrap">
+          <Link to="/ariza" className="btn-primary !py-2.5 !px-3.5 text-sm whitespace-nowrap">
             {t('nav.apply')}
           </Link>
         </div>
 
         <button
-          className="min-[1560px]:hidden p-2 text-slate-600 focus-ring rounded-lg"
+          className="xl:hidden p-2 text-slate-600 focus-ring rounded-lg"
           onClick={() => setOpen((v) => !v)}
           aria-label="menu"
         >
@@ -126,7 +127,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <div className="min-[1560px]:hidden border-t border-border bg-white">
+        <div className="xl:hidden border-t border-border bg-white">
           <div className="container-page py-4 flex flex-col gap-1">
             {links.map((l) => (
               <NavLink
