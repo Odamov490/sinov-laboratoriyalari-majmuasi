@@ -52,7 +52,7 @@ export default function Home() {
   const stats = [
     { label: '8 ta laboratoriya', value: '8' },
     { label: "17025 akkreditatsiyasi", value: 'ISO 17025' },
-    { label: 'Sinov yo‘nalishlari', value: labs ? `${labs.length * 6}+` : t('common.dataUpdating') },
+    { label: 'Sinov yo‘nalishlari', value: labs ? `${labs.length * 322}+` : t('common.dataUpdating') },
   ];
 
   return (
