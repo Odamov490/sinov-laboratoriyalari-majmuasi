@@ -124,6 +124,14 @@
     "placeholder": "Введите код ТН ВЭД",
     "checking": "Проверка..."
   },
+  "gallery": {
+    "all": "Все",
+    "category": "Категория",
+    "laboratory": "Лаборатория",
+    "resultsSuffix": "результатов",
+    "noResults": "По этому фильтру ничего не найдено.",
+    "video": "Видео"
+  },
   "track": {
     "title": "Проверить статус заявки",
     "placeholder": "SLM-2026-00001",

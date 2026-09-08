@@ -124,6 +124,14 @@
     "placeholder": "TN VED kodini kiriting",
     "checking": "Tekshirilmoqda..."
   },
+  "gallery": {
+    "all": "Barchasi",
+    "category": "Kategoriya",
+    "laboratory": "Laboratoriya",
+    "resultsSuffix": "ta natija",
+    "noResults": "Ushbu filtr bo'yicha hech narsa topilmadi.",
+    "video": "Video"
+  },
   "track": {
     "title": "Ariza holatini tekshirish",
     "placeholder": "SLM-2026-00001",

@@ -4,6 +4,10 @@
 // Relation fields (laboratory, service, category, standard) use type
 // 'async-select': a dropdown populated from another admin resource, so the
 // user picks a name instead of typing a raw UUID by hand.
+//
+// This is a plain .js file (not .jsx), so column `render` functions that
+// need markup use React.createElement instead of JSX syntax.
+import React from 'react';
 
 export const laboratoryConfig = {
   path: 'laboratories',
@@ -205,11 +209,40 @@ export const equipmentConfig = {
   ],
 };
 
+function isVideoFile(url) {
+  return /\.(mp4|webm)$/i.test(url || '');
+}
+
 export const galleryConfig = {
   path: 'gallery',
   title: 'Galereya',
-  columns: [{ key: 'title', label: 'Nomi' }],
-  searchable: false,
+  columns: [
+    {
+      key: 'imageUrl',
+      label: 'Oldindan ko\'rish',
+      render: (i) =>
+        isVideoFile(i.imageUrl)
+          ? React.createElement('video', {
+              src: i.imageUrl,
+              className: 'h-12 w-12 object-cover rounded-lg border border-border',
+              muted: true,
+            })
+          : React.createElement('img', {
+              src: i.imageUrl,
+              alt: '',
+              className: 'h-12 w-12 object-cover rounded-lg border border-border',
+            }),
+    },
+    { key: 'title', label: 'Nomi', render: (i) => i.title || '—' },
+    { key: 'category', label: 'Kategoriya', render: (i) => i.category?.nameUz || '—' },
+    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
+    { key: 'createdAt', label: 'Sana', render: (i) => new Date(i.createdAt).toLocaleDateString('uz-UZ') },
+  ],
+  bulkUpload: {
+    fileField: 'imageUrl',
+    titleField: 'title',
+    sharedFieldNames: ['categoryId', 'laboratoryId'],
+  },
   fields: [
     { name: 'title', label: 'Nomi' },
     { name: 'imageUrl', label: 'Rasm', type: 'file', required: true },

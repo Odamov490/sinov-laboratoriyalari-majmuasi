@@ -93,8 +93,11 @@ mountCrud('equipment', 'equipment', 'equipment', {
 });
 
 // Gallery & categories
-mountCrud('gallery', 'gallery', 'gallery', { include: { category: true, laboratory: true } });
-mountCrud('gallery-categories', 'gallery', 'galleryCategory', { searchFields: ['nameUz', 'nameRu', 'nameEn'] });
+mountCrud('gallery', 'gallery', 'gallery', { include: { category: true, laboratory: true }, searchFields: ['title'] });
+mountCrud('gallery-categories', 'gallery', 'galleryCategory', {
+  searchFields: ['nameUz', 'nameRu', 'nameEn'],
+  orderBy: { nameUz: 'asc' },
+});
 
 // FAQ
 mountCrud('faq', 'faq', 'fAQ', { searchFields: ['questionUz', 'questionRu', 'questionEn'], orderBy: { order: 'asc' } });

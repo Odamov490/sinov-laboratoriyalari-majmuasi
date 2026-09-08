@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X as XIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, X as XIcon, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { adminResource, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
@@ -20,6 +20,10 @@ export default function AdminCrudPage({ config }) {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [uploadingField, setUploadingField] = useState(null);
   const [asyncOptions, setAsyncOptions] = useState({});
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkFiles, setBulkFiles] = useState([]);
+  const [bulkShared, setBulkShared] = useState({});
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const load = () => {
     setError(false);
@@ -170,13 +174,88 @@ export default function AdminCrudPage({ config }) {
     }
   };
 
+  const openBulk = () => {
+    setBulkFiles([]);
+    const initialShared = {};
+    (config.bulkUpload?.sharedFieldNames || []).forEach((n) => { initialShared[n] = ''; });
+    setBulkShared(initialShared);
+    loadAsyncOptions();
+    setBulkOpen(true);
+  };
+
+  const handleBulkFilesSelected = (fileList) => {
+    const newOnes = Array.from(fileList).map((file) => ({ file, status: 'pending' }));
+    setBulkFiles((prev) => [...prev, ...newOnes]);
+  };
+
+  const removeBulkFile = (file) => {
+    setBulkFiles((prev) => prev.filter((f) => f.file !== file));
+  };
+
+  const runBulkUpload = async () => {
+    setBulkSaving(true);
+    const pendingFiles = bulkFiles
+      .filter((f) => f.status === 'pending' || f.status === 'error')
+      .map((f) => f.file);
+    let successCount = 0;
+    let failCount = 0;
+    const chunkSize = 5;
+
+    for (let i = 0; i < pendingFiles.length; i += chunkSize) {
+      const chunkFiles = pendingFiles.slice(i, i + chunkSize);
+      setBulkFiles((prev) => prev.map((f) => (chunkFiles.includes(f.file) ? { ...f, status: 'uploading' } : f)));
+      try {
+        const res = await uploadFiles(chunkFiles);
+        for (let j = 0; j < chunkFiles.length; j++) {
+          try {
+            const payload = { [config.bulkUpload.fileField]: res.files[j]?.url };
+            if (config.bulkUpload.titleField) {
+              payload[config.bulkUpload.titleField] = chunkFiles[j].name.replace(/\.[^./]+$/, '');
+            }
+            (config.bulkUpload.sharedFieldNames || []).forEach((name) => {
+              payload[name] = bulkShared[name] || null;
+            });
+            await resource.create(payload);
+            successCount += 1;
+            setBulkFiles((prev) => prev.map((f) => (f.file === chunkFiles[j] ? { ...f, status: 'done' } : f)));
+          } catch {
+            failCount += 1;
+            setBulkFiles((prev) => prev.map((f) => (f.file === chunkFiles[j] ? { ...f, status: 'error' } : f)));
+          }
+        }
+      } catch {
+        failCount += chunkFiles.length;
+        setBulkFiles((prev) => prev.map((f) => (chunkFiles.includes(f.file) ? { ...f, status: 'error' } : f)));
+      }
+    }
+
+    setBulkSaving(false);
+    load();
+    if (successCount > 0) {
+      showToast(
+        `${successCount} ta fayl yuklandi.${failCount ? ` ${failCount} tasi xato bilan tugadi.` : ''}`,
+        failCount ? 'error' : 'success'
+      );
+    } else if (failCount > 0) {
+      showToast('Fayllarni yuklashda xatolik yuz berdi.', 'error');
+    }
+    if (failCount === 0 && successCount > 0) setBulkOpen(false);
+  };
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-ink">{config.title}</h1>
-        <button onClick={openCreate} className="btn-primary !py-2.5">
-          <Plus className="h-4 w-4" /> Qo'shish
-        </button>
+        <div className="flex items-center gap-2">
+          {config.bulkUpload && (
+            <button onClick={openBulk} className="btn-secondary !py-2.5">
+              <Upload className="h-4 w-4" /> Ko'p fayl yuklash
+            </button>
+          )}
+          <button onClick={openCreate} className="btn-primary !py-2.5">
+            <Plus className="h-4 w-4" /> Qo'shish
+          </button>
+        </div>
       </div>
 
       {config.searchable !== false && (
@@ -388,6 +467,93 @@ export default function AdminCrudPage({ config }) {
         onConfirm={() => remove(confirmDelete)}
         message="Ushbu yozuvni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
       />
+
+      {config.bulkUpload && (
+        <Modal
+          open={bulkOpen}
+          onClose={() => !bulkSaving && setBulkOpen(false)}
+          title="Bir nechta fayl yuklash"
+          size="lg"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1.5">Fayllar</label>
+              <input
+                type="file"
+                multiple
+                accept=".jpg,.jpeg,.png,.webp,.mp4,.webm"
+                onChange={(e) => {
+                  handleBulkFilesSelected(e.target.files);
+                  e.target.value = '';
+                }}
+                className="text-sm"
+              />
+              <p className="text-xs text-slate-400 mt-1">
+                Fayllar bir martada 5 tadan qilib partiyalarga bo'lib yuklanadi.
+              </p>
+            </div>
+
+            {(config.bulkUpload.sharedFieldNames || []).map((name) => {
+              const field = config.fields.find((f) => f.name === name);
+              if (!field) return null;
+              return (
+                <div key={name}>
+                  <label className="block text-sm font-medium text-ink mb-1.5">{field.label}</label>
+                  <Select
+                    value={bulkShared[name] ?? ''}
+                    onChange={(v) => setBulkShared((s) => ({ ...s, [name]: v }))}
+                    placeholder={
+                      asyncOptions[name] === undefined ? 'Yuklanmoqda...' : `${field.label} tanlang (barchasi uchun)`
+                    }
+                    options={(asyncOptions[name] || []).map((item) => ({
+                      value: item.id,
+                      label: field.optionsLabel ? field.optionsLabel(item) : item.nameUz || item.name || item.id,
+                    }))}
+                  />
+                </div>
+              );
+            })}
+
+            {bulkFiles.length > 0 && (
+              <div className="max-h-56 overflow-y-auto rounded-lg border border-border divide-y divide-border">
+                {bulkFiles.map((f, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                    <span className="truncate text-ink">{f.file.name}</span>
+                    <span className="flex items-center gap-2 shrink-0">
+                      {f.status === 'pending' && <span className="text-xs text-slate-400">Kutilmoqda</span>}
+                      {f.status === 'uploading' && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                      {f.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                      {f.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
+                      {f.status !== 'uploading' && f.status !== 'done' && (
+                        <button
+                          type="button"
+                          onClick={() => removeBulkFile(f.file)}
+                          className="text-slate-400 hover:text-red-500"
+                        >
+                          <XIcon className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-end gap-3">
+            <button onClick={() => setBulkOpen(false)} disabled={bulkSaving} className="btn-secondary">
+              Yopish
+            </button>
+            <button
+              onClick={runBulkUpload}
+              disabled={bulkSaving || bulkFiles.length === 0 || bulkFiles.every((f) => f.status === 'done')}
+              className="btn-primary"
+            >
+              {bulkSaving ? 'Yuklanmoqda...' : 'Yuklash'}
+            </button>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

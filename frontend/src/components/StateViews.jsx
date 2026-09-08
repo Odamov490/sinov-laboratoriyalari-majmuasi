@@ -12,8 +12,8 @@ export function Loading({ label }) {
   );
 }
 
-export function Skeleton({ className = '' }) {
-  return <div className={`skeleton ${className}`} />;
+export function Skeleton({ className = '', style }) {
+  return <div className={`skeleton ${className}`} style={style} />;
 }
 
 export function CardSkeleton() {

@@ -124,6 +124,14 @@
     "placeholder": "Enter the TN VED code",
     "checking": "Checking..."
   },
+  "gallery": {
+    "all": "All",
+    "category": "Category",
+    "laboratory": "Laboratory",
+    "resultsSuffix": "results",
+    "noResults": "Nothing found for this filter.",
+    "video": "Video"
+  },
   "track": {
     "title": "Track application status",
     "placeholder": "SLM-2026-00001",
