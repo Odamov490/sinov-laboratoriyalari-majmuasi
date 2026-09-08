@@ -20,6 +20,7 @@ export default function Footer() {
     { to: '/narxlar', label: t('nav.prices') },
     { to: '/hujjatlar', label: t('nav.documents') },
     { to: '/akkreditatsiya', label: t('nav.accreditation') },
+    { to: '/faq', label: t('nav.faq') },
   ];
 
   return (
