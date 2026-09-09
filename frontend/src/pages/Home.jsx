@@ -22,7 +22,6 @@ import {
   getAccreditation,
   getNews,
   getDocuments,
-  getFaq,
 } from '../services/publicApi';
 import { getLocalized } from '../utils/localize';
 
@@ -35,7 +34,6 @@ export default function Home() {
   const [accreditation, setAccreditation] = useState(null);
   const [news, setNews] = useState(null);
   const [docs, setDocs] = useState(null);
-  const [faq, setFaq] = useState(null);
 
   useEffect(() => {
     getLaboratories().then(setLabs).catch(() => setLabs([]));
@@ -43,7 +41,6 @@ export default function Home() {
     getAccreditation().then(setAccreditation).catch(() => setAccreditation(null));
     getNews({ pageSize: 3 }).then((d) => setNews(d.items)).catch(() => setNews([]));
     getDocuments().then((d) => setDocs(d.slice(0, 4))).catch(() => setDocs([]));
-    getFaq().then((d) => setFaq(d.slice(0, 6))).catch(() => setFaq([]));
   }, []);
 
   const whyItems = Object.entries(t('whyUs.items', { returnObjects: true }));
@@ -204,28 +201,6 @@ export default function Home() {
             <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {docs.map((d) => (
                 <DocumentCard key={d.id} doc={d} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* FAQ */}
-      {faq && faq.length > 0 && (
-        <section className="section bg-bg-light">
-          <div className="container-page max-w-3xl">
-            <h2 className="section-title text-center">{t('nav.faq')}</h2>
-            <div className="mt-8 space-y-3">
-              {faq.map((f) => (
-                <details key={f.id} className="card p-5 group">
-                  <summary className="cursor-pointer font-medium text-ink list-none flex justify-between items-center">
-                    {getLocalized(f, 'question', i18n.language)}
-                    <span className="text-primary group-open:rotate-45 transition-transform text-xl leading-none">+</span>
-                  </summary>
-                  <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-                    {getLocalized(f, 'answer', i18n.language)}
-                  </p>
-                </details>
               ))}
             </div>
           </div>
