@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, ErrorState } from '../components/StateViews.jsx';
 import FormattedText from '../components/FormattedText.jsx';
@@ -31,9 +32,17 @@ export default function NewsDetail() {
   const galleryImages = images.slice(1);
 
   const content = getLocalized(item, 'content', i18n.language) || getLocalized(item, 'description', i18n.language);
+  const seoDescription =
+    item.seoDescription || getLocalized(item, 'description', i18n.language) || content?.slice(0, 160);
 
   return (
     <div className="section container-page max-w-3xl">
+      <SEO
+        title={item.seoTitle || getLocalized(item, 'title', i18n.language)}
+        description={seoDescription || undefined}
+        image={coverImage}
+        type="article"
+      />
       <Breadcrumb items={[{ label: t('nav.news'), to: '/yangiliklar' }, { label: getLocalized(item, 'title', i18n.language) }]} />
       <p className="mt-4 text-sm text-slate-400">{formatDate(item.publishedAt || item.createdAt, i18n.language)}</p>
       <h1 className="mt-2 text-2xl md:text-4xl font-extrabold text-primary leading-tight">

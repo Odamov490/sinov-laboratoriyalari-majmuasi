@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { getFaq } from '../services/publicApi';
@@ -16,6 +17,7 @@ export default function Faq() {
 
   return (
     <div className="section container-page max-w-3xl">
+      <SEO title={t('nav.faq')} />
       <Breadcrumb items={[{ label: t('nav.faq') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.faq')}</h1>
 

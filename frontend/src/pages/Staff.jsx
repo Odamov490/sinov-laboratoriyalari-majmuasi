@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { StaffCard } from '../components/Cards.jsx';
 import { CardSkeleton, EmptyState, ErrorState } from '../components/StateViews.jsx';
@@ -16,6 +17,7 @@ export default function Staff() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.staff')} />
       <Breadcrumb items={[{ label: t('nav.staff') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.staff')}</h1>
 

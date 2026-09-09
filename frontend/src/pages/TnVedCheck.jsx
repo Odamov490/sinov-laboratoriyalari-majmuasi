@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Info, Loader2 } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { checkTnVedRegulation } from '../services/publicApi';
 
@@ -126,6 +127,7 @@ export default function TnVedCheck() {
 
   return (
     <div className="section container-page max-w-2xl">
+      <SEO title={t('nav.tnvedCheck')} description={t('tnvedCheck.subtitle')} />
       <Breadcrumb items={[{ label: t('nav.tnvedCheck') }]} />
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('tnvedCheck.title')}</h1>
       <p className="mt-2 text-sm text-slate-500">{t('tnvedCheck.subtitle')}</p>

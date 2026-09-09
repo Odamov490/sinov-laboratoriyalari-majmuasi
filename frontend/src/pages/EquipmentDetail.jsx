@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FlaskConical } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, ErrorState, DataUpdatingBadge } from '../components/StateViews.jsx';
 import { getEquipmentItem } from '../services/publicApi';
@@ -24,6 +25,11 @@ export default function EquipmentDetail() {
 
   return (
     <div className="section container-page">
+      <SEO
+        title={item.name}
+        description={item.specifications || item.application || undefined}
+        image={item.photo}
+      />
       <Breadcrumb items={[{ label: t('nav.equipment'), to: '/uskunalar' }, { label: item.name }]} />
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className="h-72 rounded-xl bg-bg-light overflow-hidden flex items-center justify-center">

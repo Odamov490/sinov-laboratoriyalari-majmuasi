@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, Copy, ShieldCheck } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import FileUploader from '../components/FileUploader.jsx';
 import { submitApplication } from '../services/publicApi';
@@ -67,6 +68,7 @@ export default function ApplicationForm() {
 
   return (
     <div className="section container-page max-w-2xl">
+      <SEO title={t('nav.apply')} />
       <Breadcrumb items={[{ label: t('nav.apply') }]} />
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('application.title')}</h1>
 

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Skeleton, EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { getGallery, getLaboratories } from '../services/publicApi';
@@ -153,6 +154,7 @@ export default function Gallery() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.gallery')} image={items?.[0] && !isVideo(items[0].imageUrl) ? items[0].imageUrl : undefined} />
       <Breadcrumb items={[{ label: t('nav.gallery') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.gallery')}</h1>
 

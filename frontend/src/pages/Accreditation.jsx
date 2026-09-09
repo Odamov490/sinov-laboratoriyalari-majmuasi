@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, Download } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, DataUpdatingBadge } from '../components/StateViews.jsx';
 import FormattedText from '../components/FormattedText.jsx';
@@ -25,6 +26,10 @@ export default function Accreditation() {
 
   return (
     <div className="section container-page">
+      <SEO
+        title={t('nav.accreditation')}
+        description={acc ? `${acc.certificateNumber} — ${acc.standardCode}. ${scope || ''}`.trim() : undefined}
+      />
       <Breadcrumb items={[{ label: t('nav.accreditation') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.accreditation')}</h1>
 

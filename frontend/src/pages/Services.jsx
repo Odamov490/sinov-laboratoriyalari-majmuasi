@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb, SearchBar, Select, Pagination } from '../components/UI.jsx';
 import { ServiceCard } from '../components/Cards.jsx';
 import { CardSkeleton, EmptyState, ErrorState } from '../components/StateViews.jsx';
@@ -32,6 +33,7 @@ export default function Services() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.services')} />
       <Breadcrumb items={[{ label: t('nav.services') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.services')}</h1>
 

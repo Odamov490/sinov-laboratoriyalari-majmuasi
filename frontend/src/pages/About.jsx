@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, Eye, Heart, FlaskConical } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { LaboratoryCard, StaffCard } from '../components/Cards.jsx';
 import { CardSkeleton } from '../components/StateViews.jsx';
@@ -24,6 +25,7 @@ export default function About() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.about')} />
       <Breadcrumb items={[{ label: t('nav.about') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.about')}</h1>
 

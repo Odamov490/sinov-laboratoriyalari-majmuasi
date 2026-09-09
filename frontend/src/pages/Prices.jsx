@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, FileSpreadsheet } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb, SearchBar, Pagination } from '../components/UI.jsx';
 import { Loading, EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { getPrices } from '../services/publicApi';
@@ -128,6 +129,7 @@ export default function Prices() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.prices')} />
       <Breadcrumb items={[{ label: t('nav.prices') }]} />
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>

@@ -8,6 +8,7 @@ const path = require('path');
 const { PORT, CLIENT_URL, NODE_ENV, UPLOAD_DIR } = require('./config/env');
 const { generalLimiter } = require('./middleware/rateLimit');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
+const { generateSitemap } = require('./controllers/sitemapController');
 
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -28,6 +29,11 @@ app.use(cookieParser());
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
+
+// Mounted before the rate limiter so search-engine crawlers refetching
+// the sitemap never get throttled alongside real user API traffic.
+app.get('/sitemap.xml', generateSitemap);
+
 app.use(generalLimiter);
 
 // Static uploaded files

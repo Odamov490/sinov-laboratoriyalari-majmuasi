@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Download } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb, SearchBar, Select } from '../components/UI.jsx';
 import { Loading, EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { getStandards } from '../services/publicApi';
@@ -26,6 +27,7 @@ export default function Standards() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.standards')} />
       <Breadcrumb items={[{ label: t('nav.standards') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.standards')}</h1>
 

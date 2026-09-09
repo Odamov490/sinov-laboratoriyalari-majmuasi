@@ -13,6 +13,7 @@ import {
   ListChecks,
   PhoneCall,
 } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import Hero from '../components/Hero.jsx';
 import { LaboratoryCard, ServiceCard, NewsCard, DocumentCard } from '../components/Cards.jsx';
 import { CardSkeleton } from '../components/StateViews.jsx';
@@ -22,6 +23,7 @@ import {
   getAccreditation,
   getNews,
   getDocuments,
+  getSettings,
 } from '../services/publicApi';
 import { getLocalized } from '../utils/localize';
 
@@ -34,6 +36,7 @@ export default function Home() {
   const [accreditation, setAccreditation] = useState(null);
   const [news, setNews] = useState(null);
   const [docs, setDocs] = useState(null);
+  const [settings, setSettings] = useState({});
 
   useEffect(() => {
     getLaboratories().then(setLabs).catch(() => setLabs([]));
@@ -41,7 +44,18 @@ export default function Home() {
     getAccreditation().then(setAccreditation).catch(() => setAccreditation(null));
     getNews({ pageSize: 3 }).then((d) => setNews(d.items)).catch(() => setNews([]));
     getDocuments().then((d) => setDocs(d.slice(0, 4))).catch(() => setDocs([]));
+    getSettings().then(setSettings).catch(() => {});
   }, []);
+
+  const orgJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: settings.org_name || 'Sinov Laboratoriyalari Majmuasi',
+    url: typeof window !== 'undefined' ? window.location.origin : undefined,
+    ...(settings.address ? { address: { '@type': 'PostalAddress', streetAddress: settings.address } } : {}),
+    ...(settings.phone ? { telephone: settings.phone } : {}),
+    ...(settings.email ? { email: settings.email } : {}),
+  };
 
   const whyItems = Object.entries(t('whyUs.items', { returnObjects: true }));
   const processSteps = Object.entries(t('process.steps', { returnObjects: true }));
@@ -54,6 +68,7 @@ export default function Home() {
 
   return (
     <div>
+      <SEO description={t('hero.tagline')} jsonLd={orgJsonLd} />
       <Hero />
 
       {/* Statistics */}

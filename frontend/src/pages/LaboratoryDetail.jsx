@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FlaskConical } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { ServiceCard, StaffCard, EquipmentCard } from '../components/Cards.jsx';
 import { Loading, ErrorState, DataUpdatingBadge } from '../components/StateViews.jsx';
@@ -30,6 +31,11 @@ export default function LaboratoryDetail() {
 
   return (
     <div>
+      <SEO
+        title={getLocalized(lab, 'name', i18n.language)}
+        description={getLocalized(lab, 'description', i18n.language) || undefined}
+        image={lab.coverImage}
+      />
       <div className="bg-primary py-14">
         <div className="container-page">
           <Breadcrumb items={[{ label: t('nav.laboratories'), to: '/laboratoriyalar' }, { label: getLocalized(lab, 'name', i18n.language) }]} />

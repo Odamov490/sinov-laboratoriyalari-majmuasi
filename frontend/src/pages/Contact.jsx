@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { MapPin, Phone, Mail, Send, Clock } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { getSettings, sendContactMessage } from '../services/publicApi';
 import { useToast } from '../context/ToastContext.jsx';
@@ -35,6 +36,7 @@ export default function Contact() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.contact')} />
       <Breadcrumb items={[{ label: t('nav.contact') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.contact')}</h1>
 

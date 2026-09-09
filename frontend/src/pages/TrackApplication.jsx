@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Search } from 'lucide-react';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb, StatusBadge } from '../components/UI.jsx';
 import { Loading, EmptyState } from '../components/StateViews.jsx';
 import { trackApplication, trackApplicationsByPhone } from '../services/publicApi';
@@ -59,6 +60,7 @@ export default function TrackApplication() {
 
   return (
     <div className="section container-page max-w-xl">
+      <SEO title={t('nav.track')} />
       <Breadcrumb items={[{ label: t('nav.track') }]} />
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('track.title')}</h1>
 

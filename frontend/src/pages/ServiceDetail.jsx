@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, ErrorState, DataUpdatingBadge } from '../components/StateViews.jsx';
 import FormattedText from '../components/FormattedText.jsx';
@@ -37,6 +38,11 @@ export default function ServiceDetail() {
 
   return (
     <div className="section container-page">
+      <SEO
+        title={getLocalized(service, 'name', i18n.language)}
+        description={description || undefined}
+        image={service.laboratory?.coverImage}
+      />
       <Breadcrumb
         items={[
           { label: t('nav.services'), to: '/xizmatlar' },

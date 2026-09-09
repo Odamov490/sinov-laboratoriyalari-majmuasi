@@ -4,11 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Only the <title> stays static here (harmless: the browser enforces a
+      single <title> element, so react-helmet-async can safely replace its
+      text). The description/OG/twitter tags are owned entirely by
+      react-helmet-async (PublicLayout renders a sitewide default <SEO/>,
+      overridden per-page by each page's own <SEO/>) — react-helmet-async
+      does not remove tags it did not render itself, so a static
+      <meta name="description"> etc. here would end up duplicated
+      alongside the JS-rendered one rather than replaced.
+    -->
     <title>Sinov Laboratoriyalari Majmuasi</title>
-    <meta
-      name="description"
-      content="O'zbekiston Standartlar Instituti — Sinov Laboratoriyalari Majmuasi. Mahsulotlaringiz sifati va xavfsizligini ishonchli sinovlar orqali baholaymiz."
-    />
+    <meta property="og:locale" content="uz_UZ" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   </head>

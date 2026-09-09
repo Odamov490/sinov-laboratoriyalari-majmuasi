@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/admin
+Disallow: /ariza
+Disallow: /arizani-tekshirish
+
+Sitemap: https://s-lab.uz/sitemap.xml

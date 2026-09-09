@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { LaboratoryCard } from '../components/Cards.jsx';
 import { CardSkeleton, EmptyState, ErrorState } from '../components/StateViews.jsx';
@@ -18,6 +19,7 @@ export default function Laboratories() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.laboratories')} />
       <Breadcrumb items={[{ label: t('nav.laboratories') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.laboratories')}</h1>
       <p className="section-subtitle">{t('hero.tagline')}</p>

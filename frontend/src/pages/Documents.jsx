@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { DocumentCard } from '../components/Cards.jsx';
 import { Loading, EmptyState, ErrorState } from '../components/StateViews.jsx';
@@ -27,6 +28,7 @@ export default function Documents() {
 
   return (
     <div className="section container-page">
+      <SEO title={t('nav.documents')} />
       <Breadcrumb items={[{ label: t('nav.documents') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.documents')}</h1>
 
