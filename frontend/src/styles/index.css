@@ -86,6 +86,27 @@ body {
   animation: lightbox-fade 0.2s ease-out;
 }
 
+/* Test-mode banner: scrolls as a marquee by default, falls back to a
+   static centered line when the user prefers reduced motion. */
+.test-banner-track {
+  display: none;
+}
+
+@keyframes test-banner-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .test-banner-static {
+    display: none;
+  }
+  .test-banner-track {
+    display: flex;
+    animation: test-banner-marquee 20s linear infinite;
+  }
+}
+
 /* Hero section: animated gradient + molecular mesh background, and a
    one-time staggered entrance for the title/CTA stack. Motion is opt-in
    via prefers-reduced-motion, and the continuous background animations
