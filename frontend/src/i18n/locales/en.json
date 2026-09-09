@@ -25,6 +25,7 @@
     "cta2": "Submit Application"
   },
   "common": {
+    "testModeBanner": "Notice: this site is currently running in test mode. Data and features may change.",
     "readMore": "Read more",
     "apply": "Submit Application",
     "optional": "optional",

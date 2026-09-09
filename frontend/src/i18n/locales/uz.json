@@ -25,6 +25,7 @@
     "cta2": "Ariza yuborish"
   },
   "common": {
+    "testModeBanner": "Diqqat: sayt hozircha sinov (test) rejimida ishlamoqda. Ma'lumotlar va funksiyalar o'zgarishi mumkin.",
     "readMore": "Batafsil",
     "apply": "Ariza berish",
     "optional": "ixtiyoriy",
