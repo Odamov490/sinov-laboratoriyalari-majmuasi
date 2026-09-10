@@ -140,7 +140,26 @@ const getStaff = asyncHandler(async (req, res) => {
   const { laboratoryId } = req.query;
   const where = { deletedAt: null };
   if (laboratoryId) where.laboratoryId = laboratoryId;
-  const items = await prisma.staff.findMany({ where, include: { laboratory: true }, orderBy: { order: 'asc' } });
+  const items = await prisma.staff.findMany({
+    where,
+    orderBy: { order: 'asc' },
+    // Explicit select: internal HR fields (staffNumber, employeeCode,
+    // hireDate, birthDate, passport/PINFL, address, notes) must never
+    // reach the public site.
+    select: {
+      id: true,
+      fullName: true,
+      position: true,
+      specialization: true,
+      experienceYears: true,
+      email: true,
+      phone: true,
+      photo: true,
+      laboratoryId: true,
+      laboratory: true,
+      order: true,
+    },
+  });
   res.json(items);
 });
 

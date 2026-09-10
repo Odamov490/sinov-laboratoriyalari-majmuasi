@@ -164,6 +164,8 @@ export const staffConfig = {
   columns: [
     { key: 'fullName', label: 'F.I.Sh.' },
     { key: 'position', label: 'Lavozim' },
+    { key: 'employeeCode', label: 'Kod', render: (i) => i.employeeCode || '—' },
+    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
   ],
   fields: [
     { name: 'fullName', label: 'F.I.Sh.', required: true },
@@ -181,6 +183,29 @@ export const staffConfig = {
       optionsLabel: (item) => item.nameUz,
     },
     { name: 'order', label: 'Tartib', type: 'number' },
+    { name: 'staffNumber', label: 'Tabel raqami', type: 'number' },
+    { name: 'employeeCode', label: 'Kod' },
+    { name: 'hireDate', label: 'Ishga kirgan sana', type: 'date' },
+    { name: 'birthDate', label: "Tug'ilgan sana", type: 'date' },
+    { name: 'passportSeries', label: 'Pasport seriyasi' },
+    { name: 'passportNumber', label: 'Pasport raqami' },
+    { name: 'pinfl', label: 'JSHSHIR (PINFL)' },
+    { name: 'address', label: 'Manzil', fullWidth: true },
+    { name: 'notes', label: 'Izoh', type: 'textarea', fullWidth: true },
+  ],
+  exportable: true,
+  exportTitle: "Mutaxassislar ro'yxati — Sinov Laboratoriyalari Majmuasi",
+  exportColumns: [
+    { key: 'staffNumber', label: 'Tabel №' },
+    { key: 'employeeCode', label: 'Kod' },
+    { key: 'fullName', label: 'F.I.Sh.' },
+    { key: 'position', label: 'Lavozim' },
+    { key: 'specialization', label: 'Mutaxassislik' },
+    { key: 'laboratory', label: 'Laboratoriya', get: (i) => i.laboratory?.nameUz || '—' },
+    { key: 'hireDate', label: 'Ishga kirgan sana', get: (i) => (i.hireDate ? String(i.hireDate).slice(0, 10) : '—') },
+    { key: 'phone', label: 'Telefon' },
+    { key: 'email', label: 'Email' },
+    { key: 'notes', label: 'Izoh' },
   ],
 };
 

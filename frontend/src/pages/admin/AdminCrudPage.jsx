@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X as XIcon, Upload, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, X as XIcon, Upload, Loader2, CheckCircle2, AlertCircle, FileSpreadsheet, Download } from 'lucide-react';
 import { adminResource, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
@@ -24,6 +24,9 @@ export default function AdminCrudPage({ config }) {
   const [bulkFiles, setBulkFiles] = useState([]);
   const [bulkShared, setBulkShared] = useState({});
   const [bulkSaving, setBulkSaving] = useState(false);
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const exportPdfRef = useRef(null);
 
   const load = () => {
     setError(false);
@@ -242,11 +245,128 @@ export default function AdminCrudPage({ config }) {
     if (failCount === 0 && successCount > 0) setBulkOpen(false);
   };
 
+  const exportRows = (items) =>
+    items.map((item, idx) => {
+      const row = { '№': idx + 1 };
+      config.exportColumns.forEach((c) => {
+        row[c.label] = c.get ? c.get(item) : item[c.key] ?? '—';
+      });
+      return row;
+    });
+
+  const fetchAllForExport = async () => {
+    const full = await resource.list({ q: q || undefined, page: 1, pageSize: 1000 });
+    return full.items;
+  };
+
+  const handleExportExcel = async () => {
+    setExportingExcel(true);
+    try {
+      const items = await fetchAllForExport();
+      const XLSX = await import('xlsx');
+      const rows = exportRows(items);
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = Object.keys(rows[0] || {}).map(() => ({ wch: 22 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, config.title.slice(0, 31));
+      XLSX.writeFile(wb, `${config.path}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch {
+      showToast('Excel export xatolik yuz berdi.', 'error');
+    } finally {
+      setExportingExcel(false);
+    }
+  };
+
+  const handleExportPdf = async () => {
+    setExportingPdf(true);
+    try {
+      const items = await fetchAllForExport();
+      const rows = exportRows(items);
+      const headers = Object.keys(rows[0] || { '№': '' });
+
+      const container = exportPdfRef.current;
+      container.innerHTML = '';
+
+      const title = document.createElement('h2');
+      title.textContent = config.exportTitle || `${config.title} — Sinov Laboratoriyalari Majmuasi`;
+      title.style.cssText = 'font-size:16px;font-weight:700;margin-bottom:12px;color:#0B3A63;font-family:Arial,sans-serif;';
+      container.appendChild(title);
+
+      const table = document.createElement('table');
+      table.style.cssText = 'border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:11px;color:#17212B;';
+      const headHtml = `<thead><tr>${headers
+        .map((h) => `<th style="border:1px solid #E2E8F0;padding:6px 8px;background:#F5F8FB;text-align:left;">${h}</th>`)
+        .join('')}</tr></thead>`;
+      const bodyHtml = `<tbody>${rows
+        .map(
+          (r) =>
+            `<tr>${Object.values(r)
+              .map((v) => `<td style="border:1px solid #E2E8F0;padding:6px 8px;">${v}</td>`)
+              .join('')}</tr>`
+        )
+        .join('')}</tbody>`;
+      table.innerHTML = headHtml + bodyHtml;
+      container.appendChild(table);
+
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
+      const canvas = await html2canvas(container, { scale: 2, backgroundColor: '#ffffff' });
+
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const imgWidth = pageWidth - margin * 2;
+      const pxPerMm = canvas.width / imgWidth;
+      const pageContentHeightPx = Math.floor((pageHeight - margin * 2) * pxPerMm);
+
+      // Slice the rendered canvas into page-sized chunks and embed each
+      // slice on its own page, instead of re-embedding the full image on
+      // every page (which multiplies the PDF's file size by the page count).
+      let renderedPx = 0;
+      let firstPage = true;
+      while (renderedPx < canvas.height) {
+        const sliceHeightPx = Math.min(pageContentHeightPx, canvas.height - renderedPx);
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = sliceHeightPx;
+        sliceCanvas.getContext('2d').drawImage(canvas, 0, renderedPx, canvas.width, sliceHeightPx, 0, 0, canvas.width, sliceHeightPx);
+        // JPEG (not PNG) here: jsPDF stores PNG image data essentially
+        // uncompressed, which blew this up to ~60MB for a ~70-row table.
+        // JPEG at high quality is visually lossless for this flat,
+        // mostly-white table content and comes out a few hundred KB.
+        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.92);
+        const sliceHeightMm = sliceHeightPx / pxPerMm;
+
+        if (!firstPage) pdf.addPage();
+        pdf.addImage(sliceData, 'JPEG', margin, margin, imgWidth, sliceHeightMm);
+        renderedPx += sliceHeightPx;
+        firstPage = false;
+      }
+
+      pdf.save(`${config.path}-${new Date().toISOString().slice(0, 10)}.pdf`);
+      container.innerHTML = '';
+    } catch {
+      showToast('PDF export xatolik yuz berdi.', 'error');
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-ink">{config.title}</h1>
         <div className="flex items-center gap-2">
+          {config.exportable && (
+            <>
+              <button onClick={handleExportExcel} disabled={exportingExcel} className="btn-secondary !py-2.5">
+                <FileSpreadsheet className="h-4 w-4" /> {exportingExcel ? 'Tayyorlanmoqda...' : 'Excel'}
+              </button>
+              <button onClick={handleExportPdf} disabled={exportingPdf} className="btn-secondary !py-2.5">
+                <Download className="h-4 w-4" /> {exportingPdf ? 'Tayyorlanmoqda...' : 'PDF'}
+              </button>
+            </>
+          )}
           {config.bulkUpload && (
             <button onClick={openBulk} className="btn-secondary !py-2.5">
               <Upload className="h-4 w-4" /> Ko'p fayl yuklash
@@ -553,6 +673,13 @@ export default function AdminCrudPage({ config }) {
             </button>
           </div>
         </Modal>
+      )}
+
+      {config.exportable && (
+        <div
+          ref={exportPdfRef}
+          style={{ position: 'fixed', left: '-9999px', top: 0, width: '1100px', background: '#ffffff', padding: '16px' }}
+        />
       )}
     </div>
   );

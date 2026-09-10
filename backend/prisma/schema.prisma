@@ -212,6 +212,17 @@ model Staff {
   laboratoryId    String?
   laboratory      Laboratory? @relation(fields: [laboratoryId], references: [id])
   order           Int      @default(0)
+  // Internal HR fields -- admin-only, never returned by the public API
+  // (see getStaff's explicit `select` in publicController.js).
+  staffNumber     Int?
+  employeeCode    String?
+  hireDate        DateTime?
+  birthDate       DateTime?
+  passportSeries  String?
+  passportNumber  String?
+  pinfl           String?
+  address         String?
+  notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   deletedAt       DateTime?
