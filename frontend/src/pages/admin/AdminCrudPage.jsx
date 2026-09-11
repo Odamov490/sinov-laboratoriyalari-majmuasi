@@ -678,7 +678,7 @@ export default function AdminCrudPage({ config }) {
       {config.exportable && (
         <div
           ref={exportPdfRef}
-          style={{ position: 'fixed', left: '-9999px', top: 0, width: '1100px', background: '#ffffff', padding: '16px' }}
+          style={{ position: 'fixed', left: '-9999px', top: 0, width: `${config.exportWidth || 1100}px`, background: '#ffffff', padding: '16px' }}
         />
       )}
     </div>
