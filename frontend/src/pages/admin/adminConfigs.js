@@ -193,6 +193,7 @@ export const staffConfig = {
     { name: 'address', label: 'Manzil', fullWidth: true },
     { name: 'notes', label: 'Izoh', type: 'textarea', fullWidth: true },
   ],
+  birthdayPin: { dateField: 'birthDate', limit: 3 },
   exportable: true,
   exportTitle: "Mutaxassislar ro'yxati — Sinov Laboratoriyalari Majmuasi",
   exportWidth: 1900,

@@ -1,10 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, X as XIcon, Upload, Loader2, CheckCircle2, AlertCircle, FileSpreadsheet, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, X as XIcon, Upload, Loader2, CheckCircle2, AlertCircle, FileSpreadsheet, Download, Cake } from 'lucide-react';
 import { adminResource, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+
+const MONTH_NAMES_UZ = [
+  'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+  'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr',
+];
 
 export default function AdminCrudPage({ config }) {
   const resource = adminResource(config.path);
@@ -27,6 +32,7 @@ export default function AdminCrudPage({ config }) {
   const [exportingExcel, setExportingExcel] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
   const exportPdfRef = useRef(null);
+  const [upcomingBirthdays, setUpcomingBirthdays] = useState(null);
 
   const load = () => {
     setError(false);
@@ -42,6 +48,32 @@ export default function AdminCrudPage({ config }) {
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, page]);
+
+  useEffect(() => {
+    if (!config.birthdayPin) return;
+    const dateField = config.birthdayPin.dateField || 'birthDate';
+    const limit = config.birthdayPin.limit || 3;
+    resource
+      .list({ pageSize: 1000 })
+      .then((full) => {
+        const now = new Date();
+        const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+        const withDays = full.items
+          .filter((item) => item[dateField])
+          .map((item) => {
+            const bd = new Date(item[dateField]);
+            let next = Date.UTC(now.getFullYear(), bd.getUTCMonth(), bd.getUTCDate());
+            if (next < todayUTC) next = Date.UTC(now.getFullYear() + 1, bd.getUTCMonth(), bd.getUTCDate());
+            const daysUntil = Math.round((next - todayUTC) / 86400000);
+            return { item, daysUntil, month: bd.getUTCMonth(), day: bd.getUTCDate() };
+          })
+          .sort((a, b) => a.daysUntil - b.daysUntil)
+          .slice(0, limit);
+        setUpcomingBirthdays(withDays);
+      })
+      .catch(() => setUpcomingBirthdays([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadAsyncOptions = () => {
     const asyncFields = config.fields.filter((f) => f.type === 'async-select' || f.type === 'async-multi-select');
@@ -377,6 +409,29 @@ export default function AdminCrudPage({ config }) {
           </button>
         </div>
       </div>
+
+      {config.birthdayPin && upcomingBirthdays && upcomingBirthdays.length > 0 && (
+        <div className="mb-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {upcomingBirthdays.map(({ item, daysUntil, month, day }) => (
+            <button
+              key={item.id}
+              onClick={() => openEdit(item)}
+              className="flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 p-3 text-left hover:border-accent/60 hover:bg-accent/10 transition-colors"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+                <Cake className="h-5 w-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-medium text-ink text-sm">{item.fullName}</span>
+                <span className="block text-xs text-slate-500">
+                  {MONTH_NAMES_UZ[month]} {day} —{' '}
+                  {daysUntil === 0 ? 'Bugun!' : daysUntil === 1 ? 'Ertaga' : `${daysUntil} kun qoldi`}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {config.searchable !== false && (
         <div className="max-w-sm mb-5">
