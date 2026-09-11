@@ -18,9 +18,9 @@ export default function About() {
   }, []);
 
   const timeline = [
-    { year: '2019', text: "O'z DSt ISO/IEC 17025:2019 standarti asosida akkreditatsiyadan o'tish" },
-    { year: '2020+', text: 'Yangi sinov yo‘nalishlari va zamonaviy uskunalar bilan jihozlanish' },
-    { year: 'Bugun', text: '8 ta ixtisoslashgan laboratoriya orqali keng qamrovli sinov xizmatlari' },
+    { year: '2019', text: t('about.timeline1') },
+    { year: '2020+', text: t('about.timeline2') },
+    { year: t('common.today'), text: t('about.timeline3') },
   ];
 
   return (
@@ -32,29 +32,23 @@ export default function About() {
       <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card p-6">
           <Target className="h-8 w-8 text-primary" />
-          <h3 className="mt-4 font-semibold text-ink">Missiya</h3>
-          <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-            Mahsulotlar sifati va xavfsizligini xolis, aniq va ishonchli sinovlar orqali baholash.
-          </p>
+          <h3 className="mt-4 font-semibold text-ink">{t('about.missionTitle')}</h3>
+          <p className="mt-2 text-sm text-slate-600 leading-relaxed">{t('about.missionText')}</p>
         </div>
         <div className="card p-6">
           <Eye className="h-8 w-8 text-primary" />
-          <h3 className="mt-4 font-semibold text-ink">Maqsad</h3>
-          <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-            Xalqaro standartlarga mos, texnik jihatdan malakali sinov infratuzilmasini rivojlantirish.
-          </p>
+          <h3 className="mt-4 font-semibold text-ink">{t('about.goalTitle')}</h3>
+          <p className="mt-2 text-sm text-slate-600 leading-relaxed">{t('about.goalText')}</p>
         </div>
         <div className="card p-6">
           <Heart className="h-8 w-8 text-primary" />
-          <h3 className="mt-4 font-semibold text-ink">Qadriyatlar</h3>
-          <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-            Xolislik, aniqlik, professionallik va mijozlarga ishonchli xizmat ko‘rsatish.
-          </p>
+          <h3 className="mt-4 font-semibold text-ink">{t('about.valuesTitle')}</h3>
+          <p className="mt-2 text-sm text-slate-600 leading-relaxed">{t('about.valuesText')}</p>
         </div>
       </div>
 
       <div className="mt-16">
-        <h2 className="section-title">Tarix</h2>
+        <h2 className="section-title">{t('about.historyTitle')}</h2>
         <div className="mt-8 space-y-6 border-l-2 border-border pl-6">
           {timeline.map((item) => (
             <div key={item.year} className="relative">

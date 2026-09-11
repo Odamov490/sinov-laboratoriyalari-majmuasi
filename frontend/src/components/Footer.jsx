@@ -74,7 +74,7 @@ export default function Footer() {
         </div>
 
         <div>
-          <h4 className="font-semibold mb-4 text-sm uppercase tracking-wide text-white/60">Social</h4>
+          <h4 className="font-semibold mb-4 text-sm uppercase tracking-wide text-white/60">{t('common.social')}</h4>
           <div className="flex gap-3">
             {val('telegram') && (
               <a

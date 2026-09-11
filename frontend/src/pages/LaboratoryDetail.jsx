@@ -62,7 +62,7 @@ export default function LaboratoryDetail() {
 
         {lab.accreditationScope && (
           <div className="mt-6 card p-5 bg-bg-light">
-            <p className="text-sm font-semibold text-primary">Akkreditatsiya sohasi</p>
+            <p className="text-sm font-semibold text-primary">{t('common.accreditationScope')}</p>
             <div className="mt-2">
               <FormattedText text={lab.accreditationScope} />
             </div>

@@ -7,6 +7,8 @@ import { Loading, EmptyState, ErrorState } from '../components/StateViews.jsx';
 import { getStandards } from '../services/publicApi';
 import { getLocalized } from '../utils/localize';
 
+// Values must match what's stored in the DB's free-text Standard.category
+// field — only the displayed label is localized (see categoryOptions below).
 const CATEGORIES = ["O‘z DSt", 'IEC', 'ISO', 'GOST', 'EN', 'CISPR', 'Boshqa'];
 
 export default function Standards() {
@@ -25,6 +27,8 @@ export default function Standards() {
     return () => clearTimeout(handle);
   }, [q, category]);
 
+  const categoryOptions = CATEGORIES.map((c) => ({ value: c, label: c === 'Boshqa' ? t('common.other') : c }));
+
   return (
     <div className="section container-page">
       <SEO title={t('nav.standards')} />
@@ -36,8 +40,8 @@ export default function Standards() {
         <Select
           value={category}
           onChange={setCategory}
-          placeholder="Kategoriya"
-          options={CATEGORIES.map((c) => ({ value: c, label: c }))}
+          placeholder={t('common.category')}
+          options={categoryOptions}
         />
       </div>
 

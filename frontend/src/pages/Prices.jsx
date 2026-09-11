@@ -29,12 +29,12 @@ export default function Prices() {
   const rowsFor = (items) =>
     items.map((p, idx) => ({
       '№': idx + 1,
-      Xizmat: getLocalized(p.service, 'name', i18n.language),
-      Laboratoriya: getLocalized(p.service?.laboratory, 'name', i18n.language),
-      Standart: p.service?.standard?.code || '—',
-      Muddat: p.service?.durationDays ? `${p.service.durationDays} kun` : '—',
-      Narx: p.amount ? `${Number(p.amount).toLocaleString('uz-UZ')} ${p.currency}` : "Ma'lumot yangilanmoqda",
-      Sana: formatDate(p.effectiveFrom, i18n.language),
+      [t('application.service')]: getLocalized(p.service, 'name', i18n.language),
+      [t('common.laboratory')]: getLocalized(p.service?.laboratory, 'name', i18n.language),
+      [t('common.standard')]: p.service?.standard?.code || '—',
+      [t('common.duration')]: p.service?.durationDays ? `${p.service.durationDays} ${t('common.day')}` : '—',
+      [t('common.price')]: p.amount ? `${Number(p.amount).toLocaleString('uz-UZ')} ${p.currency}` : t('common.dataUpdating'),
+      [t('common.date')]: formatDate(p.effectiveFrom, i18n.language),
     }));
 
   const handleExportExcel = async () => {
@@ -46,7 +46,7 @@ export default function Prices() {
       const ws = XLSX.utils.json_to_sheet(rows);
       ws['!cols'] = [{ wch: 4 }, { wch: 45 }, { wch: 35 }, { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 14 }];
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Narxlar');
+      XLSX.utils.book_append_sheet(wb, ws, t('prices.exportSheetName'));
       XLSX.writeFile(wb, `narxlar-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } finally {
       setExportingExcel(false);
@@ -63,7 +63,7 @@ export default function Prices() {
       container.innerHTML = '';
 
       const title = document.createElement('h2');
-      title.textContent = "Narxlar ro'yxati — Sinov Laboratoriyalari Majmuasi";
+      title.textContent = t('prices.exportTitle');
       title.style.cssText = 'font-size:16px;font-weight:700;margin-bottom:12px;color:#0B3A63;font-family:Arial,sans-serif;';
       container.appendChild(title);
 
@@ -72,7 +72,7 @@ export default function Prices() {
       const headHtml = `
         <thead>
           <tr>
-            ${['№', 'Xizmat', 'Laboratoriya', 'Standart', 'Muddat', 'Narx', 'Sana']
+            ${['№', t('application.service'), t('common.laboratory'), t('common.standard'), t('common.duration'), t('common.price'), t('common.date')]
               .map((h) => `<th style="border:1px solid #E2E8F0;padding:6px 8px;background:#F5F8FB;text-align:left;">${h}</th>`)
               .join('')}
           </tr>
@@ -134,14 +134,14 @@ export default function Prices() {
       <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-extrabold text-primary">{t('nav.prices')}</h1>
-          <p className="section-subtitle">Narxlar admin panel orqali boshqariladi va tarixi saqlanadi.</p>
+          <p className="section-subtitle">{t('prices.subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={handleExportExcel} disabled={exportingExcel} className="btn-secondary !py-2.5">
-            <FileSpreadsheet className="h-4 w-4" /> {exportingExcel ? 'Tayyorlanmoqda...' : 'Excel'}
+            <FileSpreadsheet className="h-4 w-4" /> {exportingExcel ? t('common.preparing') : 'Excel'}
           </button>
           <button onClick={handleExportPdf} disabled={exportingPdf} className="btn-secondary !py-2.5">
-            <Download className="h-4 w-4" /> {exportingPdf ? 'Tayyorlanmoqda...' : 'PDF'}
+            <Download className="h-4 w-4" /> {exportingPdf ? t('common.preparing') : 'PDF'}
           </button>
         </div>
       </div>
@@ -164,9 +164,9 @@ export default function Prices() {
                 <th className="px-4 py-3">№</th>
                 <th className="px-4 py-3">{t('application.service')}</th>
                 <th className="px-4 py-3">{t('nav.laboratories')}</th>
-                <th className="px-4 py-3">Standart</th>
-                <th className="px-4 py-3">Muddat</th>
-                <th className="px-4 py-3">Narx</th>
+                <th className="px-4 py-3">{t('common.standard')}</th>
+                <th className="px-4 py-3">{t('common.duration')}</th>
+                <th className="px-4 py-3">{t('common.price')}</th>
                 <th className="px-4 py-3">{t('common.date')}</th>
               </tr>
             </thead>
@@ -177,7 +177,7 @@ export default function Prices() {
                   <td className="px-4 py-3 font-medium text-ink">{getLocalized(p.service, 'name', i18n.language)}</td>
                   <td className="px-4 py-3 text-slate-600">{getLocalized(p.service?.laboratory, 'name', i18n.language)}</td>
                   <td className="px-4 py-3 text-slate-600">{p.service?.standard?.code || '—'}</td>
-                  <td className="px-4 py-3 text-slate-600">{p.service?.durationDays ? `${p.service.durationDays} kun` : '—'}</td>
+                  <td className="px-4 py-3 text-slate-600">{p.service?.durationDays ? `${p.service.durationDays} ${t('common.day')}` : '—'}</td>
                   <td className="px-4 py-3 font-semibold text-primary whitespace-nowrap">
                     {p.amount ? `${Number(p.amount).toLocaleString('uz-UZ')} ${p.currency}` : t('common.dataUpdating')}
                   </td>

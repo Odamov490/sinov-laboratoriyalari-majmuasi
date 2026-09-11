@@ -45,28 +45,28 @@ export default function Contact() {
           <div className="card p-5 flex items-start gap-4">
             <MapPin className="h-5 w-5 text-primary mt-0.5" />
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Manzil</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400">{t('common.address')}</p>
               <p className="text-sm font-medium text-ink">{val('address')}</p>
             </div>
           </div>
           <div className="card p-5 flex items-start gap-4">
             <Phone className="h-5 w-5 text-primary mt-0.5" />
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Telefon</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400">{t('common.phone')}</p>
               <p className="text-sm font-medium text-ink">{val('phone')}</p>
             </div>
           </div>
           <div className="card p-5 flex items-start gap-4">
             <Mail className="h-5 w-5 text-primary mt-0.5" />
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Email</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400">{t('common.email')}</p>
               <p className="text-sm font-medium text-ink">{val('email')}</p>
             </div>
           </div>
           <div className="card p-5 flex items-start gap-4">
             <Clock className="h-5 w-5 text-primary mt-0.5" />
             <div>
-              <p className="text-xs uppercase tracking-wide text-slate-400">Ish vaqti</p>
+              <p className="text-xs uppercase tracking-wide text-slate-400">{t('common.workingHours')}</p>
               <p className="text-sm font-medium text-ink">{val('working_hours')}</p>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function Contact() {
               placeholder={t('application.fullName')}
               className="input-field"
             />
-            {errors.fullName && <p className="text-xs text-red-500 mt-1">Majburiy maydon</p>}
+            {errors.fullName && <p className="text-xs text-red-500 mt-1">{t('common.requiredField')}</p>}
           </div>
           <input {...register('phone')} placeholder={t('application.phone')} className="input-field" />
           <input {...register('email')} placeholder={t('application.email')} className="input-field" />
@@ -98,7 +98,7 @@ export default function Contact() {
               placeholder={t('application.comment')}
               className="input-field resize-none"
             />
-            {errors.message && <p className="text-xs text-red-500 mt-1">Xabar matnini kiriting</p>}
+            {errors.message && <p className="text-xs text-red-500 mt-1">{t('common.messageRequired')}</p>}
           </div>
           <button type="submit" disabled={isSubmitting} className="btn-primary w-full">
             <Send className="h-4 w-4" /> {t('common.send')}

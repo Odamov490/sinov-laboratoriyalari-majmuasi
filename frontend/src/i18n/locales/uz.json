@@ -48,7 +48,37 @@
     "add": "Qo‘shish",
     "actions": "Amallar",
     "status": "Holat",
-    "date": "Sana"
+    "date": "Sana",
+    "address": "Manzil",
+    "phone": "Telefon",
+    "email": "Email",
+    "workingHours": "Ish vaqti",
+    "requiredField": "Majburiy maydon",
+    "messageRequired": "Xabar matnini kiriting",
+    "day": "kun",
+    "other": "Boshqa",
+    "social": "Ijtimoiy tarmoqlar",
+    "category": "Kategoriya",
+    "laboratory": "Laboratoriya",
+    "testObject": "Sinov obyekti",
+    "testType": "Sinov turi",
+    "standard": "Standart",
+    "duration": "Muddat",
+    "completionDuration": "Bajarilish muddati",
+    "price": "Narx",
+    "manufacturer": "Ishlab chiqaruvchi",
+    "technicalSpecs": "Texnik xususiyatlari",
+    "usage": "Qo'llanilishi",
+    "accreditationScope": "Akkreditatsiya sohasi",
+    "issuedDate": "Berilgan sana",
+    "validUntil": "Amal qilish muddati",
+    "certificate": "Guvohnoma (PDF)",
+    "scope": "Qamrov",
+    "copied": "Nusxalandi",
+    "showFullText": "To'liq matnni ko'rsatish",
+    "collapseText": "Qisqartirish",
+    "today": "Bugun",
+    "preparing": "Tayyorlanmoqda..."
   },
   "whyUs": {
     "title": "Nima uchun aynan biz",
@@ -123,7 +153,14 @@
     "subtitle": "TN VED kodini kiriting — tizim majburiy sertifikat yoki deklaratsiya talab qilinishini avtomatik tekshiradi.",
     "label": "TN VED kodi",
     "placeholder": "TN VED kodini kiriting",
-    "checking": "Tekshirilmoqda..."
+    "checking": "Tekshirilmoqda...",
+    "disclaimer": "Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy ma'lumot uchun mutaxassislarimiz bilan bog'laning.",
+    "mandatoryTitle": "Diqqat! Majburiy muvofiqlik sertifikati talab qilinadi",
+    "mandatoryNotice": "Ushbu TN VED kodi bo'yicha ariza onlayn tizim orqali qabul qilinmaydi.",
+    "declarationTitle": "Muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi",
+    "noMatchTitle": "Maxsus muvofiqlik talabi (sertifikat yoki deklaratsiya) topilmadi",
+    "decisionLabel": "Qaror",
+    "itemLabel": "Band"
   },
   "gallery": {
     "all": "Barchasi",
@@ -147,5 +184,35 @@
     "email": "Email",
     "password": "Parol",
     "dashboard": "Boshqaruv paneli"
+  },
+  "home": {
+    "statLabsLabel": "8 ta laboratoriya",
+    "statAccreditationLabel": "Akkreditatsiya standarti",
+    "statDirectionsLabel": "Sinov yo'nalishlari"
+  },
+  "about": {
+    "timeline1": "O'z DSt ISO/IEC 17025:2019 standarti asosida akkreditatsiyadan o'tish",
+    "timeline2": "Yangi sinov yo'nalishlari va zamonaviy uskunalar bilan jihozlanish",
+    "timeline3": "8 ta ixtisoslashgan laboratoriya orqali keng qamrovli sinov xizmatlari",
+    "missionTitle": "Missiya",
+    "missionText": "Mahsulotlar sifati va xavfsizligini xolis, aniq va ishonchli sinovlar orqali baholash.",
+    "goalTitle": "Maqsad",
+    "goalText": "Xalqaro standartlarga mos, texnik jihatdan malakali sinov infratuzilmasini rivojlantirish.",
+    "valuesTitle": "Qadriyatlar",
+    "valuesText": "Xolislik, aniqlik, professionallik va mijozlarga ishonchli xizmat ko'rsatish.",
+    "historyTitle": "Tarix"
+  },
+  "prices": {
+    "subtitle": "Narxlar admin panel orqali boshqariladi va tarixi saqlanadi.",
+    "exportSheetName": "Narxlar",
+    "exportTitle": "Narxlar ro'yxati — Sinov Laboratoriyalari Majmuasi"
+  },
+  "status": {
+    "QABUL_QILINDI": "Qabul qilindi",
+    "KORIB_CHIQILMOQDA": "Ko'rib chiqilmoqda",
+    "SINOV_JARAYONIDA": "Sinov jarayonida",
+    "NATIJA_TAYYOR": "Natija tayyor",
+    "YAKUNLANDI": "Yakunlandi",
+    "BEKOR_QILINDI": "Bekor qilindi"
   }
 }

@@ -38,18 +38,18 @@ export default function Accreditation() {
         <div>
           <p className="text-2xl font-bold">{acc?.standardCode || 'O‘z DSt ISO/IEC 17025:2019'}</p>
           <p className="mt-1 text-white/70">{t('common.status')}: {acc?.certificateNumber || t('common.dataUpdating')}</p>
-          {acc?.issuedAt && <p className="mt-1 text-sm text-white/60">Berilgan sana: {formatDate(acc.issuedAt, i18n.language)}</p>}
-          {acc?.validUntil && <p className="text-sm text-white/60">Amal qilish muddati: {formatDate(acc.validUntil, i18n.language)}</p>}
+          {acc?.issuedAt && <p className="mt-1 text-sm text-white/60">{t('common.issuedDate')}: {formatDate(acc.issuedAt, i18n.language)}</p>}
+          {acc?.validUntil && <p className="text-sm text-white/60">{t('common.validUntil')}: {formatDate(acc.validUntil, i18n.language)}</p>}
           {acc?.documentUrl && (
             <a href={acc.documentUrl} target="_blank" rel="noreferrer" className="btn-accent mt-4 inline-flex">
-              <Download className="h-4 w-4" /> Guvohnoma (PDF)
+              <Download className="h-4 w-4" /> {t('common.certificate')}
             </a>
           )}
         </div>
       </div>
 
       <div className="mt-10">
-        <h2 className="section-title">Scope</h2>
+        <h2 className="section-title">{t('common.scope')}</h2>
         {scope ? (
           <div className="mt-4 card p-6">
             <FormattedText text={scope} />

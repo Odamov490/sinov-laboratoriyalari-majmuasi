@@ -45,6 +45,7 @@ const DETAIL_PREVIEW_LENGTH = 220;
 // own collapsible box, and a muted disclaimer footnote — shared layout for
 // all three outcomes (mandatory cert / declaration / nothing found).
 function RegulationNotice({ tone, icon: Icon, title, chips, detail, note }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const c = NOTICE_TONES[tone];
   const isLong = detail && detail.length > DETAIL_PREVIEW_LENGTH;
@@ -76,7 +77,7 @@ function RegulationNotice({ tone, icon: Icon, title, chips, detail, note }) {
                   onClick={() => setExpanded((v) => !v)}
                   className={`block mt-2 text-[11px] font-semibold underline underline-offset-2 ${c.link}`}
                 >
-                  {expanded ? 'Qisqartirish' : "To'liq matnni ko'rsatish"}
+                  {expanded ? t('common.collapseText') : t('common.showFullText')}
                 </button>
               )}
             </div>
@@ -122,8 +123,7 @@ export default function TnVedCheck() {
   const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
   const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
 
-  const legalDisclaimer =
-    "Aniq talab mahsulotning to'liq tavsifi va amaldagi qonunchilikka muvofiq belgilanadi. Yakuniy ma'lumot uchun mutaxassislarimiz bilan bog'laning.";
+  const legalDisclaimer = t('tnvedCheck.disclaimer');
 
   return (
     <div className="section container-page max-w-2xl">
@@ -155,10 +155,13 @@ export default function TnVedCheck() {
           <RegulationNotice
             tone="red"
             icon={AlertTriangle}
-            title="Diqqat! Majburiy muvofiqlik sertifikati talab qilinadi"
-            chips={[`${mandatoryMatch.decision}-son qaror`, `${mandatoryMatch.item}-band`]}
+            title={t('tnvedCheck.mandatoryTitle')}
+            chips={[
+              `${t('tnvedCheck.decisionLabel')} №${mandatoryMatch.decision}`,
+              `${t('tnvedCheck.itemLabel')} №${mandatoryMatch.item}`,
+            ]}
             detail={mandatoryMatch.nameUz}
-            note={`Ushbu TN VED kodi bo'yicha ariza onlayn tizim orqali qabul qilinmaydi. ${legalDisclaimer}`}
+            note={`${t('tnvedCheck.mandatoryNotice')} ${legalDisclaimer}`}
           />
         )}
 
@@ -166,8 +169,11 @@ export default function TnVedCheck() {
           <RegulationNotice
             tone="emerald"
             icon={Info}
-            title="Muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi"
-            chips={[`${declarationMatch.decision}-son qaror`, `${declarationMatch.item}-band`]}
+            title={t('tnvedCheck.declarationTitle')}
+            chips={[
+              `${t('tnvedCheck.decisionLabel')} №${declarationMatch.decision}`,
+              `${t('tnvedCheck.itemLabel')} №${declarationMatch.item}`,
+            ]}
             detail={declarationMatch.nameUz}
             note={legalDisclaimer}
           />
@@ -177,7 +183,7 @@ export default function TnVedCheck() {
           <RegulationNotice
             tone="amber"
             icon={AlertTriangle}
-            title="Maxsus muvofiqlik talabi (sertifikat yoki deklaratsiya) topilmadi"
+            title={t('tnvedCheck.noMatchTitle')}
             note={legalDisclaimer}
           />
         )}

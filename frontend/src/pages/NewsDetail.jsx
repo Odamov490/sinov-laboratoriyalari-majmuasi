@@ -64,7 +64,7 @@ export default function NewsDetail() {
 
       {galleryImages.length > 0 && (
         <div className="mt-10">
-          <h2 className="font-semibold text-ink mb-4">Galereya</h2>
+          <h2 className="font-semibold text-ink mb-4">{t('nav.gallery')}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {galleryImages.map((url) => (
               <img

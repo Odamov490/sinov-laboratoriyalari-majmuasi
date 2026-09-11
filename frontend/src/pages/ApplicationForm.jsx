@@ -47,7 +47,7 @@ export default function ApplicationForm() {
           <button
             onClick={() => {
               navigator.clipboard.writeText(result.applicationNumber);
-              showToast('Nusxalandi', 'success');
+              showToast(t('common.copied'), 'success');
             }}
             className="text-slate-400 hover:text-primary"
           >
@@ -133,11 +133,12 @@ export default function ApplicationForm() {
 }
 
 function Field({ label, error, children }) {
+  const { t } = useTranslation();
   return (
     <div>
       <label className="block text-sm font-medium text-ink mb-1.5">{label}</label>
       {children}
-      {error && <p className="text-xs text-red-500 mt-1">Majburiy maydon</p>}
+      {error && <p className="text-xs text-red-500 mt-1">{t('common.requiredField')}</p>}
     </div>
   );
 }

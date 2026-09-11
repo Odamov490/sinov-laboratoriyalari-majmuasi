@@ -48,7 +48,37 @@
     "add": "Add",
     "actions": "Actions",
     "status": "Status",
-    "date": "Date"
+    "date": "Date",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "workingHours": "Working hours",
+    "requiredField": "Required field",
+    "messageRequired": "Please enter your message",
+    "day": "days",
+    "other": "Other",
+    "social": "Social media",
+    "category": "Category",
+    "laboratory": "Laboratory",
+    "testObject": "Test object",
+    "testType": "Test type",
+    "standard": "Standard",
+    "duration": "Duration",
+    "completionDuration": "Completion time",
+    "price": "Price",
+    "manufacturer": "Manufacturer",
+    "technicalSpecs": "Technical specifications",
+    "usage": "Usage",
+    "accreditationScope": "Accreditation scope",
+    "issuedDate": "Issue date",
+    "validUntil": "Valid until",
+    "certificate": "Certificate (PDF)",
+    "scope": "Scope",
+    "copied": "Copied",
+    "showFullText": "Show full text",
+    "collapseText": "Collapse",
+    "today": "Today",
+    "preparing": "Preparing..."
   },
   "whyUs": {
     "title": "Why choose us",
@@ -123,7 +153,14 @@
     "subtitle": "Enter your TN VED code — the system automatically checks whether a mandatory certificate or declaration is required.",
     "label": "TN VED code",
     "placeholder": "Enter the TN VED code",
-    "checking": "Checking..."
+    "checking": "Checking...",
+    "disclaimer": "The exact requirement is determined by the product's full description and current legislation. Contact our specialists for final information.",
+    "mandatoryTitle": "Attention! A mandatory certificate of conformity is required",
+    "mandatoryNotice": "Applications for this TN VED code are not accepted through the online system.",
+    "declarationTitle": "A declaration of conformity is recommended",
+    "noMatchTitle": "No special conformity requirement (certificate or declaration) was found",
+    "decisionLabel": "Decision",
+    "itemLabel": "Item"
   },
   "gallery": {
     "all": "All",
@@ -147,5 +184,35 @@
     "email": "Email",
     "password": "Password",
     "dashboard": "Dashboard"
+  },
+  "home": {
+    "statLabsLabel": "8 laboratories",
+    "statAccreditationLabel": "Accreditation standard",
+    "statDirectionsLabel": "Testing directions"
+  },
+  "about": {
+    "timeline1": "Accredited under the O'z DSt ISO/IEC 17025:2019 standard",
+    "timeline2": "Equipped with new testing directions and modern equipment",
+    "timeline3": "Comprehensive testing services through 8 specialized laboratories",
+    "missionTitle": "Mission",
+    "missionText": "Objective, accurate, and reliable assessment of product quality and safety through testing.",
+    "goalTitle": "Goal",
+    "goalText": "Developing a technically competent testing infrastructure that meets international standards.",
+    "valuesTitle": "Values",
+    "valuesText": "Objectivity, accuracy, professionalism, and reliable customer service.",
+    "historyTitle": "History"
+  },
+  "prices": {
+    "subtitle": "Prices are managed via the admin panel, and their history is preserved.",
+    "exportSheetName": "Prices",
+    "exportTitle": "Price List — Testing Laboratories Complex"
+  },
+  "status": {
+    "QABUL_QILINDI": "Received",
+    "KORIB_CHIQILMOQDA": "Under review",
+    "SINOV_JARAYONIDA": "Testing in progress",
+    "NATIJA_TAYYOR": "Result ready",
+    "YAKUNLANDI": "Completed",
+    "BEKOR_QILINDI": "Cancelled"
   }
 }

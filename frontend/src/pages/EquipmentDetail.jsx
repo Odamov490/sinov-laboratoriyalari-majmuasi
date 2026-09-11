@@ -45,12 +45,12 @@ export default function EquipmentDetail() {
             <p className="mt-1 text-secondary text-sm font-medium">{getLocalized(item.laboratory, 'name', i18n.language)}</p>
           )}
           <div className="mt-6 card divide-y divide-border">
-            <Row label="Ishlab chiqaruvchi" value={item.manufacturer} t={t} />
+            <Row label={t('common.manufacturer')} value={item.manufacturer} t={t} />
             <Row label="Model" value={item.model} t={t} />
           </div>
           {item.specifications ? (
             <div className="mt-6">
-              <h3 className="font-semibold text-ink">Texnik xususiyatlari</h3>
+              <h3 className="font-semibold text-ink">{t('common.technicalSpecs')}</h3>
               <p className="mt-2 text-sm text-slate-600 whitespace-pre-line">{item.specifications}</p>
             </div>
           ) : (
@@ -58,7 +58,7 @@ export default function EquipmentDetail() {
           )}
           {item.application && (
             <div className="mt-6">
-              <h3 className="font-semibold text-ink">Qo‘llanilishi</h3>
+              <h3 className="font-semibold text-ink">{t('common.usage')}</h3>
               <p className="mt-2 text-sm text-slate-600 whitespace-pre-line">{item.application}</p>
             </div>
           )}

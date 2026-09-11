@@ -43,10 +43,11 @@ export function Pagination({ page, pageSize, total, onChange }) {
 }
 
 export function Breadcrumb({ items }) {
+  const { t } = useTranslation();
   return (
     <nav aria-label="breadcrumb" className="text-sm text-slate-500 flex flex-wrap items-center gap-1.5">
       <Link to="/" className="hover:text-primary">
-        Bosh sahifa
+        {t('nav.home')}
       </Link>
       {items.map((it, idx) => (
         <React.Fragment key={idx}>
@@ -83,13 +84,14 @@ const STATUS_LABELS = {
 };
 
 export function StatusBadge({ status }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${
         STATUS_STYLES[status] || 'bg-slate-50 text-slate-600 border-slate-200'
       }`}
     >
-      {STATUS_LABELS[status] || status}
+      {t(`status.${status}`, STATUS_LABELS[status] || status)}
     </span>
   );
 }

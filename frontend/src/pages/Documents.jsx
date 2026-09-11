@@ -19,7 +19,7 @@ export default function Documents() {
   const grouped = React.useMemo(() => {
     if (!items) return {};
     return items.reduce((acc, doc) => {
-      const key = doc.category ? getLocalized(doc.category, 'name', i18n.language) : 'Boshqa';
+      const key = doc.category ? getLocalized(doc.category, 'name', i18n.language) : t('common.other');
       acc[key] = acc[key] || [];
       acc[key].push(doc);
       return acc;

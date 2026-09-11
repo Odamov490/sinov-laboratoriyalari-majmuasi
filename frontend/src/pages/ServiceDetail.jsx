@@ -26,12 +26,12 @@ export default function ServiceDetail() {
   const price = service.prices?.[0];
 
   const rows = [
-    { label: 'Laboratoriya', value: getLocalized(service.laboratory, 'name', i18n.language) },
-    { label: 'Sinov obyekti', value: service.testObject || t('common.dataUpdating') },
-    { label: 'Sinov turi', value: service.testType || t('common.dataUpdating') },
-    { label: 'Standart', value: service.standard?.code || t('common.dataUpdating') },
-    { label: 'Bajarilish muddati', value: service.durationDays ? `${service.durationDays} kun` : t('common.dataUpdating') },
-    { label: 'Narx', value: price?.amount ? `${Number(price.amount).toLocaleString('uz-UZ')} ${price.currency}` : t('common.dataUpdating') },
+    { label: t('common.laboratory'), value: getLocalized(service.laboratory, 'name', i18n.language) },
+    { label: t('common.testObject'), value: service.testObject || t('common.dataUpdating') },
+    { label: t('common.testType'), value: service.testType || t('common.dataUpdating') },
+    { label: t('common.standard'), value: service.standard?.code || t('common.dataUpdating') },
+    { label: t('common.completionDuration'), value: service.durationDays ? `${service.durationDays} ${t('common.day')}` : t('common.dataUpdating') },
+    { label: t('common.price'), value: price?.amount ? `${Number(price.amount).toLocaleString('uz-UZ')} ${price.currency}` : t('common.dataUpdating') },
   ];
 
   const description = getLocalized(service, 'description', i18n.language);

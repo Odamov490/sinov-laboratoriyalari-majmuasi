@@ -61,9 +61,9 @@ export default function Home() {
   const processSteps = Object.entries(t('process.steps', { returnObjects: true }));
 
   const stats = [
-    { label: '8 ta laboratoriya', value: '8' },
-    { label: "Akkreditatsiya standarti", value: 'O‘z DSt ISO/IEC 17025:2019' },
-    { label: 'Sinov yo‘nalishlari', value: labs ? `${labs.length * 322}+` : t('common.dataUpdating') },
+    { label: t('home.statLabsLabel'), value: '8' },
+    { label: t('home.statAccreditationLabel'), value: 'O‘z DSt ISO/IEC 17025:2019' },
+    { label: t('home.statDirectionsLabel'), value: labs ? `${labs.length * 322}+` : t('common.dataUpdating') },
   ];
 
   return (
