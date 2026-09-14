@@ -30,6 +30,7 @@ router.get('/gallery', ctrl.getGallery);
 router.get('/faq', ctrl.getFaq);
 router.get('/accreditation', ctrl.getAccreditation);
 router.get('/settings', ctrl.getSettings);
+router.get('/info-pages/:slug', ctrl.getInfoPage);
 router.get('/search', ctrl.globalSearch);
 
 router.post('/applications', applicationLimiter, upload.array('files', 5), createApplication);

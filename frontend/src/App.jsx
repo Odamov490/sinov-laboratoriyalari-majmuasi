@@ -24,6 +24,7 @@ import Faq from './pages/Faq.jsx';
 import Contact from './pages/Contact.jsx';
 import ApplicationForm from './pages/ApplicationForm.jsx';
 import TnVedCheck from './pages/TnVedCheck.jsx';
+import DeclarationInfo from './pages/DeclarationInfo.jsx';
 import TrackApplication from './pages/TrackApplication.jsx';
 import NotFound from './pages/NotFound.jsx';
 
@@ -33,6 +34,7 @@ import AdminApplications from './pages/admin/AdminApplications.jsx';
 import AdminPrices from './pages/admin/AdminPrices.jsx';
 import AdminUsers from './pages/admin/AdminUsers.jsx';
 import AdminSettings from './pages/admin/AdminSettings.jsx';
+import AdminDeclarationInfo from './pages/admin/AdminDeclarationInfo.jsx';
 import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
@@ -76,6 +78,7 @@ export default function App() {
         <Route path="/arizani-tekshirish" element={<TrackApplication />} />
         <Route path="/ariza" element={<ApplicationForm />} />
         <Route path="/tnved-tekshirish" element={<TnVedCheck />} />
+        <Route path="/deklaratsiya-va-sertifikat" element={<DeclarationInfo />} />
         <Route path="/aloqa" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -97,6 +100,7 @@ export default function App() {
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
         <Route path="tnved-reglament" element={<AdminCrudPage config={tnVedRegulationConfig} />} />
+        <Route path="deklaratsiya-sertifikat" element={<AdminDeclarationInfo />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="skanerlash" element={<AdminScanner />} />

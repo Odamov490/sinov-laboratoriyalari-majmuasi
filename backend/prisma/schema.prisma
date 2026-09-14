@@ -427,3 +427,18 @@ model TnVedRegulation {
   decision  String
   createdAt DateTime                @default(now())
 }
+
+// Admin-editable public info pages (e.g. "declaration vs certificate"
+// explainer) — reusable model for future one-off content pages, not just
+// this one, so it's keyed by slug rather than a dedicated table per page.
+model InfoPage {
+  id         String   @id @default(uuid())
+  slug       String   @unique
+  titleUz    String
+  titleRu    String
+  titleEn    String
+  contentUz  String
+  contentRu  String
+  contentEn  String
+  updatedAt  DateTime @updatedAt
+}

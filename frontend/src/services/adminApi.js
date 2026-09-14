@@ -38,6 +38,11 @@ export const adminUsers = adminResource('users');
 
 export const updateSettings = (payload) => apiClient.put('/admin/settings', payload).then((r) => r.data);
 
+export const adminInfoPage = {
+  get: (slug) => apiClient.get(`/admin/info-pages/${slug}`).then((r) => r.data),
+  update: (slug, payload) => apiClient.put(`/admin/info-pages/${slug}`, payload).then((r) => r.data),
+};
+
 export const uploadFiles = (files) => {
   const formData = new FormData();
   Array.from(files).forEach((f) => formData.append('files', f));

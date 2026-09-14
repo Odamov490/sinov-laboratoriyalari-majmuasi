@@ -21,6 +21,7 @@ export const getEquipmentItem = (slug) => apiClient.get(`/equipment/${slug}`).th
 export const getGallery = (params) => apiClient.get('/gallery', { params }).then((r) => r.data);
 export const getFaq = () => apiClient.get('/faq').then((r) => r.data);
 export const getAccreditation = () => apiClient.get('/accreditation').then((r) => r.data);
+export const getInfoPage = (slug) => apiClient.get(`/info-pages/${slug}`).then((r) => r.data);
 export const getSettings = () => apiClient.get('/settings').then((r) => r.data);
 export const globalSearch = (q) => apiClient.get('/search', { params: { q } }).then((r) => r.data);
 

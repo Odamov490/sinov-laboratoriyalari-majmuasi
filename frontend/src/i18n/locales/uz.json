@@ -16,7 +16,8 @@
     "faq": "FAQ",
     "track": "Arizani tekshirish",
     "apply": "Ariza yuborish",
-    "tnvedCheck": "TN VED tekshirish"
+    "tnvedCheck": "TN VED tekshirish",
+    "declarationInfo": "Deklaratsiya va sertifikat"
   },
   "hero": {
     "title": "SINOV LABORATORIYALARI MAJMUASI",
@@ -161,6 +162,12 @@
     "noMatchTitle": "Maxsus muvofiqlik talabi (sertifikat yoki deklaratsiya) topilmadi",
     "decisionLabel": "Qaror",
     "itemLabel": "Band"
+  },
+  "declarationInfo": {
+    "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",
+    "applyHint": "Mahsulotingiz uchun sinovdan o'tkazish yoki hujjat rasmiylashtirish uchun ariza bering.",
+    "homeCardTitle": "Deklaratsiya kerakmi yoki sertifikat? Bilib oling",
+    "homeCardText": "Mahsulotingiz uchun qaysi hujjat talab qilinishini — muvofiqlik deklaratsiyasimi yoki sertifikatimi — va bu qanday tartibga solinishini bilib oling."
   },
   "gallery": {
     "all": "Barchasi",

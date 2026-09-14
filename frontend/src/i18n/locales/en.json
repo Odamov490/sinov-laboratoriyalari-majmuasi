@@ -16,7 +16,8 @@
     "faq": "FAQ",
     "track": "Track Application",
     "apply": "Submit Application",
-    "tnvedCheck": "Check TN VED Code"
+    "tnvedCheck": "Check TN VED Code",
+    "declarationInfo": "Declaration & Certificate"
   },
   "hero": {
     "title": "TESTING LABORATORIES COMPLEX",
@@ -161,6 +162,12 @@
     "noMatchTitle": "No special conformity requirement (certificate or declaration) was found",
     "decisionLabel": "Decision",
     "itemLabel": "Item"
+  },
+  "declarationInfo": {
+    "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",
+    "applyHint": "Submit an application to test your product or arrange the required document.",
+    "homeCardTitle": "Need a declaration or a certificate? Find out",
+    "homeCardText": "Find out which document your product requires — a declaration of conformity or a certificate — and how it's regulated."
   },
   "gallery": {
     "all": "All",

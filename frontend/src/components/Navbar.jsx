@@ -30,6 +30,7 @@ export default function Navbar() {
     { to: '/xizmatlar', label: t('nav.services') },
     { to: '/narxlar', label: t('nav.prices') },
     { to: '/akkreditatsiya', label: t('nav.accreditation') },
+    { to: '/deklaratsiya-va-sertifikat', label: t('nav.declarationInfo') },
     { to: '/yangiliklar', label: t('nav.news') },
     { to: '/hujjatlar', label: t('nav.documents') },
      { to: '/galereya', label: t('nav.gallery') },

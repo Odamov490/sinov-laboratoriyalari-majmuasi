@@ -151,6 +151,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Declaration vs certificate explainer */}
+      <section className="section bg-bg-light">
+        <div className="container-page">
+          <div className="card p-8 flex flex-wrap items-center justify-between gap-6">
+            <div className="flex items-start gap-4 max-w-xl">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <ShieldCheck className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold text-ink">{t('declarationInfo.homeCardTitle')}</h2>
+                <p className="mt-1 text-sm text-slate-500">{t('declarationInfo.homeCardText')}</p>
+              </div>
+            </div>
+            <Link to="/deklaratsiya-va-sertifikat" className="btn-secondary shrink-0">
+              {t('common.readMore')}
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Why Us */}
       <section className="section bg-bg-light">
         <div className="container-page">

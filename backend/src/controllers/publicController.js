@@ -202,6 +202,12 @@ const getSettings = asyncHandler(async (req, res) => {
   res.json(map);
 });
 
+const getInfoPage = asyncHandler(async (req, res) => {
+  const item = await prisma.infoPage.findUnique({ where: { slug: req.params.slug } });
+  if (!item) return res.status(404).json({ error: 'Sahifa topilmadi.' });
+  res.json(item);
+});
+
 const globalSearch = asyncHandler(async (req, res) => {
   const { q } = req.query;
   if (!q || q.trim().length < 2) return res.json({ laboratories: [], services: [], standards: [], news: [], documents: [], equipment: [] });
@@ -237,5 +243,6 @@ module.exports = {
   getFaq,
   getAccreditation,
   getSettings,
+  getInfoPage,
   globalSearch,
 };

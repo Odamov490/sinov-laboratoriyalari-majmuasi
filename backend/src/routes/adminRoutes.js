@@ -7,6 +7,7 @@ const { updateApplicationStatus } = require('../controllers/applicationControlle
 const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
+const { getInfoPage, updateInfoPage } = require('../controllers/infoPageAdminController');
 const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');
 const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
 const prisma = require('../config/prisma');
@@ -185,6 +186,10 @@ router.delete('/users/:id', requireModule('users'), deleteUser);
 
 // Settings (Super Admin only)
 router.put('/settings', requireModule('settings'), updateSettings);
+
+// Info pages (admin-editable public explainer pages, e.g. declaration vs certificate)
+router.get('/info-pages/:slug', requireModule('applications'), getInfoPage);
+router.put('/info-pages/:slug', requireModule('applications'), updateInfoPage);
 
 // Sample tracking (QR-based check-in/check-out between laboratories)
 router.get('/samples/stats', requireModule('samples'), getStats);
