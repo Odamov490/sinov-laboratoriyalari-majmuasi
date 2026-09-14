@@ -1,5 +1,6 @@
 import React from 'react';
 import { Info } from 'lucide-react';
+import GuideStepIllustration from './GuideStepIllustration.jsx';
 
 // Parses the same "intro paragraph \n\n 1. Title. Description ... 10. Title.
 // Description \n\n closing note" text convention used for
@@ -52,11 +53,14 @@ export default function GuideTimeline({ text }) {
             <span className="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white text-sm font-bold">
               {step.number}
             </span>
-            <div className="pt-1">
-              <p className="font-semibold text-ink text-sm">{step.title}</p>
-              {step.description && (
-                <p className="mt-1 text-sm text-slate-600 leading-relaxed whitespace-pre-line">{step.description}</p>
-              )}
+            <div className="pt-1 flex-1 flex flex-col sm:flex-row sm:items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-ink text-sm">{step.title}</p>
+                {step.description && (
+                  <p className="mt-1 text-sm text-slate-600 leading-relaxed whitespace-pre-line">{step.description}</p>
+                )}
+              </div>
+              <GuideStepIllustration step={Number(step.number)} className="w-full sm:w-36 h-24 shrink-0" />
             </div>
           </li>
         ))}
