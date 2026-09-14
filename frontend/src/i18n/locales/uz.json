@@ -78,6 +78,8 @@
     "copied": "Nusxalandi",
     "showFullText": "To'liq matnni ko'rsatish",
     "collapseText": "Qisqartirish",
+    "view": "Ko'rish",
+    "download": "Yuklab olish",
     "today": "Bugun",
     "preparing": "Tayyorlanmoqda..."
   },
@@ -167,7 +169,8 @@
     "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",
     "applyHint": "Mahsulotingiz uchun sinovdan o'tkazish yoki hujjat rasmiylashtirish uchun ariza bering.",
     "homeCardTitle": "Deklaratsiya kerakmi yoki sertifikat? Bilib oling",
-    "homeCardText": "Mahsulotingiz uchun qaysi hujjat talab qilinishini — muvofiqlik deklaratsiyasimi yoki sertifikatimi — va bu qanday tartibga solinishini bilib oling."
+    "homeCardText": "Mahsulotingiz uchun qaysi hujjat talab qilinishini — muvofiqlik deklaratsiyasimi yoki sertifikatimi — va bu qanday tartibga solinishini bilib oling.",
+    "resolutionsTitle": "Rasmiy hujjatlar"
   },
   "gallery": {
     "all": "Barchasi",

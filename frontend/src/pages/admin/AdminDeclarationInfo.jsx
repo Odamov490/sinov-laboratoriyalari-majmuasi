@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { adminInfoPage } from '../../services/adminApi';
+import { FileText } from 'lucide-react';
+import { adminInfoPage, uploadFiles } from '../../services/adminApi';
 import { Loading } from '../../components/StateViews.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
@@ -11,10 +12,16 @@ const LANGS = [
   { code: 'En', label: 'English' },
 ];
 
+const RESOLUTION_DOCS = [
+  { field: 'document502Url', label: 'Qaror №502 (PDF)' },
+  { field: 'document43Url', label: 'Qaror №43 (PDF)' },
+];
+
 export default function AdminDeclarationInfo() {
   const { showToast } = useToast();
   const [values, setValues] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
 
   useEffect(() => {
     adminInfoPage
@@ -35,6 +42,20 @@ export default function AdminDeclarationInfo() {
       showToast('Xatolik yuz berdi.', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileChange = async (field, fileList) => {
+    if (!fileList?.length) return;
+    setUploadingField(field);
+    try {
+      const res = await uploadFiles(fileList);
+      setValues((v) => ({ ...v, [field]: res.files[0].url }));
+      showToast('Fayl yuklandi. Saqlashni unutmang.', 'success');
+    } catch {
+      showToast('Fayl yuklashda xatolik.', 'error');
+    } finally {
+      setUploadingField(null);
     }
   };
 
@@ -71,8 +92,38 @@ export default function AdminDeclarationInfo() {
           </div>
         ))}
 
-        <button onClick={save} disabled={saving} className="btn-primary w-full">
-          {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+        <div className="card p-6 space-y-4">
+          <p className="text-sm font-semibold text-primary">Rasmiy hujjatlar (502 va 43-son qarorlar)</p>
+          {RESOLUTION_DOCS.map((doc) => (
+            <div key={doc.field}>
+              <label className="block text-sm font-medium text-ink mb-1.5">{doc.label}</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => handleFileChange(doc.field, e.target.files)}
+                  className="text-sm"
+                />
+                {uploadingField === doc.field && (
+                  <span className="text-xs text-primary">Yuklanmoqda...</span>
+                )}
+              </div>
+              {values[doc.field] && uploadingField !== doc.field && (
+                <a
+                  href={values[doc.field]}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                >
+                  <FileText className="h-3.5 w-3.5" /> Joriy fayl: {values[doc.field].split('/').pop()}
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+
+        <button onClick={save} disabled={saving || !!uploadingField} className="btn-primary w-full">
+          {uploadingField ? 'Fayl yuklanmoqda...' : saving ? 'Saqlanmoqda...' : 'Saqlash'}
         </button>
       </div>
     </div>

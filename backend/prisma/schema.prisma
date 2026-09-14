@@ -432,13 +432,17 @@ model TnVedRegulation {
 // explainer) — reusable model for future one-off content pages, not just
 // this one, so it's keyed by slug rather than a dedicated table per page.
 model InfoPage {
-  id         String   @id @default(uuid())
-  slug       String   @unique
-  titleUz    String
-  titleRu    String
-  titleEn    String
-  contentUz  String
-  contentRu  String
-  contentEn  String
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  titleUz         String
+  titleRu         String
+  titleEn         String
+  contentUz       String
+  contentRu       String
+  contentEn       String
+  // Reference PDFs for the declaration-vs-certificate page (Resolutions
+  // No. 502 and No. 43) — nullable since not every InfoPage needs them.
+  document502Url  String?
+  document43Url   String?
+  updatedAt       DateTime @updatedAt
 }

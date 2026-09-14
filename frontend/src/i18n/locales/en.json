@@ -78,6 +78,8 @@
     "copied": "Copied",
     "showFullText": "Show full text",
     "collapseText": "Collapse",
+    "view": "View",
+    "download": "Download",
     "today": "Today",
     "preparing": "Preparing..."
   },
@@ -167,7 +169,8 @@
     "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",
     "applyHint": "Submit an application to test your product or arrange the required document.",
     "homeCardTitle": "Need a declaration or a certificate? Find out",
-    "homeCardText": "Find out which document your product requires — a declaration of conformity or a certificate — and how it's regulated."
+    "homeCardText": "Find out which document your product requires — a declaration of conformity or a certificate — and how it's regulated.",
+    "resolutionsTitle": "Official Documents"
   },
   "gallery": {
     "all": "All",
