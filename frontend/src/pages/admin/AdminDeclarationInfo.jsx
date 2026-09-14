@@ -28,7 +28,12 @@ export default function AdminDeclarationInfo() {
       .get(SLUG)
       .then(setValues)
       .catch(() =>
-        setValues({ titleUz: '', titleRu: '', titleEn: '', contentUz: '', contentRu: '', contentEn: '' })
+        setValues({
+          titleUz: '', titleRu: '', titleEn: '',
+          contentUz: '', contentRu: '', contentEn: '',
+          guideTitleUz: '', guideTitleRu: '', guideTitleEn: '',
+          guideContentUz: '', guideContentRu: '', guideContentEn: '',
+        })
       );
   }, []);
 
@@ -69,6 +74,7 @@ export default function AdminDeclarationInfo() {
       </p>
 
       <div className="space-y-6">
+        <h2 className="text-lg font-bold text-ink">Asosiy tushuntirish</h2>
         {LANGS.map((lang) => (
           <div key={lang.code} className="card p-6 space-y-4">
             <p className="text-sm font-semibold text-primary">{lang.label}</p>
@@ -85,6 +91,30 @@ export default function AdminDeclarationInfo() {
               <textarea
                 value={values[`content${lang.code}`] || ''}
                 onChange={(e) => setValues({ ...values, [`content${lang.code}`]: e.target.value })}
+                rows={15}
+                className="input-field resize-y font-mono text-sm"
+              />
+            </div>
+          </div>
+        ))}
+
+        <h2 className="text-lg font-bold text-ink pt-2">Bosqichma-bosqich qo'llanma</h2>
+        {LANGS.map((lang) => (
+          <div key={`guide-${lang.code}`} className="card p-6 space-y-4">
+            <p className="text-sm font-semibold text-primary">{lang.label}</p>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1.5">Qo'llanma sarlavhasi</label>
+              <input
+                value={values[`guideTitle${lang.code}`] || ''}
+                onChange={(e) => setValues({ ...values, [`guideTitle${lang.code}`]: e.target.value })}
+                className="input-field"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1.5">Qo'llanma matni</label>
+              <textarea
+                value={values[`guideContent${lang.code}`] || ''}
+                onChange={(e) => setValues({ ...values, [`guideContent${lang.code}`]: e.target.value })}
                 rows={15}
                 className="input-field resize-y font-mono text-sm"
               />

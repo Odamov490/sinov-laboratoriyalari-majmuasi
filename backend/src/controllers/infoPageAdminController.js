@@ -8,8 +8,20 @@ const getInfoPage = asyncHandler(async (req, res) => {
 });
 
 const updateInfoPage = asyncHandler(async (req, res) => {
-  const { titleUz, titleRu, titleEn, contentUz, contentRu, contentEn, document502Url, document43Url } = req.body;
-  const data = { titleUz, titleRu, titleEn, contentUz, contentRu, contentEn, document502Url, document43Url };
+  const {
+    titleUz, titleRu, titleEn,
+    contentUz, contentRu, contentEn,
+    document502Url, document43Url,
+    guideTitleUz, guideTitleRu, guideTitleEn,
+    guideContentUz, guideContentRu, guideContentEn,
+  } = req.body;
+  const data = {
+    titleUz, titleRu, titleEn,
+    contentUz, contentRu, contentEn,
+    document502Url, document43Url,
+    guideTitleUz, guideTitleRu, guideTitleEn,
+    guideContentUz, guideContentRu, guideContentEn,
+  };
   const item = await prisma.infoPage.upsert({
     where: { slug: req.params.slug },
     update: data,

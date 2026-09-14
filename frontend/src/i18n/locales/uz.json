@@ -170,7 +170,10 @@
     "applyHint": "Mahsulotingiz uchun sinovdan o'tkazish yoki hujjat rasmiylashtirish uchun ariza bering.",
     "homeCardTitle": "Deklaratsiya kerakmi yoki sertifikat? Bilib oling",
     "homeCardText": "Mahsulotingiz uchun qaysi hujjat talab qilinishini — muvofiqlik deklaratsiyasimi yoki sertifikatimi — va bu qanday tartibga solinishini bilib oling.",
-    "resolutionsTitle": "Rasmiy hujjatlar"
+    "resolutionsTitle": "Rasmiy hujjatlar",
+    "guideBadgeEri": "ERI talab etiladi",
+    "guideBadgePayment": "To'lov: shartnoma / hisob-faktura asosida",
+    "guideBadgeLab": "Tavsiya etilgan laboratoriya: O'ZAK.SL.0309"
   },
   "gallery": {
     "all": "Barchasi",

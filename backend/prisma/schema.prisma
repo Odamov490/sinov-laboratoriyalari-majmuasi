@@ -444,5 +444,14 @@ model InfoPage {
   // No. 502 and No. 43) — nullable since not every InfoPage needs them.
   document502Url  String?
   document43Url   String?
+  // Optional second section: a step-by-step how-to guide, shown below the
+  // main content on the same page — nullable since not every InfoPage
+  // needs one.
+  guideTitleUz    String?
+  guideTitleRu    String?
+  guideTitleEn    String?
+  guideContentUz  String?
+  guideContentRu  String?
+  guideContentEn  String?
   updatedAt       DateTime @updatedAt
 }

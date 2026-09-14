@@ -19,8 +19,11 @@ export default function FormattedText({ text, className = '' }) {
   return (
     <div className={`space-y-4 text-slate-600 leading-relaxed ${className}`}>
       {blocks.map((block, idx) => {
+        // (?<!\d) keeps the split from firing mid-number — without it,
+        // "10. " and reference numbers like "№43." get mis-split between
+        // their digits (e.g. "1" / "0. Text...").
         const items = block
-          .split(/(?=\d+\.\s)/)
+          .split(/(?=(?<!\d)\d+\.\s)/)
           .map((s) => s.trim())
           .filter(Boolean);
 

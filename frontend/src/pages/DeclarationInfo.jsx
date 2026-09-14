@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, FileText, Eye, Download } from 'lucide-react';
+import { ShieldCheck, FileText, Eye, Download, ListChecks, KeySquare, CreditCard, FlaskConical } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, ErrorState } from '../components/StateViews.jsx';
@@ -25,6 +25,8 @@ export default function DeclarationInfo() {
 
   const title = getLocalized(page, 'title', i18n.language);
   const content = getLocalized(page, 'content', i18n.language);
+  const guideTitle = getLocalized(page, 'guideTitle', i18n.language);
+  const guideContent = getLocalized(page, 'guideContent', i18n.language);
 
   return (
     <div className="section container-page max-w-3xl">
@@ -59,6 +61,29 @@ export default function DeclarationInfo() {
         </div>
       )}
 
+      {guideTitle && guideContent && (
+        <>
+          <hr className="mt-16 border-border" />
+
+          <div className="mt-10 flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ListChecks className="h-5 w-5" />
+            </span>
+            <h2 className="text-xl md:text-2xl font-extrabold text-primary pt-2">{guideTitle}</h2>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            <GuideBadge icon={KeySquare}>{t('declarationInfo.guideBadgeEri')}</GuideBadge>
+            <GuideBadge icon={CreditCard}>{t('declarationInfo.guideBadgePayment')}</GuideBadge>
+            <GuideBadge icon={FlaskConical} gold>{t('declarationInfo.guideBadgeLab')}</GuideBadge>
+          </div>
+
+          <div className="mt-6 card p-6">
+            <FormattedText text={guideContent} />
+          </div>
+        </>
+      )}
+
       <div className="mt-8 card p-6 bg-bg-light flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm font-medium text-ink">{t('declarationInfo.applyHint')}</p>
         <Link to="/ariza" className="btn-primary shrink-0">
@@ -66,6 +91,18 @@ export default function DeclarationInfo() {
         </Link>
       </div>
     </div>
+  );
+}
+
+function GuideBadge({ icon: Icon, gold, children }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+        gold ? 'border-accent/50 bg-accent/10 text-[#8A6A17]' : 'border-border bg-bg-light text-slate-600'
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" /> {children}
+    </span>
   );
 }
 

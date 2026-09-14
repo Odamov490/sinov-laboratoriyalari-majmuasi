@@ -170,7 +170,10 @@
     "applyHint": "Submit an application to test your product or arrange the required document.",
     "homeCardTitle": "Need a declaration or a certificate? Find out",
     "homeCardText": "Find out which document your product requires — a declaration of conformity or a certificate — and how it's regulated.",
-    "resolutionsTitle": "Official Documents"
+    "resolutionsTitle": "Official Documents",
+    "guideBadgeEri": "Digital signature (ERI) required",
+    "guideBadgePayment": "Payment: per contract / invoice",
+    "guideBadgeLab": "Recommended laboratory: O'ZAK.SL.0309"
   },
   "gallery": {
     "all": "All",
