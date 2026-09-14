@@ -453,5 +453,19 @@ model InfoPage {
   guideContentUz  String?
   guideContentRu  String?
   guideContentEn  String?
+  // Declaration-vs-certificate comparison cards: 5 newline-separated
+  // values each, matching 5 fixed rows whose labels are hardcoded in the
+  // frontend (i18n) rather than stored here.
+  comparisonDeclarationUz String?
+  comparisonDeclarationRu String?
+  comparisonDeclarationEn String?
+  comparisonCertificateUz String?
+  comparisonCertificateRu String?
+  comparisonCertificateEn String?
+  // FAQ: blank-line separated Q/A blocks, first line of each block is the
+  // question, the rest is the answer.
+  faqUz           String?
+  faqRu           String?
+  faqEn           String?
   updatedAt       DateTime @updatedAt
 }

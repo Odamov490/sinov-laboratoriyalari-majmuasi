@@ -17,6 +17,14 @@ const RESOLUTION_DOCS = [
   { field: 'document43Url', label: 'Qaror №43 (PDF)' },
 ];
 
+const COMPARISON_ROWS = [
+  'Kim tasdiqlaydi',
+  'Javobgarlik kim zimmasida',
+  'Qanday hujjatlar asosida beriladi',
+  'Amal qilish muddati',
+  'Qaysi holatlarda qo\'llaniladi',
+];
+
 export default function AdminDeclarationInfo() {
   const { showToast } = useToast();
   const [values, setValues] = useState(null);
@@ -31,8 +39,11 @@ export default function AdminDeclarationInfo() {
         setValues({
           titleUz: '', titleRu: '', titleEn: '',
           contentUz: '', contentRu: '', contentEn: '',
+          comparisonDeclarationUz: '', comparisonDeclarationRu: '', comparisonDeclarationEn: '',
+          comparisonCertificateUz: '', comparisonCertificateRu: '', comparisonCertificateEn: '',
           guideTitleUz: '', guideTitleRu: '', guideTitleEn: '',
           guideContentUz: '', guideContentRu: '', guideContentEn: '',
+          faqUz: '', faqRu: '', faqEn: '',
         })
       );
   }, []);
@@ -74,12 +85,12 @@ export default function AdminDeclarationInfo() {
       </p>
 
       <div className="space-y-6">
-        <h2 className="text-lg font-bold text-ink">Asosiy tushuntirish</h2>
+        <h2 className="text-lg font-bold text-ink">Hero (bosh sarlavha va matn)</h2>
         {LANGS.map((lang) => (
           <div key={lang.code} className="card p-6 space-y-4">
             <p className="text-sm font-semibold text-primary">{lang.label}</p>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Sarlavha</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Sarlavha (H1)</label>
               <input
                 value={values[`title${lang.code}`] || ''}
                 onChange={(e) => setValues({ ...values, [`title${lang.code}`]: e.target.value })}
@@ -87,12 +98,42 @@ export default function AdminDeclarationInfo() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Matn</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">Kirish matni (2-3 gap)</label>
               <textarea
                 value={values[`content${lang.code}`] || ''}
                 onChange={(e) => setValues({ ...values, [`content${lang.code}`]: e.target.value })}
-                rows={15}
-                className="input-field resize-y font-mono text-sm"
+                rows={3}
+                className="input-field resize-y text-sm"
+              />
+            </div>
+          </div>
+        ))}
+
+        <h2 className="text-lg font-bold text-ink pt-2">Solishtirish (Deklaratsiya vs Sertifikat)</h2>
+        <p className="text-xs text-slate-500 -mt-4">
+          Har bir katakcha aynan 5 qatordan iborat bo'lishi kerak, quyidagi tartibda: {COMPARISON_ROWS.join(' / ')}.
+        </p>
+        {LANGS.map((lang) => (
+          <div key={`comparison-${lang.code}`} className="card p-6 space-y-4">
+            <p className="text-sm font-semibold text-primary">{lang.label}</p>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1.5">Deklaratsiya kartasi (5 qator)</label>
+              <textarea
+                value={values[`comparisonDeclaration${lang.code}`] || ''}
+                onChange={(e) => setValues({ ...values, [`comparisonDeclaration${lang.code}`]: e.target.value })}
+                rows={5}
+                placeholder={COMPARISON_ROWS.join('\n')}
+                className="input-field resize-y text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1.5">Sertifikat kartasi (5 qator)</label>
+              <textarea
+                value={values[`comparisonCertificate${lang.code}`] || ''}
+                onChange={(e) => setValues({ ...values, [`comparisonCertificate${lang.code}`]: e.target.value })}
+                rows={5}
+                placeholder={COMPARISON_ROWS.join('\n')}
+                className="input-field resize-y text-sm"
               />
             </div>
           </div>
@@ -119,6 +160,22 @@ export default function AdminDeclarationInfo() {
                 className="input-field resize-y font-mono text-sm"
               />
             </div>
+          </div>
+        ))}
+
+        <h2 className="text-lg font-bold text-ink pt-2">FAQ (Tez-tez so'raladigan savollar)</h2>
+        <p className="text-xs text-slate-500 -mt-4">
+          Har bir savol-javobni bo'sh qator bilan ajrating. Blokning birinchi qatori — savol, qolgani — javob.
+        </p>
+        {LANGS.map((lang) => (
+          <div key={`faq-${lang.code}`} className="card p-6 space-y-2">
+            <p className="text-sm font-semibold text-primary">{lang.label}</p>
+            <textarea
+              value={values[`faq${lang.code}`] || ''}
+              onChange={(e) => setValues({ ...values, [`faq${lang.code}`]: e.target.value })}
+              rows={15}
+              className="input-field resize-y font-mono text-sm"
+            />
           </div>
         ))}
 
