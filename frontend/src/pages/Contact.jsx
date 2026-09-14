@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Phone, Mail, Send, Clock } from 'lucide-react';
+import { MapPin, Phone, Mail, Send, Clock, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { getSettings, sendContactMessage } from '../services/publicApi';
 import { useToast } from '../context/ToastContext.jsx';
 
+const LAB_LAT = 41.3326111;
+const LAB_LON = 69.3213086;
+
 export default function Contact() {
   const { t } = useTranslation();
   const { showToast } = useToast();
   const [settings, setSettings] = useState({});
+  const [mapMenuOpen, setMapMenuOpen] = useState(false);
   const {
     register,
     handleSubmit,
@@ -70,13 +74,49 @@ export default function Contact() {
               <p className="text-sm font-medium text-ink">{val('working_hours')}</p>
             </div>
           </div>
-          <div className="rounded-xl overflow-hidden border border-border h-64">
+          <div className="relative rounded-xl overflow-hidden border border-border h-64">
             <iframe
               title="map"
               className="w-full h-full"
               loading="lazy"
               src="https://www.openstreetmap.org/export/embed.html?bbox=69.3153086%2C41.3266111%2C69.3273086%2C41.3386111&layer=mapnik&marker=41.3326111%2C69.3213086"
             />
+
+            <div className="absolute top-3 right-3">
+              <button
+                type="button"
+                onClick={() => setMapMenuOpen((v) => !v)}
+                className="flex items-center gap-1.5 rounded-lg bg-white border border-border shadow-card px-3 py-1.5 text-xs font-semibold text-ink hover:bg-bg-light"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-primary" /> {t('common.openInMap')}
+              </button>
+
+              {mapMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMapMenuOpen(false)} />
+                  <div className="absolute right-0 mt-1.5 w-44 rounded-lg border border-border bg-white shadow-card py-1 z-20">
+                    <a
+                      href={`https://www.google.com/maps?q=${LAB_LAT},${LAB_LON}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => setMapMenuOpen(false)}
+                      className="block w-full text-left px-3 py-1.5 text-sm text-slate-600 hover:bg-bg-light"
+                    >
+                      Google Maps
+                    </a>
+                    <a
+                      href={`https://yandex.com/maps/?pt=${LAB_LON},${LAB_LAT}&z=17&l=map`}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => setMapMenuOpen(false)}
+                      className="block w-full text-left px-3 py-1.5 text-sm text-slate-600 hover:bg-bg-light"
+                    >
+                      Yandex Maps
+                    </a>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
