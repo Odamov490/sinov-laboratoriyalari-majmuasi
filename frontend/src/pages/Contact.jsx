@@ -75,7 +75,7 @@ export default function Contact() {
               title="map"
               className="w-full h-full"
               loading="lazy"
-              src="https://www.openstreetmap.org/export/embed.html?bbox=69.20%2C41.28%2C69.32%2C41.36&layer=mapnik"
+              src="https://www.openstreetmap.org/export/embed.html?bbox=69.3153086%2C41.3266111%2C69.3273086%2C41.3386111&layer=mapnik&marker=41.3326111%2C69.3213086"
             />
           </div>
         </div>
