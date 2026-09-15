@@ -19,6 +19,7 @@ const MODULE_ACCESS = {
   tnved: ['SUPER_ADMIN', 'MANAGER'],
   settings: ['SUPER_ADMIN'],
   analytics: ['SUPER_ADMIN'],
+  staffActivity: ['SUPER_ADMIN'],
 };
 
 function requireModule(moduleName) {

@@ -100,8 +100,11 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 py-5">
-        <div className="container-page text-center text-xs text-white/50">
-          © {new Date().getFullYear()} Sinov Laboratoriyalari Majmuasi. {t('footer.rights')}
+        <div className="container-page flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-center text-xs text-white/50">
+          <span>© {new Date().getFullYear()} Sinov Laboratoriyalari Majmuasi. {t('footer.rights')}</span>
+          <Link to="/kabinet/kirish" className="hover:text-accent transition-colors underline underline-offset-2">
+            Xodim kabineti
+          </Link>
         </div>
       </div>
     </footer>

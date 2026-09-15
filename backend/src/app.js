@@ -13,6 +13,7 @@ const { generateSitemap } = require('./controllers/sitemapController');
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const staffAuthRoutes = require('./routes/staffAuthRoutes');
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), UPLOAD_DIR)));
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/staff-auth', staffAuthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 

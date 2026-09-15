@@ -23,4 +23,15 @@ const applicationLimiter = rateLimit({
   message: { error: "Juda ko'p ariza yuborildi. Birozdan so'ng qayta urinib ko'ring." },
 });
 
-module.exports = { generalLimiter, authLimiter, applicationLimiter };
+// Stricter than authLimiter: staff cabinet login credentials (passport +
+// PINFL) are identity numbers rather than a chosen secret, so guessing
+// attempts are throttled harder.
+const staffAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Juda ko'p urinish. Birozdan so'ng qayta urinib ko'ring." },
+});
+
+module.exports = { generalLimiter, authLimiter, applicationLimiter, staffAuthLimiter };

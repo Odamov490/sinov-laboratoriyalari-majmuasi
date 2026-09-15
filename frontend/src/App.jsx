@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 
 import PublicLayout from './layouts/PublicLayout.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
+import StaffCabinetLayout from './layouts/StaffCabinetLayout.jsx';
 
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
@@ -39,6 +40,9 @@ import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
+import AdminStaffActivity from './pages/admin/AdminStaffActivity.jsx';
+import StaffLogin from './pages/staff/StaffLogin.jsx';
+import StaffDashboard from './pages/staff/StaffDashboard.jsx';
 import {
   laboratoryConfig,
   serviceConfig,
@@ -105,7 +109,13 @@ export default function App() {
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="skanerlash" element={<AdminScanner />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
+        <Route path="xodimlar-faoliyati" element={<AdminStaffActivity />} />
         <Route path="sozlamalar" element={<AdminSettings />} />
+      </Route>
+
+      <Route path="/kabinet/kirish" element={<StaffLogin />} />
+      <Route path="/kabinet" element={<StaffCabinetLayout />}>
+        <Route index element={<StaffDashboard />} />
       </Route>
     </Routes>
   );

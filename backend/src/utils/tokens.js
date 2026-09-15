@@ -26,4 +26,28 @@ const cookieOptions = {
   path: '/',
 };
 
-module.exports = { signAccessToken, signRefreshToken, verifyToken, cookieOptions };
+// Staff cabinet tokens use their own claim shape (role: 'STAFF', distinct
+// `type` values) and distinct cookie names below, so a staff session and an
+// admin session can coexist in the same browser without colliding.
+function signStaffAccessToken(staff) {
+  return jwt.sign(
+    { sub: staff.id, role: 'STAFF', fullName: staff.fullName, type: 'staff-access' },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
+  );
+}
+
+function signStaffRefreshToken(staff) {
+  return jwt.sign({ sub: staff.id, role: 'STAFF', type: 'staff-refresh' }, JWT_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+  });
+}
+
+module.exports = {
+  signAccessToken,
+  signRefreshToken,
+  verifyToken,
+  cookieOptions,
+  signStaffAccessToken,
+  signStaffRefreshToken,
+};

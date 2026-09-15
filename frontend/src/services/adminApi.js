@@ -46,6 +46,9 @@ export const adminInfoPage = {
 export const getAnalyticsOverview = (params) =>
   apiClient.get('/admin/analytics/overview', { params }).then((r) => r.data);
 
+export const getStaffActivity = (params) =>
+  apiClient.get('/admin/staff-activity', { params }).then((r) => r.data);
+
 export const uploadFiles = (files) => {
   const formData = new FormData();
   Array.from(files).forEach((f) => formData.append('files', f));
