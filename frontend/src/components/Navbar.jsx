@@ -50,7 +50,7 @@ export default function Navbar() {
         scrolled ? 'border-primary/20 shadow-lg' : 'border-primary/10 shadow-sm'
       }`}
     >
-      <div className="mx-auto w-full max-w-[1760px] px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between gap-3">
+      <div className="container-page flex h-16 items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
             <FlaskConical className="h-5 w-5" />
