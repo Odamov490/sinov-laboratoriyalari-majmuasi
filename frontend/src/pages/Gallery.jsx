@@ -203,7 +203,7 @@ export default function Gallery() {
         {error ? (
           <ErrorState onRetry={() => { setItems(null); load(); }} />
         ) : items === null ? (
-          <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 xl:columns-5">
+          <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6">
             {SKELETON_HEIGHTS.map((h, i) => (
               <Skeleton key={i} className="mb-4 w-full break-inside-avoid" style={{ height: h }} />
             ))}
@@ -211,7 +211,7 @@ export default function Gallery() {
         ) : filtered.length === 0 ? (
           <EmptyState message={items.length > 0 ? t('gallery.noResults') : undefined} />
         ) : (
-          <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 xl:columns-5">
+          <div className="columns-2 gap-4 sm:columns-3 lg:columns-4 xl:columns-5 2xl:columns-6">
             {filtered.map((g, idx) => (
               <GalleryItem key={g.id} item={g} onOpen={() => setActiveIdx(idx)} />
             ))}

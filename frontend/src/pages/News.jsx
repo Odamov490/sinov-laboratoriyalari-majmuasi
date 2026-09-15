@@ -24,7 +24,7 @@ export default function News() {
       <Breadcrumb items={[{ label: t('nav.news') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.news')}</h1>
 
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
         {error ? (
           <div className="col-span-full"><ErrorState /></div>
         ) : data === null ? (
