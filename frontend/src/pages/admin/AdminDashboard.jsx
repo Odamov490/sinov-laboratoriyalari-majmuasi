@@ -1,36 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Inbox, FlaskConical, Wrench, Newspaper, Users, Eye, Activity, RefreshCw } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { adminApplications, adminResource, getAnalyticsOverview } from '../../services/adminApi';
+import { Inbox, FlaskConical, Wrench, Newspaper } from 'lucide-react';
+import { adminApplications, adminResource } from '../../services/adminApi';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { StatusBadge } from '../../components/UI.jsx';
-import { Loading, ErrorState } from '../../components/StateViews.jsx';
+import { Loading } from '../../components/StateViews.jsx';
+import AnalyticsPanel from '../../components/admin/AnalyticsPanel.jsx';
 import { formatDate } from '../../utils/localize';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [recent, setRecent] = useState(null);
-  const [analytics, setAnalytics] = useState(null);
-  const [analyticsStatus, setAnalyticsStatus] = useState('loading'); // loading | ready | not-configured | error
-
-  const loadAnalytics = () => {
-    setAnalyticsStatus('loading');
-    getAnalyticsOverview()
-      .then((data) => {
-        setAnalytics(data);
-        setAnalyticsStatus('ready');
-      })
-      .catch((err) => {
-        setAnalyticsStatus(err?.response?.status === 503 ? 'not-configured' : 'error');
-      });
-  };
-
-  useEffect(() => {
-    if (user.role === 'SUPER_ADMIN') loadAnalytics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.role]);
 
   useEffect(() => {
     const canApplications = ['SUPER_ADMIN', 'MANAGER'].includes(user.role);
@@ -81,75 +62,7 @@ export default function AdminDashboard() {
 
       {user.role === 'SUPER_ADMIN' && (
         <div className="mt-10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-ink">Saytdan foydalanish statistikasi</h2>
-            <button
-              onClick={loadAnalytics}
-              disabled={analyticsStatus === 'loading'}
-              className="btn-secondary !py-1.5 !px-3 text-xs"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${analyticsStatus === 'loading' ? 'animate-spin' : ''}`} /> Yangilash
-            </button>
-          </div>
-
-          {analyticsStatus === 'loading' && <Loading />}
-
-          {analyticsStatus === 'not-configured' && (
-            <div className="card p-6 text-center text-sm text-slate-500">
-              Cloudflare Analytics hali ulanmagan.
-            </div>
-          )}
-
-          {analyticsStatus === 'error' && (
-            <div className="card">
-              <ErrorState message="Statistikani olishda xatolik yuz berdi." onRetry={loadAnalytics} retryLabel="Qayta urinish" />
-            </div>
-          )}
-
-          {analyticsStatus === 'ready' && analytics && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
-                {[
-                  { label: 'Noyob tashrifchilar (30 kun)', value: analytics.totals.uniqueVisitors, icon: Users },
-                  { label: 'Sahifa ko‘rishlar', value: analytics.totals.pageViews, icon: Eye },
-                  { label: 'Jami so‘rovlar', value: analytics.totals.requests, icon: Activity },
-                ].map((c) => (
-                  <div key={c.label} className="card p-6 flex items-center gap-4">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                      <c.icon className="h-6 w-6" />
-                    </span>
-                    <div>
-                      <p className="text-2xl font-bold text-ink">{c.value.toLocaleString('uz-UZ')}</p>
-                      <p className="text-sm text-slate-500">{c.label}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {analytics.dailyStats.length > 0 && (
-                <div className="card p-6">
-                  <p className="text-sm font-semibold text-ink mb-3">Kunlik noyob tashrifchilar</p>
-                  <ResponsiveContainer width="100%" height={240}>
-                    <LineChart data={analytics.dailyStats} margin={{ bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                      <XAxis
-                        dataKey="date"
-                        tickFormatter={(d) => formatDate(d)}
-                        tick={{ fontSize: 10 }}
-                        interval={Math.max(0, Math.ceil(analytics.dailyStats.length / 8) - 1)}
-                        angle={-30}
-                        textAnchor="end"
-                        height={50}
-                      />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                      <Tooltip labelFormatter={(d) => formatDate(d)} />
-                      <Line type="monotone" dataKey="uniqueVisitors" stroke="#0B3A63" name="Noyob tashrifchilar" strokeWidth={2} dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </>
-          )}
+          <AnalyticsPanel />
         </div>
       )}
 
