@@ -18,6 +18,7 @@ const MODULE_ACCESS = {
   samples: ['SUPER_ADMIN', 'MANAGER'],
   tnved: ['SUPER_ADMIN', 'MANAGER'],
   settings: ['SUPER_ADMIN'],
+  analytics: ['SUPER_ADMIN'],
 };
 
 function requireModule(moduleName) {

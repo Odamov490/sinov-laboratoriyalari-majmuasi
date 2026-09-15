@@ -36,7 +36,7 @@ export function EmptyState({ message }) {
   );
 }
 
-export function ErrorState({ message, onRetry }) {
+export function ErrorState({ message, onRetry, retryLabel }) {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-500">
@@ -44,7 +44,7 @@ export function ErrorState({ message, onRetry }) {
       <p className="text-sm">{message || t('common.errorLoading')}</p>
       {onRetry && (
         <button onClick={onRetry} className="btn-secondary mt-2">
-          {t('common.back')}
+          {retryLabel || t('common.back')}
         </button>
       )}
     </div>

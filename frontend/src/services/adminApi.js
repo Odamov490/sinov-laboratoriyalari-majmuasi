@@ -43,6 +43,8 @@ export const adminInfoPage = {
   update: (slug, payload) => apiClient.put(`/admin/info-pages/${slug}`, payload).then((r) => r.data),
 };
 
+export const getAnalyticsOverview = () => apiClient.get('/admin/analytics/overview').then((r) => r.data);
+
 export const uploadFiles = (files) => {
   const formData = new FormData();
   Array.from(files).forEach((f) => formData.append('files', f));
