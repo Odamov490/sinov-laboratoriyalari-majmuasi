@@ -41,6 +41,7 @@ import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
 import AdminStaffActivity from './pages/admin/AdminStaffActivity.jsx';
+import AdminProfile from './pages/admin/AdminProfile.jsx';
 import StaffLogin from './pages/staff/StaffLogin.jsx';
 import StaffDashboard from './pages/staff/StaffDashboard.jsx';
 import {
@@ -110,6 +111,7 @@ export default function App() {
         <Route path="skanerlash" element={<AdminScanner />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
         <Route path="xodimlar-faoliyati" element={<AdminStaffActivity />} />
+        <Route path="mening-profilim" element={<AdminProfile />} />
         <Route path="sozlamalar" element={<AdminSettings />} />
       </Route>
 

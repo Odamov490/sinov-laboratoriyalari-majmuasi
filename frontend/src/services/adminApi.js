@@ -49,6 +49,12 @@ export const getAnalyticsOverview = (params) =>
 export const getStaffActivity = (params) =>
   apiClient.get('/admin/staff-activity', { params }).then((r) => r.data);
 
+export const updateAdminProfile = (payload) => apiClient.put('/admin/profile', payload).then((r) => r.data);
+
+export const getMyDashboard = () => apiClient.get('/admin/dashboard/my-activity').then((r) => r.data);
+
+export const getAdminNotifications = () => apiClient.get('/admin/notifications').then((r) => r.data);
+
 export const uploadFiles = (files) => {
   const formData = new FormData();
   Array.from(files).forEach((f) => formData.append('files', f));

@@ -76,4 +76,34 @@ const refresh = asyncHandler(async (req, res) => {
   res.json({ accessToken });
 });
 
-module.exports = { login, logout, me, refresh };
+const updateProfileSchema = z.object({
+  fullName: z.string().trim().min(2).optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(6).optional(),
+});
+
+// Any admin-panel user updating their own account -- never another user's.
+// Scoped strictly to req.user.sub, matching every other endpoint here.
+const updateProfile = asyncHandler(async (req, res) => {
+  const { fullName, currentPassword, newPassword } = updateProfileSchema.parse(req.body);
+
+  const user = await prisma.user.findUnique({ where: { id: req.user.sub } });
+  if (!user) return res.status(404).json({ error: 'Foydalanuvchi topilmadi.' });
+
+  const data = {};
+  if (fullName) data.fullName = fullName;
+
+  if (newPassword) {
+    if (!currentPassword) {
+      return res.status(400).json({ error: "Parolni o'zgartirish uchun joriy parolni kiriting." });
+    }
+    const valid = await argon2.verify(user.passwordHash, currentPassword);
+    if (!valid) return res.status(401).json({ error: "Joriy parol noto'g'ri." });
+    data.passwordHash = await argon2.hash(newPassword);
+  }
+
+  const updated = await prisma.user.update({ where: { id: user.id }, data });
+  res.json({ id: updated.id, fullName: updated.fullName, email: updated.email, role: updated.role, labId: updated.labId });
+});
+
+module.exports = { login, logout, me, refresh, updateProfile };

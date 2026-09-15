@@ -28,6 +28,7 @@ import {
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
 import { adminResource } from '../services/adminApi';
+import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 
 const MENU = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] },
@@ -132,13 +133,12 @@ export default function AdminLayout() {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-border flex items-center justify-between px-5 lg:justify-end">
+        <header className="h-16 bg-white border-b border-border flex items-center justify-between px-5">
           <button className="lg:hidden" onClick={() => setOpen(true)}>
             <Menu className="h-6 w-6 text-primary" />
           </button>
-          <div className="text-sm text-slate-600">
-            <span className="font-medium text-ink">{user.fullName}</span>
-            <span className="ml-2 text-xs rounded-full bg-bg-light px-2 py-1 text-slate-500">{user.role}</span>
+          <div className="ml-auto">
+            <AdminHeaderMenu />
           </div>
         </header>
         <main className="flex-1 p-5 lg:p-8 overflow-x-hidden">
