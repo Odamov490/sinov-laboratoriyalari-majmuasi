@@ -62,7 +62,7 @@ export default function About() {
 
       <div className="mt-16">
         <h2 className="section-title">{t('nav.laboratories')}</h2>
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {labs === null
             ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
             : labs.map((l) => <LaboratoryCard key={l.id} lab={l} />)}
@@ -72,7 +72,7 @@ export default function About() {
       {staff && staff.length > 0 && (
         <div className="mt-16">
           <h2 className="section-title">{t('nav.staff')}</h2>
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {staff.map((s) => (
               <StaffCard key={s.id} person={s} />
             ))}

@@ -43,7 +43,7 @@ export default function Documents() {
           Object.entries(grouped).map(([cat, docs]) => (
             <div key={cat} className="mb-10">
               <h2 className="font-semibold text-ink mb-4">{cat}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {docs.map((d) => (
                   <DocumentCard key={d.id} doc={d} />
                 ))}

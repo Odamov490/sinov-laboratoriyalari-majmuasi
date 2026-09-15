@@ -97,7 +97,7 @@ export default function Home() {
               {t('common.viewAll')} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {labs === null
               ? Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
               : labs.slice(0, 8).map((lab) => <LaboratoryCard key={lab.id} lab={lab} />)}
@@ -114,7 +114,7 @@ export default function Home() {
               {t('common.viewAll')} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {services === null
               ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
               : services.map((s) => <ServiceCard key={s.id} service={s} />)}
@@ -218,7 +218,7 @@ export default function Home() {
               {t('common.viewAll')} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {news === null
               ? Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
               : news.length > 0
@@ -233,7 +233,7 @@ export default function Home() {
         <section className="section">
           <div className="container-page">
             <h2 className="section-title">{t('nav.documents')}</h2>
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
               {docs.map((d) => (
                 <DocumentCard key={d.id} doc={d} />
               ))}

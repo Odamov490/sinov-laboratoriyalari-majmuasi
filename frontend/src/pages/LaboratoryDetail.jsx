@@ -72,7 +72,7 @@ export default function LaboratoryDetail() {
         {lab.services && lab.services.length > 0 && (
           <div className="mt-14">
             <h2 className="section-title">{t('nav.services')}</h2>
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {lab.services.map((s) => (
                 <ServiceCard key={s.id} service={{ ...s, laboratory: lab }} />
               ))}
@@ -83,7 +83,7 @@ export default function LaboratoryDetail() {
         {lab.equipment && lab.equipment.length > 0 && (
           <div className="mt-14">
             <h2 className="section-title">{t('nav.equipment')}</h2>
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {lab.equipment.map((e) => (
                 <EquipmentCard key={e.id} item={e} />
               ))}
@@ -94,7 +94,7 @@ export default function LaboratoryDetail() {
         {lab.staff && lab.staff.length > 0 && (
           <div className="mt-14">
             <h2 className="section-title">{t('nav.staff')}</h2>
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {lab.staff.map((s) => (
                 <StaffCard key={s.id} person={s} />
               ))}

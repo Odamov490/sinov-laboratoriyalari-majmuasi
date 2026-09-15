@@ -21,7 +21,7 @@ export default function Equipment() {
       <Breadcrumb items={[{ label: t('nav.equipment') }]} />
       <h1 className="mt-4 text-3xl md:text-4xl font-extrabold text-primary">{t('nav.equipment')}</h1>
 
-      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {error ? (
           <div className="col-span-full"><ErrorState /></div>
         ) : items === null ? (
