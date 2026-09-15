@@ -46,9 +46,6 @@ export const adminInfoPage = {
 export const getAnalyticsOverview = (params) =>
   apiClient.get('/admin/analytics/overview', { params }).then((r) => r.data);
 
-export const getStaffActivity = (params) =>
-  apiClient.get('/admin/staff-activity', { params }).then((r) => r.data);
-
 export const updateAdminProfile = (payload) => apiClient.put('/admin/profile', payload).then((r) => r.data);
 
 export const getMyDashboard = () => apiClient.get('/admin/dashboard/my-activity').then((r) => r.data);

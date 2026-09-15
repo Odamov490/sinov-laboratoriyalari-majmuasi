@@ -6,7 +6,6 @@ import App from './App.jsx';
 import './i18n/index.js';
 import './styles/index.css';
 import { AuthProvider } from './context/AuthContext.jsx';
-import { StaffAuthProvider } from './context/StaffAuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -15,9 +14,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <ToastProvider>
           <AuthProvider>
-            <StaffAuthProvider>
-              <App />
-            </StaffAuthProvider>
+            <App />
           </AuthProvider>
         </ToastProvider>
       </BrowserRouter>

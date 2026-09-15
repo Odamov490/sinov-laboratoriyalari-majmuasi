@@ -223,29 +223,9 @@ model Staff {
   pinfl           String?
   address         String?
   notes           String?
-  lastLoginAt     DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   deletedAt       DateTime?
-  activityLogs    StaffActivityLog[]
-}
-
-enum StaffActivityAction {
-  LOGIN
-  LOGIN_FAILED
-  PROFILE_UPDATE
-}
-
-// Audit trail for the staff self-service cabinet (passport/PINFL login) --
-// lets a Super Admin oversee each staff member's own account activity.
-model StaffActivityLog {
-  id        String              @id @default(uuid())
-  staffId   String
-  staff     Staff               @relation(fields: [staffId], references: [id])
-  action    StaffActivityAction
-  detail    String?
-  ipAddress String?
-  createdAt DateTime            @default(now())
 }
 
 model Equipment {

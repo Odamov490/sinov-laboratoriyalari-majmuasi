@@ -11,7 +11,6 @@ const { getInfoPage, updateInfoPage } = require('../controllers/infoPageAdminCon
 const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');
 const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
 const { getAnalyticsOverview } = require('../controllers/analyticsController');
-const { listActivity: listStaffActivity } = require('../controllers/staffAuthController');
 const { updateProfile } = require('../controllers/authController');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const prisma = require('../config/prisma');
@@ -193,9 +192,6 @@ router.put('/settings', requireModule('settings'), updateSettings);
 
 // Site usage analytics (Cloudflare, Super Admin only)
 router.get('/analytics/overview', requireModule('analytics'), getAnalyticsOverview);
-
-// Staff cabinet activity oversight (Super Admin only)
-router.get('/staff-activity', requireModule('staffActivity'), listStaffActivity);
 
 // Own admin-panel profile (any authenticated admin user, self only)
 router.put('/profile', updateProfile);
