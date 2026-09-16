@@ -2,7 +2,7 @@ const express = require('express');
 const ctrl = require('../controllers/publicController');
 const { createApplication, trackApplication, trackByPhone } = require('../controllers/applicationController');
 const { createContactMessage } = require('../controllers/contactController');
-const { checkTnVedRegulation } = require('../controllers/tnvedController');
+const { checkTnVedRegulation, suggestTnVedCodes } = require('../controllers/tnvedController');
 const { upload } = require('../middleware/upload');
 const { applicationLimiter } = require('../middleware/rateLimit');
 
@@ -40,5 +40,6 @@ router.get('/applications/track-by-phone', trackByPhone);
 router.post('/contact', createContactMessage);
 
 router.get('/tnved-check', checkTnVedRegulation);
+router.get('/tnved-suggest', suggestTnVedCodes);
 
 module.exports = router;

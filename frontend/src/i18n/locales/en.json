@@ -165,7 +165,9 @@
     "declarationTitle": "A declaration of conformity is recommended",
     "noMatchTitle": "No special conformity requirement (certificate or declaration) was found",
     "decisionLabel": "Decision",
-    "itemLabel": "Item"
+    "itemLabel": "Item",
+    "categorySertifikat": "Certificate",
+    "categoryDeklaratsiya": "Declaration"
   },
   "declarationInfo": {
     "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",

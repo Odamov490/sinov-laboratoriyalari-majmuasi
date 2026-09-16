@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { CheckCircle2, Copy, ShieldCheck } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import FileUploader from '../components/FileUploader.jsx';
-import { submitApplication } from '../services/publicApi';
+import { submitApplication, suggestTnVedCodes } from '../services/publicApi';
 import { useToast } from '../context/ToastContext.jsx';
 
 export default function ApplicationForm() {
@@ -19,10 +19,39 @@ export default function ApplicationForm() {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: { serviceId: searchParams.get('serviceId') || '' },
   });
+
+  const tnVedCode = watch('tnVedCode');
+  const [tnVedSuggestions, setTnVedSuggestions] = useState([]);
+  const [showTnVedSuggestions, setShowTnVedSuggestions] = useState(false);
+  const tnVedBoxRef = useRef(null);
+
+  useEffect(() => {
+    const digits = (tnVedCode || '').replace(/\D/g, '');
+    if (digits.length < 2) {
+      setTnVedSuggestions([]);
+      return undefined;
+    }
+    const handle = setTimeout(() => {
+      suggestTnVedCodes(digits)
+        .then((data) => setTnVedSuggestions(data.suggestions || []))
+        .catch(() => setTnVedSuggestions([]));
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [tnVedCode]);
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (tnVedBoxRef.current && !tnVedBoxRef.current.contains(e.target)) setShowTnVedSuggestions(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
 
   const onSubmit = async (values) => {
     try {
@@ -103,7 +132,40 @@ export default function ApplicationForm() {
           </Field>
 
           <Field label={`${t('application.tnvedLabel')} (${t('common.optional')})`}>
-            <input {...register('tnVedCode')} placeholder={t('application.tnvedPlaceholder')} className="input-field" />
+            <div className="relative" ref={tnVedBoxRef}>
+              <input
+                {...register('tnVedCode', { onChange: () => setShowTnVedSuggestions(true) })}
+                placeholder={t('application.tnvedPlaceholder')}
+                className="input-field"
+                autoComplete="off"
+                onFocus={() => setShowTnVedSuggestions(true)}
+              />
+              {showTnVedSuggestions && tnVedSuggestions.length > 0 && (
+                <div className="absolute z-20 mt-1 w-full max-h-64 overflow-y-auto rounded-lg border border-border bg-white shadow-lg">
+                  {tnVedSuggestions.map((s, idx) => (
+                    <button
+                      key={`${s.item}-${s.code}-${idx}`}
+                      type="button"
+                      onClick={() => {
+                        setValue('tnVedCode', s.code.replace(/\s/g, ''), { shouldValidate: true });
+                        setShowTnVedSuggestions(false);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-bg-light border-b border-border last:border-0"
+                    >
+                      <span className="font-mono font-semibold text-primary shrink-0">{s.code}</span>
+                      <span className="text-slate-500 line-clamp-1 flex-1 min-w-0">{s.nameUz}</span>
+                      <span
+                        className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                          s.category === 'SERTIFIKAT' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
+                        }`}
+                      >
+                        {s.category === 'SERTIFIKAT' ? t('tnvedCheck.categorySertifikat') : t('tnvedCheck.categoryDeklaratsiya')}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </Field>
 
           <Field label={`${t('application.productDescription')} (${t('common.optional')})`}>
@@ -113,10 +175,6 @@ export default function ApplicationForm() {
               placeholder={t('application.productDescriptionPlaceholder')}
               className="input-field resize-none"
             />
-          </Field>
-
-          <Field label={t('application.comment')}>
-            <textarea {...register('comment')} rows={4} className="input-field resize-none" />
           </Field>
 
           <Field label={t('application.file')}>

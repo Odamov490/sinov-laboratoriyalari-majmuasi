@@ -44,4 +44,27 @@ function headingOf(text) {
   return parseInt(digits.slice(0, 4), 10);
 }
 
-module.exports = { parseTnVedRanges };
+// Extracts individual TN VED code tokens out of the same free-text wording
+// (for the code-suggestion autocomplete): a token is a run of space-
+// separated digit groups (e.g. "8701 91 500 0"), which comma/dash list and
+// range separators naturally break on since they aren't whitespace. Range
+// endpoints (e.g. both sides of "2203 — 2208") surface as separate tokens
+// too — an approximation, same spirit as parseTnVedRanges.
+function extractCodeTokens(tnVedRaw) {
+  if (!tnVedRaw) return [];
+  const withoutParens = tnVedRaw.replace(/\([^)]*\)/g, ' ');
+  const rawMatches = withoutParens.match(/\d+(?:\s+\d+)*/g) || [];
+
+  const seen = new Set();
+  const tokens = [];
+  for (const raw of rawMatches) {
+    const display = raw.trim().replace(/\s+/g, ' ');
+    const digits = display.replace(/\s/g, '');
+    if (digits.length < 4 || seen.has(digits)) continue;
+    seen.add(digits);
+    tokens.push({ display, digits });
+  }
+  return tokens;
+}
+
+module.exports = { parseTnVedRanges, extractCodeTokens };

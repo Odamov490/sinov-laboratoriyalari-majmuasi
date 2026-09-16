@@ -39,3 +39,4 @@ export const trackApplicationsByPhone = (phone) =>
 export const sendContactMessage = (payload) => apiClient.post('/contact', payload).then((r) => r.data);
 
 export const checkTnVedRegulation = (code) => apiClient.get('/tnved-check', { params: { code } }).then((r) => r.data);
+export const suggestTnVedCodes = (q) => apiClient.get('/tnved-suggest', { params: { q } }).then((r) => r.data);

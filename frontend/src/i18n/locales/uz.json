@@ -165,7 +165,9 @@
     "declarationTitle": "Muvofiqlik deklaratsiyasi rasmiylashtirilishi tavsiya etiladi",
     "noMatchTitle": "Maxsus muvofiqlik talabi (sertifikat yoki deklaratsiya) topilmadi",
     "decisionLabel": "Qaror",
-    "itemLabel": "Band"
+    "itemLabel": "Band",
+    "categorySertifikat": "Sertifikat",
+    "categoryDeklaratsiya": "Deklaratsiya"
   },
   "declarationInfo": {
     "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",
