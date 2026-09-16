@@ -414,7 +414,7 @@ enum TnVedRegulationCategory {
 }
 
 // Reference table for mandatory conformity requirements (Cabinet of Ministers
-// resolutions 502 and 43): which HS/TN VED code ranges require a mandatory
+// resolution 43): which HS/TN VED code ranges require a mandatory
 // certificate vs. a declaration of conformity. tnVedRaw keeps the original
 // legal-text range/exception wording verbatim (see parseTnVedRanges — it is
 // only approximately machine-parseable at the 4-digit heading level).
@@ -440,9 +440,8 @@ model InfoPage {
   contentUz       String
   contentRu       String
   contentEn       String
-  // Reference PDFs for the declaration-vs-certificate page (Resolutions
-  // No. 502 and No. 43) — nullable since not every InfoPage needs them.
-  document502Url  String?
+  // Reference PDF for the declaration-vs-certificate page (Resolution
+  // No. 43) — nullable since not every InfoPage needs it.
   document43Url   String?
   // Optional second section: a step-by-step how-to guide, shown below the
   // main content on the same page — nullable since not every InfoPage

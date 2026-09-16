@@ -112,7 +112,7 @@ mountCrud('accreditation', 'laboratories', 'accreditation', {});
 // Contact messages (read/manage - Super Admin + Manager since it's inbound leads)
 mountCrud('contact-messages', 'applications', 'contactMessage', { searchFields: ['fullName', 'email'] });
 
-// TN VED conformity regulations (resolutions 502/43 reference table — view/search, edit if needed)
+// TN VED conformity regulations (resolution 43 reference table — view/search, edit if needed)
 mountCrud('tnved-reglament', 'applications', 'tnVedRegulation', {
   searchFields: ['item', 'nameUz', 'tnVedRaw'],
   orderBy: { createdAt: 'asc' },

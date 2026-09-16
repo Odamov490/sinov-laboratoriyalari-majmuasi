@@ -1,5 +1,5 @@
 // Parses the free-text TN VED range/list wording used in Cabinet of
-// Ministers resolutions 502 and 43 (e.g. "0601 — 0602", "0701, 0703, 0712
+// Ministers resolution 43 (e.g. "0601 — 0602", "0701, 0703, 0712
 // 90 110 0, 0713", "8701 — 8706 (8701 91 500 0 ... дан ташқари)") into a
 // list of 4-digit HS "heading" ranges: [{ min, max }, ...].
 //

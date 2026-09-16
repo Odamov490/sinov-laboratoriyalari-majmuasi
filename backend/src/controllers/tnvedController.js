@@ -4,7 +4,7 @@ const { parseTnVedRanges } = require('../utils/tnvedRanges');
 
 // Approximate conformity-requirement lookup for the application form: does
 // this TN VED code fall under a mandatory certificate or declaration
-// requirement per resolutions 502/43? Matches at the 4-digit HS heading
+// requirement per resolution 43? Matches at the 4-digit HS heading
 // level only — see parseTnVedRanges for the simplifications involved.
 const checkTnVedRegulation = asyncHandler(async (req, res) => {
   const digits = (req.query.code || '').toString().replace(/\D/g, '');

@@ -352,7 +352,7 @@ export const tnVedRegulationConfig = {
         { value: 'DEKLARATSIYA', label: 'Deklaratsiya' },
       ],
     },
-    { name: 'decision', label: "Qaror raqami (502 yoki 43)", required: true },
+    { name: 'decision', label: "Qaror raqami (43)", required: true },
   ],
   columns: [
     { key: 'item', label: 'Band' },

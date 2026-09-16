@@ -91,8 +91,6 @@ export default function DeclarationInfo() {
 
         <p className="mt-6 text-center text-sm text-slate-500 max-w-2xl mx-auto leading-relaxed">
           {t('declarationInfo.resolutionsNotePrefix')}{' '}
-          <ResolutionRef number="502" url={page.document502Url} label={t('declarationInfo.resolution502Label')} />{' '}
-          {t('declarationInfo.resolutionsNoteAnd')}{' '}
           <ResolutionRef number="43" url={page.document43Url} label={t('declarationInfo.resolution43Label')} />{' '}
           {t('declarationInfo.resolutionsNoteSuffix')}
         </p>

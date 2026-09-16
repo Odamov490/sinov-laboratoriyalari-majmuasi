@@ -11,7 +11,7 @@ const updateInfoPage = asyncHandler(async (req, res) => {
   const {
     titleUz, titleRu, titleEn,
     contentUz, contentRu, contentEn,
-    document502Url, document43Url,
+    document43Url,
     guideTitleUz, guideTitleRu, guideTitleEn,
     guideContentUz, guideContentRu, guideContentEn,
     comparisonDeclarationUz, comparisonDeclarationRu, comparisonDeclarationEn,
@@ -21,7 +21,7 @@ const updateInfoPage = asyncHandler(async (req, res) => {
   const data = {
     titleUz, titleRu, titleEn,
     contentUz, contentRu, contentEn,
-    document502Url, document43Url,
+    document43Url,
     guideTitleUz, guideTitleRu, guideTitleEn,
     guideContentUz, guideContentRu, guideContentEn,
     comparisonDeclarationUz, comparisonDeclarationRu, comparisonDeclarationEn,

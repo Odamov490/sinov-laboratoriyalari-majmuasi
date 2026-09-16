@@ -13,7 +13,6 @@ const LANGS = [
 ];
 
 const RESOLUTION_DOCS = [
-  { field: 'document502Url', label: 'Qaror №502 (PDF)' },
   { field: 'document43Url', label: 'Qaror №43 (PDF)' },
 ];
 
@@ -180,7 +179,7 @@ export default function AdminDeclarationInfo() {
         ))}
 
         <div className="card p-6 space-y-4">
-          <p className="text-sm font-semibold text-primary">Rasmiy hujjatlar (502 va 43-son qarorlar)</p>
+          <p className="text-sm font-semibold text-primary">Rasmiy hujjat (43-son qaror)</p>
           {RESOLUTION_DOCS.map((doc) => (
             <div key={doc.field}>
               <label className="block text-sm font-medium text-ink mb-1.5">{doc.label}</label>

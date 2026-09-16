@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 // One-time import of the TN VED conformity-regulation reference table
-// (Cabinet of Ministers resolutions 502 and 43) into the TnVedRegulation
+// (Cabinet of Ministers resolution 43, Annex 4) into the TnVedRegulation
 // table. Run manually, not part of the regular seed.js.
 const path = require('path');
 const { PrismaClient } = require('@prisma/client');
