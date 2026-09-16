@@ -40,33 +40,35 @@ export default function Accreditation() {
           <p className="mt-1 text-white/70">{t('common.status')}: {acc?.certificateNumber || t('common.dataUpdating')}</p>
           {acc?.issuedAt && <p className="mt-1 text-sm text-white/60">{t('common.issuedDate')}: {formatDate(acc.issuedAt, i18n.language)}</p>}
           {acc?.validUntil && <p className="text-sm text-white/60">{t('common.validUntil')}: {formatDate(acc.validUntil, i18n.language)}</p>}
-          {acc?.documentUrl && (
-            <a href={acc.documentUrl} target="_blank" rel="noreferrer" className="btn-accent mt-4 inline-flex">
-              <Download className="h-4 w-4" /> {t('common.certificate')}
-            </a>
-          )}
+          <div className="mt-4 flex flex-wrap gap-3">
+            {acc?.documentUrl && (
+              <a href={acc.documentUrl} target="_blank" rel="noreferrer" className="btn-accent inline-flex">
+                <Download className="h-4 w-4" /> {t('common.certificate')}
+              </a>
+            )}
+            {acc?.scopeUrl && (
+              <a
+                href={acc.scopeUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                <FileText className="h-4 w-4" /> {t('common.viewScope')}
+              </a>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="mt-10">
-        <h2 className="section-title">{t('common.scope')}</h2>
-        {acc?.scopeUrl && (
-          <a
-            href={acc.scopeUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-primary mt-4 inline-flex"
-          >
-            <FileText className="h-4 w-4" /> {t('common.viewScope')}
-          </a>
-        )}
+        <h2 className="section-title">{t('common.accreditationScope')}</h2>
         {scope ? (
           <div className="mt-4 card p-6">
             <FormattedText text={scope} />
           </div>
-        ) : !acc?.scopeUrl ? (
+        ) : (
           <div className="mt-4"><DataUpdatingBadge /></div>
-        ) : null}
+        )}
       </div>
 
       <div className="mt-10">
