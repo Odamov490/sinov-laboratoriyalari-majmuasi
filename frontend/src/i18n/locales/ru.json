@@ -194,6 +194,7 @@
     "helperPlaceholder": "Например: 8501",
     "helperResultCert": "Вам нужен СЕРТИФИКАТ",
     "helperResultDecl": "Вам нужна ДЕКЛАРАЦИЯ",
+    "helperResultBoth": "Вам нужны и СЕРТИФИКАТ, и ДЕКЛАРАЦИЯ",
     "helperResultNone": "Точная информация не найдена — свяжитесь с нашими специалистами",
     "helperFullCheckLink": "Полная проверка",
     "faqTitle": "Часто задаваемые вопросы",

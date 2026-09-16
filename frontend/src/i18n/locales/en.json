@@ -194,6 +194,7 @@
     "helperPlaceholder": "e.g. 8501",
     "helperResultCert": "You need a CERTIFICATE",
     "helperResultDecl": "You need a DECLARATION",
+    "helperResultBoth": "You need both a CERTIFICATE and a DECLARATION",
     "helperResultNone": "No exact match found — contact our specialists",
     "helperFullCheckLink": "Full check",
     "faqTitle": "Frequently Asked Questions",

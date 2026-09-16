@@ -207,13 +207,14 @@ function GuideBadge({ icon: Icon, gold, children }) {
 const RESULT_TONES = {
   cert: { box: 'bg-red-50 border-red-200', text: 'text-red-800', icon: 'text-red-600' },
   decl: { box: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-800', icon: 'text-emerald-600' },
+  both: { box: 'bg-red-50 border-red-200', text: 'text-red-800', icon: 'text-red-600' },
   none: { box: 'bg-amber-50 border-amber-200', text: 'text-amber-800', icon: 'text-amber-600' },
 };
 
 function TnVedHelper({ t }) {
   const [query, setQuery] = useState('');
   const [checking, setChecking] = useState(false);
-  const [result, setResult] = useState(null); // 'cert' | 'decl' | 'none' | null
+  const [result, setResult] = useState(null); // 'cert' | 'decl' | 'both' | 'none' | null
 
   useEffect(() => {
     const code = query.replace(/\D/g, '');
@@ -226,7 +227,8 @@ function TnVedHelper({ t }) {
     const handle = setTimeout(() => {
       checkTnVedRegulation(code)
         .then((data) => {
-          if (data.hasMandatoryCert) setResult('cert');
+          if (data.hasMandatoryCert && data.hasDeclaration) setResult('both');
+          else if (data.hasMandatoryCert) setResult('cert');
           else if (data.hasDeclaration) setResult('decl');
           else setResult('none');
         })
@@ -270,7 +272,7 @@ function TnVedHelper({ t }) {
           ) : (
             <CheckCircle2 className={`h-4 w-4 shrink-0 ${tone.icon}`} />
           )}
-          {t(`declarationInfo.helperResult${result === 'cert' ? 'Cert' : result === 'decl' ? 'Decl' : 'None'}`)}
+          {t(`declarationInfo.helperResult${result === 'cert' ? 'Cert' : result === 'decl' ? 'Decl' : result === 'both' ? 'Both' : 'None'}`)}
         </div>
       )}
 

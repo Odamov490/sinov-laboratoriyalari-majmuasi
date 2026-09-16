@@ -194,6 +194,7 @@
     "helperPlaceholder": "Masalan: 8501",
     "helperResultCert": "Sizga SERTIFIKAT kerak",
     "helperResultDecl": "Sizga DEKLARATSIYA kerak",
+    "helperResultBoth": "Sizga ham SERTIFIKAT, ham DEKLARATSIYA kerak",
     "helperResultNone": "Aniq ma'lumot topilmadi — mutaxassislarimiz bilan bog'laning",
     "helperFullCheckLink": "To'liq tekshirish",
     "faqTitle": "Tez-tez so'raladigan savollar",

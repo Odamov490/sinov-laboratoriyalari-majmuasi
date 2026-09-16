@@ -119,9 +119,9 @@ export default function TnVedCheck() {
     return () => clearTimeout(handle);
   }, [tnQuery]);
 
-  const mandatoryMatch = tnRegulation?.matches?.find((m) => m.category === 'SERTIFIKAT');
-  const declarationMatch = !mandatoryMatch && tnRegulation?.matches?.find((m) => m.category === 'DEKLARATSIYA');
-  const checkedNoMatch = !tnChecking && tnRegulation && !mandatoryMatch && !declarationMatch;
+  const mandatoryMatches = tnRegulation?.matches?.filter((m) => m.category === 'SERTIFIKAT') || [];
+  const declarationMatches = tnRegulation?.matches?.filter((m) => m.category === 'DEKLARATSIYA') || [];
+  const checkedNoMatch = !tnChecking && tnRegulation && mandatoryMatches.length === 0 && declarationMatches.length === 0;
 
   const legalDisclaimer = t('tnvedCheck.disclaimer');
 
@@ -150,34 +150,39 @@ export default function TnVedCheck() {
           )}
         </div>
 
-        {/* TN VED conformity-requirement notice — approximate, HS-heading-level match */}
-        {mandatoryMatch && (
+        {/* TN VED conformity-requirement notices — approximate, HS-heading-level
+            match; a code can fall under both a certificate and a declaration
+            requirement at once (different product descriptions under the
+            same heading), so every match is shown, not just one. */}
+        {mandatoryMatches.map((match) => (
           <RegulationNotice
+            key={`cert-${match.item}`}
             tone="red"
             icon={AlertTriangle}
             title={t('tnvedCheck.mandatoryTitle')}
             chips={[
-              `${t('tnvedCheck.decisionLabel')} №${mandatoryMatch.decision}`,
-              `${t('tnvedCheck.itemLabel')} №${mandatoryMatch.item}`,
+              `${t('tnvedCheck.decisionLabel')} №${match.decision}`,
+              `${t('tnvedCheck.itemLabel')} №${match.item}`,
             ]}
-            detail={mandatoryMatch.nameUz}
+            detail={match.nameUz}
             note={`${t('tnvedCheck.mandatoryNotice')} ${legalDisclaimer}`}
           />
-        )}
+        ))}
 
-        {!mandatoryMatch && declarationMatch && (
+        {declarationMatches.map((match) => (
           <RegulationNotice
+            key={`decl-${match.item}`}
             tone="emerald"
             icon={Info}
             title={t('tnvedCheck.declarationTitle')}
             chips={[
-              `${t('tnvedCheck.decisionLabel')} №${declarationMatch.decision}`,
-              `${t('tnvedCheck.itemLabel')} №${declarationMatch.item}`,
+              `${t('tnvedCheck.decisionLabel')} №${match.decision}`,
+              `${t('tnvedCheck.itemLabel')} №${match.item}`,
             ]}
-            detail={declarationMatch.nameUz}
+            detail={match.nameUz}
             note={legalDisclaimer}
           />
-        )}
+        ))}
 
         {checkedNoMatch && (
           <RegulationNotice
