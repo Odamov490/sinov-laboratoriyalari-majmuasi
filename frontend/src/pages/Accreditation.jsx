@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck, Download } from 'lucide-react';
+import { ShieldCheck, Download, FileText } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { Loading, DataUpdatingBadge } from '../components/StateViews.jsx';
@@ -50,13 +50,23 @@ export default function Accreditation() {
 
       <div className="mt-10">
         <h2 className="section-title">{t('common.scope')}</h2>
+        {acc?.scopeUrl && (
+          <a
+            href={acc.scopeUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-primary mt-4 inline-flex"
+          >
+            <FileText className="h-4 w-4" /> {t('common.viewScope')}
+          </a>
+        )}
         {scope ? (
           <div className="mt-4 card p-6">
             <FormattedText text={scope} />
           </div>
-        ) : (
+        ) : !acc?.scopeUrl ? (
           <div className="mt-4"><DataUpdatingBadge /></div>
-        )}
+        ) : null}
       </div>
 
       <div className="mt-10">

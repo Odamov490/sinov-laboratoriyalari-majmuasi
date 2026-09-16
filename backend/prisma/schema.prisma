@@ -344,6 +344,11 @@ model Accreditation {
   scopeRu           String?
   scopeEn           String?
   documentUrl       String?
+  // Link to the official accreditation-scope document on the national
+  // akkred.uz system — kept as a plain admin-editable URL (not an uploaded
+  // file) since the scope there changes often and this just needs to point
+  // at whatever the current one is.
+  scopeUrl          String?
   issuedAt          DateTime?
   validUntil        DateTime?
   createdAt         DateTime @default(now())

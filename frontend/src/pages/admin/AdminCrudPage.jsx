@@ -621,6 +621,7 @@ export default function AdminCrudPage({ config }) {
                 <input
                   type={f.type || 'text'}
                   className="input-field"
+                  placeholder={f.placeholder}
                   value={form[f.name] ?? ''}
                   onChange={(e) => handleChange(f.name, e.target.value)}
                 />

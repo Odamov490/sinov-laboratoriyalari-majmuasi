@@ -330,6 +330,13 @@ export const accreditationConfig = {
     { name: 'scopeRu', label: 'Scope (RU)', type: 'textarea', fullWidth: true },
     { name: 'scopeEn', label: 'Scope (EN)', type: 'textarea', fullWidth: true },
     { name: 'documentUrl', label: 'Guvohnoma (PDF)', type: 'file' },
+    {
+      name: 'scopeUrl',
+      label: "Akkreditatsiya doirasi havolasi (akkred.uz)",
+      type: 'url',
+      fullWidth: true,
+      placeholder: 'https://api-e.akkred.uz/media/file/pdf/...',
+    },
     { name: 'issuedAt', label: 'Berilgan sana', type: 'date' },
     { name: 'validUntil', label: 'Amal qilish muddati', type: 'date' },
   ],

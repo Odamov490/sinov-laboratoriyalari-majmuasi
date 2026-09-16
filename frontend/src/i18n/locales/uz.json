@@ -75,6 +75,7 @@
     "validUntil": "Amal qilish muddati",
     "certificate": "Guvohnoma (PDF)",
     "scope": "Qamrov",
+    "viewScope": "Akkreditatsiya doirasini ko'rish",
     "copied": "Nusxalandi",
     "showFullText": "To'liq matnni ko'rsatish",
     "collapseText": "Qisqartirish",

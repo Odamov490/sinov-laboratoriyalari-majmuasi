@@ -75,6 +75,7 @@
     "validUntil": "Valid until",
     "certificate": "Certificate (PDF)",
     "scope": "Scope",
+    "viewScope": "View accreditation scope",
     "copied": "Copied",
     "showFullText": "Show full text",
     "collapseText": "Collapse",
