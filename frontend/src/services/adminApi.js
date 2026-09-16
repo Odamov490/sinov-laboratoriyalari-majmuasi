@@ -25,6 +25,7 @@ export const adminApplications = {
   get: (id) => apiClient.get(`/admin/applications/${id}`).then((r) => r.data),
   updateStatus: (id, status, statusComment) =>
     apiClient.patch(`/admin/applications/${id}/status`, { status, statusComment }).then((r) => r.data),
+  remove: (id) => apiClient.delete(`/admin/applications/${id}`).then((r) => r.data),
 };
 
 export const adminPrices = {

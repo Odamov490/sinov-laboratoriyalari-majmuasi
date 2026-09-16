@@ -120,4 +120,23 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
   res.json(application);
 });
 
-module.exports = { createApplication, trackApplication, trackByPhone, updateApplicationStatus };
+// Deleting an application must also clear its required-FK children (test
+// items, uploaded files) first; samples only reference an application
+// optionally (they're physical items with their own lifecycle), so they're
+// unlinked rather than deleted.
+const deleteApplication = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const existing = await prisma.application.findUnique({ where: { id } });
+  if (!existing) return res.status(404).json({ error: 'Ariza topilmadi.' });
+
+  await prisma.$transaction([
+    prisma.applicationTestItem.deleteMany({ where: { applicationId: id } }),
+    prisma.applicationFile.deleteMany({ where: { applicationId: id } }),
+    prisma.sample.updateMany({ where: { applicationId: id }, data: { applicationId: null } }),
+    prisma.application.delete({ where: { id } }),
+  ]);
+
+  res.json({ success: true });
+});
+
+module.exports = { createApplication, trackApplication, trackByPhone, updateApplicationStatus, deleteApplication };

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, X, Plus, AlertTriangle, Tag, Info } from 'lucide-react';
+import { Eye, Trash2, X, Plus, AlertTriangle, Tag, Info } from 'lucide-react';
 import { adminApplications, adminTestItems, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Select, Pagination, StatusBadge, APPLICATION_STATUSES, STATUS_LABELS } from '../../components/UI.jsx';
-import { Modal } from '../../components/Modal.jsx';
+import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
 
@@ -17,6 +17,7 @@ export default function AdminApplications() {
   const [statusDraft, setStatusDraft] = useState('');
   const [commentDraft, setCommentDraft] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
   const [services, setServices] = useState([]);
   const [addServiceId, setAddServiceId] = useState('');
@@ -53,6 +54,17 @@ export default function AdminApplications() {
   };
 
   const refreshSelected = () => adminApplications.get(selected.id).then(setSelected);
+
+  const removeApplication = async (id) => {
+    try {
+      await adminApplications.remove(id);
+      showToast("Ariza o'chirildi.", 'success');
+      if (selected?.id === id) setSelected(null);
+      load();
+    } catch {
+      showToast("O'chirishda xatolik.", 'error');
+    }
+  };
 
   const saveStatus = async () => {
     setSaving(true);
@@ -138,9 +150,12 @@ export default function AdminApplications() {
                   <td className="px-4 py-3">{a.service?.laboratory?.nameUz || '—'}</td>
                   <td className="px-4 py-3 text-slate-500">{formatDate(a.createdAt)}</td>
                   <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
                     <button onClick={() => openDetail(a)} className="p-2 rounded-lg hover:bg-bg-light text-primary">
                       <Eye className="h-4 w-4" />
+                    </button>
+                    <button onClick={() => setConfirmDelete(a.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500">
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </td>
                 </tr>
@@ -268,9 +283,22 @@ export default function AdminApplications() {
             <button onClick={saveStatus} disabled={saving} className="btn-primary w-full">
               {saving ? 'Saqlanmoqda...' : 'Saqlash'}
             </button>
+            <button
+              onClick={() => setConfirmDelete(selected.id)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" /> Arizani o'chirish
+            </button>
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={!!confirmDelete}
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => removeApplication(confirmDelete)}
+        message="Ushbu arizani o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+      />
     </div>
   );
 }

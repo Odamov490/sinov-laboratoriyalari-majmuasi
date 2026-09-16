@@ -3,7 +3,7 @@ const crudFactory = require('../utils/crudFactory');
 const { authenticate } = require('../middleware/auth');
 const { requireModule } = require('../middleware/rbac');
 const { upload, verifyFileSignature } = require('../middleware/upload');
-const { updateApplicationStatus } = require('../controllers/applicationController');
+const { updateApplicationStatus, deleteApplication } = require('../controllers/applicationController');
 const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
 const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
@@ -160,6 +160,7 @@ router.get(
   })
 );
 router.patch('/applications/:id/status', requireModule('applications'), updateApplicationStatus);
+router.delete('/applications/:id', requireModule('applications'), deleteApplication);
 router.post('/applications/:id/test-items', requireModule('applications'), addTestItem);
 router.delete('/applications/:id/test-items/:itemId', requireModule('applications'), removeTestItem);
 
