@@ -196,7 +196,7 @@
     "codeVersionCurrentTitle": "This code is current under the 2022 TN VED revision",
     "codeVersionConvertedTitle": "Note: this is an old (2017) TN VED code",
     "codeVersionConvertedText": "It was changed/split into the following new code(s) in the 2022 revision:",
-    "codeVersionUnchangedTitle": "This code is unchanged between the 2017 and 2022 TN VED revisions.",
+    "codeVersionUnchangedTitle": "This code does not appear in Resolution No. 733's list (products whose code changed) — so it likely stayed the same between the 2017 and 2022 revisions. Since that list only covers changed codes, we don't have a product name on file for it.",
     "codeVersionSource": "Source: Cabinet of Ministers Resolution No. 733 of December 31, 2022, Annex 1."
   },
   "declarationInfo": {
