@@ -22,7 +22,7 @@ function crudFactory(modelName, opts = {}) {
 
   const list = asyncHandler(async (req, res) => {
     const { page = 1, pageSize = 20, q } = req.query;
-    const take = Math.min(Number(pageSize) || 20, 100);
+    const take = Math.min(Number(pageSize) || 20, 3000);
     const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
 
     const where = { ...baseWhere() };

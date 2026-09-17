@@ -221,7 +221,7 @@ router.put('/info-pages/:slug', requireModule('applications'), updateInfoPage);
 // question/option-driven indicator sets.
 mountCrud('test-indicators', 'testPrograms', 'testIndicator', {
   include: { laboratory: true },
-  searchFields: ['nameUz', 'nameRu', 'nameEn', 'standardCode'],
+  searchFields: ['nameUz', 'nameRu', 'nameEn', 'standardCode', 'positionCode'],
   softDelete: true,
 });
 mountCrud('products', 'testPrograms', 'product', {

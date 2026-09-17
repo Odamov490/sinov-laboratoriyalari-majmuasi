@@ -11,6 +11,8 @@ const MONTH_NAMES_UZ = [
   'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr',
 ];
 
+const PAGE_SIZE_OPTIONS = [15, 25, 50, 100, 200, 500];
+
 export default function AdminCrudPage({ config }) {
   const resource = adminResource(config.path);
   const { showToast } = useToast();
@@ -18,6 +20,7 @@ export default function AdminCrudPage({ config }) {
   const [error, setError] = useState(false);
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});
@@ -37,7 +40,7 @@ export default function AdminCrudPage({ config }) {
   const load = () => {
     setError(false);
     resource
-      .list({ q: q || undefined, page, pageSize: 15 })
+      .list({ q: q || undefined, page, pageSize })
       .then(setData)
       .catch(() => setError(true));
   };
@@ -47,7 +50,7 @@ export default function AdminCrudPage({ config }) {
     const handle = setTimeout(load, 250);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, page]);
+  }, [q, page, pageSize]);
 
   useEffect(() => {
     if (!config.birthdayPin) return;
@@ -433,11 +436,25 @@ export default function AdminCrudPage({ config }) {
         </div>
       )}
 
-      {config.searchable !== false && (
-        <div className="max-w-sm mb-5">
-          <SearchBar value={q} onChange={(v) => { setQ(v); setPage(1); }} />
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        {config.searchable !== false && (
+          <div className="max-w-sm flex-1 min-w-[200px]">
+            <SearchBar value={q} onChange={(v) => { setQ(v); setPage(1); }} />
+          </div>
+        )}
+        <label className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
+          Qatorlar:
+          <select
+            value={pageSize}
+            onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+            className="input-field !w-auto !py-2"
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div className="card overflow-x-auto">
         {error ? (
@@ -480,7 +497,7 @@ export default function AdminCrudPage({ config }) {
           </table>
         )}
       </div>
-      {data && <Pagination page={page} pageSize={15} total={data.total} onChange={setPage} />}
+      {data && <Pagination page={page} pageSize={pageSize} total={data.total} onChange={setPage} />}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Tahrirlash' : "Qo'shish"} size="lg">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

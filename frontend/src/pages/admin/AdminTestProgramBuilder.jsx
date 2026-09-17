@@ -118,7 +118,7 @@ export default function AdminTestProgramBuilder() {
     setProduct(null);
     load();
     adminTestIndicators
-      .list({ pageSize: 500 })
+      .list({ pageSize: 3000 })
       .then((d) => setPool(d.items))
       .catch(() => setPool([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
