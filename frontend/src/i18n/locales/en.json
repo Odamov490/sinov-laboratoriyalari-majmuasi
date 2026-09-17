@@ -169,7 +169,30 @@
     "decisionLabel": "Decision",
     "itemLabel": "Item",
     "categorySertifikat": "Certificate",
-    "categoryDeklaratsiya": "Declaration"
+    "categoryDeklaratsiya": "Declaration",
+    "caveatTitle": "Note: a special condition applies",
+    "caveatPrefix": "If your product falls under the following condition",
+    "caveatSuffix": "this requirement may not apply to you. Contact our specialists for a definitive conclusion.",
+    "generalExceptionsToggle": "Situations exempt from mandatory conformity assessment",
+    "generalExceptionsIntro": "The list below describes import SITUATIONS, not product types. Even if your product is on the certificate or declaration list above, mandatory conformity assessment (neither certificate nor declaration) does not apply if one of the following applies:",
+    "generalExceptions": [
+      "If, at the time the conformity application is submitted (within the 72 hours preceding it), there is no accredited certification body in Uzbekistan able to assess that product's conformity",
+      "Products imported into the customs territory for processing purposes",
+      "Previously used (operated) products — except vehicles, hunting and sporting weapons and their ammunition, lifts, escalators, travolators, industrial air-conditioning systems, solar panels and cylinders for any gas, as well as other products defined by legislation",
+      "Samples, exhibits and advertising materials for exhibitions and fairs",
+      "Products imported as samples for testing and research aimed at confirming conformity, and for interlaboratory comparison testing",
+      "When the product sample is insufficient to assess conformity (the certification body must provide a written conclusion confirming the sample is insufficient for testing)",
+      "Products imported for use in scientific research purposes, including to carry out research programs",
+      "Products imported as foreign gratuitous (humanitarian) aid and international technical assistance",
+      "Goods intended to provide assistance in natural disasters, armed conflicts, technogenic catastrophes and other such situations",
+      "Confiscated products, as well as property converted to state revenue by a court decision for unfulfilled tax obligations or unpaid penalties, and products released from seizure by a criminal-case authority",
+      "Food and other goods imported from abroad for the personal use of foreign workers engaged in construction and other contract work in the republic",
+      "Products necessary for the normal operation of vehicles carrying out international cargo transportation across the territory of Uzbekistan",
+      "Goods intended for the official (service) use of international organizations, diplomatic and consular missions of foreign states, and missions of foreign states to international organizations enjoying customs and other privileges in the country",
+      "Components, raw materials and materials used as a constituent part in manufacturing non-food products not intended for sale in Uzbekistan",
+      "Spare and component parts, and materials, for equipment directly used in one's own production processes, not intended for sale in Uzbekistan"
+    ],
+    "generalExceptionsNote": "For products covered by technical regulations that have entered into force, conformity assessment is carried out under those regulations' requirements. For a final legal conclusion, please refer to the official source (lex.uz or the National Legislation Database)."
   },
   "declarationInfo": {
     "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",

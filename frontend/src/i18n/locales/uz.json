@@ -169,7 +169,30 @@
     "decisionLabel": "Qaror",
     "itemLabel": "Band",
     "categorySertifikat": "Sertifikat",
-    "categoryDeklaratsiya": "Deklaratsiya"
+    "categoryDeklaratsiya": "Deklaratsiya",
+    "caveatTitle": "Diqqat, alohida shart bor",
+    "caveatPrefix": "Agar mahsulotingiz quyidagi holatga to'g'ri kelsa",
+    "caveatSuffix": "bu talab sizga tegishli bo'lmasligi mumkin. Aniq xulosa uchun mutaxassislarimiz bilan bog'laning.",
+    "generalExceptionsToggle": "Majburiy muvofiqlikni baholashdan ozod etiladigan holatlar",
+    "generalExceptionsIntro": "Quyidagilar — mahsulot TURI emas, balki import qilish VAZIYATI tavsifi. Mahsulotingiz yuqorida sertifikat yoki deklaratsiya talab qilinadigan ro'yxatga kirgan bo'lsa ham, agar u quyidagi holatlardan biriga to'g'ri kelsa, majburiy muvofiqlikni baholash tartibi (na sertifikat, na deklaratsiya) qo'llanilmaydi:",
+    "generalExceptions": [
+      "Muvofiqlikni tasdiqlash uchun ariza berilgan paytda (ariza qabul qilingan kundan oldingi 72 soat ichida) O'zbekistonda ushbu mahsulot bo'yicha muvofiqlikni baholay oladigan akkreditatsiyadan o'tgan sertifikatlashtirish organi mavjud bo'lmasa",
+      "Bojxona hududida qayta ishlash maqsadida olib kiriladigan mahsulotlar",
+      "Ilgari foydalanishda (iste'molda) bo'lgan mahsulotlar (transport vositalari, ov va sport qurollari hamda ularning o'q-dorilari, lift, eskalator, travolator, sanoat havo sovitish tizimi, quyosh panellari va har qanday gaz uchun ballonlar, shuningdek qonunchilikda belgilangan boshqa mahsulotlar bundan mustasno)",
+      "Ko'rgazmalar, yarmarkalar uchun namunalar, eksponatlar va reklama materiallari",
+      "Muvofiqligini tasdiqlash maqsadida sinov va tadqiqot, shuningdek, laboratoriyalararo solishtiruv sinovlarini o'tkazish uchun namuna sifatida olib kiriladigan mahsulotlar",
+      "Mahsulotlarning muvofiqligini baholash uchun mahsulot namunasi yetarli bo'lmaganda (sertifikatlashtirish organi tomonidan bu haqda xulosa/xat taqdim etilishi lozim)",
+      "Ilmiy-tadqiqot maqsadlarida foydalanish uchun, shu jumladan, tadqiqot dasturlarini amalga oshirish uchun olib kiriladigan mahsulotlar",
+      "Xorijiy beg'araz (gumanitar) yordam va xalqaro texnik yordam sifatida olib kiriladigan mahsulotlar",
+      "Tabiiy ofatlar, harbiy mojarolar, texnogen falokatlar va boshqa holatlarda yordam ko'rsatish uchun mo'ljallangan tovarlar",
+      "Musodara qilingan, shuningdek, sud hukmi (qarori) bilan musodara qilingan yoki boshqa davlat daromadiga aylantirilgan mol-mulk, bajarilmagan soliq majburiyati, to'lanmagan jazo choralari va jinoiy ishni yurituvchi organ tomonidan olib qo'yishdan ozod qilingan mahsulotlar",
+      "Respublikada qurilish va boshqa pudrat ishlarini amalga oshirish uchun xorijiy xodimlarning shaxsiy foydalanishi uchun mo'ljallangan, respublikaga chetdan keltirilgan ozuqaviy va boshqa tovarlar",
+      "O'zbekiston Respublikasi hududida xalqaro miqyosda yuk tashishni amalga oshiruvchi transport vositalarining normal ish olib borishi uchun zarur bo'lgan mahsulotlar",
+      "Mamlakat hududida bojxona va boshqa imtiyozlarga ega bo'lgan xalqaro tashkilotlar, xorijiy davlatlarning diplomatik va konsullik vakolatxonalari va boshqa xalqaro tashkilotlar huzuridagi xorijiy davlatlar vakolatxonalarining rasmiy (xizmat yuzasidan) foydalanishi uchun mo'ljallangan tovarlari",
+      "O'zbekiston Respublikasida sotish uchun mo'ljallanmagan noziq-ovqat mahsulotlarini ishlab chiqarishda uning tarkibiy qismi sifatida foydalaniladigan butlovchi qismlar, xomashyo va materiallar",
+      "O'zbekiston Respublikasida sotish uchun mo'ljallanmagan, bevosita o'z ishlab chiqarish jarayonlarida qo'llanadigan asbob-uskunalarning ehtiyot va butlovchi qismlari va materiallar"
+    ],
+    "generalExceptionsNote": "Ushbu texnik reglamentlar kuchga kirgan mahsulotlar bo'yicha muvofiqlik baholash o'sha reglamentlar talablari asosida amalga oshiriladi. Yakuniy huquqiy xulosa uchun rasmiy manbaga (lex.uz yoki Qonunchilik ma'lumotlari milliy bazasi) murojaat qilish tavsiya etiladi."
   },
   "declarationInfo": {
     "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",

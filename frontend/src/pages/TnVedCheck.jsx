@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Info, Loader2 } from 'lucide-react';
+import { AlertTriangle, Info, Loader2, ChevronDown, ShieldQuestion } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { checkTnVedRegulation, getInfoPage } from '../services/publicApi';
@@ -50,7 +50,7 @@ const DETAIL_PREVIEW_LENGTH = 220;
 // reference as chips, the (often very long) legal item description in its
 // own collapsible box, and a muted disclaimer footnote — shared layout for
 // all three outcomes (mandatory cert / declaration / nothing found).
-function RegulationNotice({ tone, icon: Icon, title, chips, detail, note, linkHref, linkLabel }) {
+function RegulationNotice({ tone, icon: Icon, title, chips, detail, note, linkHref, linkLabel, caveat }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const c = NOTICE_TONES[tone];
@@ -86,6 +86,16 @@ function RegulationNotice({ tone, icon: Icon, title, chips, detail, note, linkHr
                   {expanded ? t('common.collapseText') : t('common.showFullText')}
                 </button>
               )}
+            </div>
+          )}
+
+          {caveat?.length > 0 && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-800">
+              <ShieldQuestion className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+              <p>
+                <span className="font-semibold">{t('tnvedCheck.caveatTitle')}.</span> {t('tnvedCheck.caveatPrefix')} («
+                {caveat.join('», «')}»), {t('tnvedCheck.caveatSuffix')}
+              </p>
             </div>
           )}
 
@@ -194,6 +204,7 @@ export default function TnVedCheck() {
             ]}
             detail={match.nameUz}
             note={`${t('tnvedCheck.mandatoryNotice')} ${legalDisclaimer}`}
+            caveat={match.qualitativeExceptions}
           />
         ))}
 
@@ -209,6 +220,7 @@ export default function TnVedCheck() {
             ]}
             detail={match.nameUz}
             note={legalDisclaimer}
+            caveat={match.qualitativeExceptions}
           />
         ))}
 
@@ -222,7 +234,45 @@ export default function TnVedCheck() {
             linkLabel={t('tnvedCheck.viewResolution43')}
           />
         )}
+
+        {/* Situational exemptions from mandatory conformity assessment —
+            these depend on the import circumstances, not the product's TN
+            VED code, so they can't be checked automatically and are shown
+            as reference information regardless of what code is entered. */}
+        <GeneralExceptions />
       </div>
     </div>
+  );
+}
+
+function GeneralExceptions() {
+  const { t } = useTranslation();
+  const exceptions = t('tnvedCheck.generalExceptions', { returnObjects: true });
+
+  return (
+    <details className="card p-5 group">
+      <summary className="cursor-pointer font-medium text-ink list-none flex justify-between items-center gap-3">
+        <span className="flex items-center gap-2.5">
+          <ShieldQuestion className="h-4 w-4 shrink-0 text-primary" />
+          {t('tnvedCheck.generalExceptionsToggle')}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+      </summary>
+
+      <div className="mt-4 pt-4 border-t border-border">
+        <p className="text-sm text-slate-600 leading-relaxed">{t('tnvedCheck.generalExceptionsIntro')}</p>
+        <ol className="mt-3 space-y-2 list-decimal pl-5 text-sm text-ink">
+          {Array.isArray(exceptions) &&
+            exceptions.map((item, idx) => (
+              <li key={idx} className="leading-relaxed">
+                {item}
+              </li>
+            ))}
+        </ol>
+        <p className="mt-4 pt-3 border-t border-border text-xs text-slate-500 leading-relaxed">
+          {t('tnvedCheck.generalExceptionsNote')}
+        </p>
+      </div>
+    </details>
   );
 }
