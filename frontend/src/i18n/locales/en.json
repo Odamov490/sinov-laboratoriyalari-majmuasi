@@ -192,7 +192,12 @@
       "Components, raw materials and materials used as a constituent part in manufacturing non-food products not intended for sale in Uzbekistan",
       "Spare and component parts, and materials, for equipment directly used in one's own production processes, not intended for sale in Uzbekistan"
     ],
-    "generalExceptionsNote": "For products covered by technical regulations that have entered into force, conformity assessment is carried out under those regulations' requirements. For a final legal conclusion, please refer to the official source (lex.uz or the National Legislation Database)."
+    "generalExceptionsNote": "For products covered by technical regulations that have entered into force, conformity assessment is carried out under those regulations' requirements. For a final legal conclusion, please refer to the official source (lex.uz or the National Legislation Database).",
+    "codeVersionCurrentTitle": "This code is current under the 2022 TN VED revision",
+    "codeVersionConvertedTitle": "Note: this is an old (2017) TN VED code",
+    "codeVersionConvertedText": "It was changed/split into the following new code(s) in the 2022 revision:",
+    "codeVersionUnchangedTitle": "This code is unchanged between the 2017 and 2022 TN VED revisions.",
+    "codeVersionSource": "Source: Cabinet of Ministers Resolution No. 733 of December 31, 2022, Annex 1."
   },
   "declarationInfo": {
     "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",

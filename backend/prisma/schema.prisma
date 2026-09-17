@@ -433,6 +433,31 @@ model TnVedRegulation {
   createdAt DateTime                @default(now())
 }
 
+// Reference data from Cabinet of Ministers resolution No. 733 (2022-12-31,
+// Annex 1): TIF TN (HS) code version lookup, unrelated to the
+// certificate/declaration requirement above. Two tables:
+//  - TnVedCurrentCode: codes confirmed to exist under the 2022 revision.
+//  - TnVedCodeConversion: old (2017) codes that were renumbered/split, with
+//    their 2022 successor code(s).
+// A code not present in EITHER table is not claimed to "not exist" — this
+// source only lists codes that changed, so an unlisted code is treated as
+// unchanged between the 2017 and 2022 revisions.
+model TnVedCurrentCode {
+  id        String   @id @default(uuid())
+  digits    String   @unique
+  display   String
+  nameUz    String?
+  createdAt DateTime @default(now())
+}
+
+model TnVedCodeConversion {
+  id         String   @id @default(uuid())
+  oldDigits  String   @unique
+  oldDisplay String
+  newCodes   Json
+  createdAt  DateTime @default(now())
+}
+
 // Admin-editable public info pages (e.g. "declaration vs certificate"
 // explainer) — reusable model for future one-off content pages, not just
 // this one, so it's keyed by slug rather than a dedicated table per page.

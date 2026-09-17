@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Info, Loader2, ChevronDown, ShieldQuestion } from 'lucide-react';
+import { AlertTriangle, Info, Loader2, ChevronDown, ShieldQuestion, FileSearch } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { checkTnVedRegulation, getInfoPage } from '../services/publicApi';
@@ -235,11 +235,79 @@ export default function TnVedCheck() {
           />
         )}
 
+        {/* Extra reference info about the code itself (TIF TN 2017->2022
+            version lookup) — shown alongside the "not required" result so
+            the user isn't left with just a negative answer. */}
+        {checkedNoMatch && tnRegulation?.codeVersion && (
+          <CodeVersionNotice info={tnRegulation.codeVersion} />
+        )}
+
         {/* Situational exemptions from mandatory conformity assessment —
             these depend on the import circumstances, not the product's TN
             VED code, so they can't be checked automatically and are shown
             as reference information regardless of what code is entered. */}
         <GeneralExceptions />
+      </div>
+    </div>
+  );
+}
+
+// TIF TN 2017->2022 code-version reference (resolution 733) — informational
+// only, separate from the cert/declaration requirement above.
+function CodeVersionNotice({ info }) {
+  const { t } = useTranslation();
+
+  if (info.status === 'current') {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="flex items-start gap-3">
+          <FileSearch className="h-5 w-5 mt-0.5 shrink-0 text-slate-500" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-ink">{t('tnvedCheck.codeVersionCurrentTitle')}</p>
+            <p className="mt-1 text-xs text-slate-600">
+              <span className="font-mono font-semibold text-primary">{info.display}</span>
+              {info.nameUz && <> — {info.nameUz}</>}
+            </p>
+            <p className="mt-2 text-[11px] text-slate-400">{t('tnvedCheck.codeVersionSource')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (info.status === 'converted') {
+    return (
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+        <div className="flex items-start gap-3">
+          <FileSearch className="h-5 w-5 mt-0.5 shrink-0 text-slate-500" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-ink">{t('tnvedCheck.codeVersionConvertedTitle')}</p>
+            <p className="mt-1 text-xs text-slate-600">
+              <span className="font-mono">{info.oldDisplay}</span> (2017) — {t('tnvedCheck.codeVersionConvertedText')}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {info.newCodes.map((c) => (
+                <span
+                  key={c.digits}
+                  className="inline-flex rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-primary"
+                >
+                  {c.display}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-slate-400">{t('tnvedCheck.codeVersionSource')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // status === 'unchanged'
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+      <div className="flex items-start gap-3">
+        <FileSearch className="h-5 w-5 mt-0.5 shrink-0 text-slate-500" />
+        <p className="text-sm text-slate-600">{t('tnvedCheck.codeVersionUnchangedTitle')}</p>
       </div>
     </div>
   );

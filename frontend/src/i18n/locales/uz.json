@@ -192,7 +192,12 @@
       "O'zbekiston Respublikasida sotish uchun mo'ljallanmagan noziq-ovqat mahsulotlarini ishlab chiqarishda uning tarkibiy qismi sifatida foydalaniladigan butlovchi qismlar, xomashyo va materiallar",
       "O'zbekiston Respublikasida sotish uchun mo'ljallanmagan, bevosita o'z ishlab chiqarish jarayonlarida qo'llanadigan asbob-uskunalarning ehtiyot va butlovchi qismlari va materiallar"
     ],
-    "generalExceptionsNote": "Ushbu texnik reglamentlar kuchga kirgan mahsulotlar bo'yicha muvofiqlik baholash o'sha reglamentlar talablari asosida amalga oshiriladi. Yakuniy huquqiy xulosa uchun rasmiy manbaga (lex.uz yoki Qonunchilik ma'lumotlari milliy bazasi) murojaat qilish tavsiya etiladi."
+    "generalExceptionsNote": "Ushbu texnik reglamentlar kuchga kirgan mahsulotlar bo'yicha muvofiqlik baholash o'sha reglamentlar talablari asosida amalga oshiriladi. Yakuniy huquqiy xulosa uchun rasmiy manbaga (lex.uz yoki Qonunchilik ma'lumotlari milliy bazasi) murojaat qilish tavsiya etiladi.",
+    "codeVersionCurrentTitle": "Ushbu kod TIF TN 2022-yilgi tahririga ko'ra amaldagi kod",
+    "codeVersionConvertedTitle": "Diqqat: bu eski (2017-yilgi) TIF TN kodi",
+    "codeVersionConvertedText": "2022-yilgi tahririda quyidagi yangi kod(lar)ga o'zgargan/bo'lingan:",
+    "codeVersionUnchangedTitle": "Ushbu kod TIF TN 2017-yilgi va 2022-yilgi tahrirlarida o'zgarmagan.",
+    "codeVersionSource": "Manba: Vazirlar Mahkamasining 2022-yil 31-dekabrdagi 733-son qarori, 1-ilova."
   },
   "declarationInfo": {
     "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",
