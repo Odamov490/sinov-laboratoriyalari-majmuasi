@@ -3,14 +3,18 @@ import { Plus, History, Trash2 } from 'lucide-react';
 import { adminPrices, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
-import { Select } from '../../components/UI.jsx';
+import { Select, Pagination } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
+
+const PAGE_SIZE_OPTIONS = [15, 25, 50, 100, 200, 500];
 
 export default function AdminPrices() {
   const { showToast } = useToast();
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [editing, setEditing] = useState(null);
   const [amount, setAmount] = useState('');
   const [saving, setSaving] = useState(false);
@@ -97,7 +101,24 @@ export default function AdminPrices() {
           <Plus className="h-4 w-4" /> Yangi narx qo'shish
         </button>
       </div>
-      <p className="text-sm text-slate-500 mb-6">Eski narxlar avtomatik ravishda tarixga saqlanadi va o'chirilmaydi.</p>
+      <p className="text-sm text-slate-500 mb-4">Eski narxlar avtomatik ravishda tarixga saqlanadi va o'chirilmaydi.</p>
+
+      {data && data.items.length > 0 && (
+        <div className="flex justify-end mb-3">
+          <label className="flex items-center gap-2 text-sm text-slate-500">
+            Qatorlar:
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              className="input-field !w-auto !py-2"
+            >
+              {PAGE_SIZE_OPTIONS.map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
 
       <div className="card overflow-x-auto">
         {error ? (
@@ -120,7 +141,7 @@ export default function AdminPrices() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {data.items.map((p) => (
+              {data.items.slice((page - 1) * pageSize, page * pageSize).map((p) => (
                 <tr key={p.id} className="hover:bg-bg-light/60">
                   <td className="px-4 py-3 font-medium text-ink">{p.service?.nameUz}</td>
                   <td className="px-4 py-3">{p.service?.laboratory?.nameUz}</td>
@@ -149,6 +170,9 @@ export default function AdminPrices() {
           </table>
         )}
       </div>
+      {data && data.items.length > 0 && (
+        <Pagination page={page} pageSize={pageSize} total={data.items.length} onChange={setPage} />
+      )}
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi narx qo'shish" size="sm">
         <label className="block text-sm font-medium text-ink mb-1.5">Xizmat</label>
