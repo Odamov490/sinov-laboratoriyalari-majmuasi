@@ -1,16 +1,21 @@
 // Parses the free-text TN VED range/list wording used in Cabinet of
 // Ministers resolution 43 (e.g. "0601 — 0602", "0701, 0703, 0712
 // 90 110 0, 0713", "8701 — 8706 (8701 91 500 0 ... дан ташқари)") into a
-// list of 4-digit HS "heading" ranges: [{ min, max }, ...].
+// list of ranges: [{ minDigits, maxDigits }, ...], each as digit *strings*
+// (not truncated to 4 digits) so matchesCode() can compare at whatever
+// precision both the range and the looked-up code actually specify — e.g.
+// "9026 10 — 9026 80800 0" only covers subheadings 10–80 within heading
+// 9026, so a code like 9026.90.00.00 (outside that sub-range) must NOT
+// match just because it shares the 9026 heading.
 //
-// Deliberate simplifications (this is an approximate, heading-level match —
-// not a legally authoritative parse of the resolutions):
+// Deliberate simplifications (this is an approximate match — not a legally
+// authoritative parse of the resolutions):
 //  - Everything inside parentheses is dropped entirely, including "... дан
 //    ташқари" (except ...) exclusion clauses. So "8701 — 8706 (8701 91 500
 //    0 ... дан ташқари)" is treated as the full, unexcluded 8701–8706 range.
-//  - Only the first 4 digits of each code (the HS heading) are used for
-//    comparison; finer 6/10-digit precision present in the source text is
-//    not modeled.
+//  - When a range's two endpoints are given at different digit precisions
+//    in the source text (a transcription quirk), comparison falls back to
+//    the shorter of the two.
 function parseTnVedRanges(tnVedRaw) {
   if (!tnVedRaw) return [];
 
@@ -21,27 +26,52 @@ function parseTnVedRanges(tnVedRaw) {
     const parts = segment.split(/[-–—]/); // hyphen-minus, en dash, em dash
 
     if (parts.length >= 2) {
-      const left = headingOf(parts[0]);
-      const right = headingOf(parts[parts.length - 1]);
+      const left = digitsOf(parts[0]);
+      const right = digitsOf(parts[parts.length - 1]);
       if (left !== null && right !== null) {
-        ranges.push({ min: Math.min(left, right), max: Math.max(left, right) });
+        ranges.push(makeRange(left, right));
         continue;
       }
     }
 
-    const single = headingOf(segment);
-    if (single !== null) ranges.push({ min: single, max: single });
+    const single = digitsOf(segment);
+    if (single !== null) ranges.push(makeRange(single, single));
   }
 
   return ranges;
 }
 
-// Extracts the digits from a text fragment and returns the first 4 as a
-// number (the HS heading), or null if there aren't at least 4 digits.
-function headingOf(text) {
+// Extracts all digits from a text fragment, or null if there are fewer
+// than 4 (not even enough for an HS heading).
+function digitsOf(text) {
   const digits = (text.match(/\d/g) || []).join('');
-  if (digits.length < 4) return null;
-  return parseInt(digits.slice(0, 4), 10);
+  return digits.length < 4 ? null : digits;
+}
+
+// Builds a { minDigits, maxDigits } range from two digit strings, comparing
+// (and ordering) them numerically at their shared precision — the shorter
+// of the two lengths — so mismatched-precision endpoints from the source
+// text still produce a sensible range.
+function makeRange(a, b) {
+  const precision = Math.min(a.length, b.length);
+  const av = parseInt(a.slice(0, precision), 10);
+  const bv = parseInt(b.slice(0, precision), 10);
+  return av <= bv
+    ? { minDigits: a.slice(0, precision), maxDigits: b.slice(0, precision) }
+    : { minDigits: b.slice(0, precision), maxDigits: a.slice(0, precision) };
+}
+
+// Does `codeDigits` (the full digit string of the code being looked up)
+// fall inside `range`? Compares at the shorter of the range's precision and
+// the code's own precision, so a bare 4-digit heading query still matches
+// broadly (not enough information to exclude it), while a fully-specified
+// 8/10-digit code is checked against the real sub-range boundaries.
+function matchesCode(range, codeDigits) {
+  const precision = Math.min(range.minDigits.length, codeDigits.length);
+  const code = parseInt(codeDigits.slice(0, precision), 10);
+  const min = parseInt(range.minDigits.slice(0, precision), 10);
+  const max = parseInt(range.maxDigits.slice(0, precision), 10);
+  return code >= min && code <= max;
 }
 
 // Extracts individual TN VED code tokens out of the same free-text wording
@@ -67,4 +97,4 @@ function extractCodeTokens(tnVedRaw) {
   return tokens;
 }
 
-module.exports = { parseTnVedRanges, extractCodeTokens };
+module.exports = { parseTnVedRanges, extractCodeTokens, matchesCode };

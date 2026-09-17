@@ -3,7 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Info, Loader2 } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
-import { checkTnVedRegulation } from '../services/publicApi';
+import { checkTnVedRegulation, getInfoPage } from '../services/publicApi';
+
+// Standard TN VED / FEACN codes are 10 digits; a "no requirement found"
+// conclusion is only trustworthy once the full code is in — a 4-6 digit
+// heading prefix that currently finds nothing could still resolve to a
+// match once the remaining digits narrow it into a listed sub-range.
+const FULL_CODE_LENGTH = 10;
 
 const NOTICE_TONES = {
   red: {
@@ -44,7 +50,7 @@ const DETAIL_PREVIEW_LENGTH = 220;
 // reference as chips, the (often very long) legal item description in its
 // own collapsible box, and a muted disclaimer footnote — shared layout for
 // all three outcomes (mandatory cert / declaration / nothing found).
-function RegulationNotice({ tone, icon: Icon, title, chips, detail, note }) {
+function RegulationNotice({ tone, icon: Icon, title, chips, detail, note, linkHref, linkLabel }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const c = NOTICE_TONES[tone];
@@ -84,6 +90,17 @@ function RegulationNotice({ tone, icon: Icon, title, chips, detail, note }) {
           )}
 
           {note && <p className={`mt-3 pt-3 border-t text-[11px] leading-relaxed ${c.note}`}>{note}</p>}
+
+          {linkHref && (
+            <a
+              href={linkHref}
+              target="_blank"
+              rel="noreferrer"
+              className={`mt-2 inline-flex items-center gap-1 text-[11px] font-semibold underline underline-offset-2 ${c.link}`}
+            >
+              {linkLabel}
+            </a>
+          )}
         </div>
       </div>
     </div>
@@ -93,15 +110,20 @@ function RegulationNotice({ tone, icon: Icon, title, chips, detail, note }) {
 export default function TnVedCheck() {
   const { t } = useTranslation();
   const [tnQuery, setTnQuery] = useState('');
+  const [infoPage, setInfoPage] = useState(null);
 
   // --- TN VED conformity-regulation lookup (mandatory cert / declaration) ---
   const [tnRegulation, setTnRegulation] = useState(null); // { matches, hasMandatoryCert, hasDeclaration } | null
   const [tnChecking, setTnChecking] = useState(false);
 
-  // Approximate conformity-requirement check (4-digit HS heading match only
-  // — see backend parseTnVedRanges), fired automatically as the code is
-  // typed. A changed code always clears the previous result first, so a
-  // stale banner never lingers on top of a code it no longer matches.
+  useEffect(() => {
+    getInfoPage('deklaratsiya-va-sertifikat').then(setInfoPage).catch(() => setInfoPage(null));
+  }, []);
+
+  // Approximate conformity-requirement check (see backend parseTnVedRanges),
+  // fired automatically as the code is typed. A changed code always clears
+  // the previous result first, so a stale banner never lingers on top of a
+  // code it no longer matches.
   useEffect(() => {
     const code = tnQuery.replace(/\D/g, '');
     setTnRegulation(null);
@@ -119,9 +141,15 @@ export default function TnVedCheck() {
     return () => clearTimeout(handle);
   }, [tnQuery]);
 
+  const codeDigits = tnQuery.replace(/\D/g, '');
+  const isFullCode = codeDigits.length >= FULL_CODE_LENGTH;
   const mandatoryMatches = tnRegulation?.matches?.filter((m) => m.category === 'SERTIFIKAT') || [];
   const declarationMatches = tnRegulation?.matches?.filter((m) => m.category === 'DEKLARATSIYA') || [];
-  const checkedNoMatch = !tnChecking && tnRegulation && mandatoryMatches.length === 0 && declarationMatches.length === 0;
+  // Only declare "nothing required" once the full code is in — a shorter
+  // prefix that currently finds nothing may still resolve to a match once
+  // the rest of the digits are typed (see FULL_CODE_LENGTH above).
+  const checkedNoMatch =
+    !tnChecking && tnRegulation && isFullCode && mandatoryMatches.length === 0 && declarationMatches.length === 0;
 
   const legalDisclaimer = t('tnvedCheck.disclaimer');
 
@@ -189,7 +217,9 @@ export default function TnVedCheck() {
             tone="amber"
             icon={AlertTriangle}
             title={t('tnvedCheck.noMatchTitle')}
-            note={legalDisclaimer}
+            note={`${t('tnvedCheck.noMatchSuggestion')} ${legalDisclaimer}`}
+            linkHref={infoPage?.document43Url || undefined}
+            linkLabel={t('tnvedCheck.viewResolution43')}
           />
         )}
       </div>
