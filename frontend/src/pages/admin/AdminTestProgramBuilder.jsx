@@ -6,11 +6,12 @@ import { Loading, ErrorState, EmptyState } from '../../components/StateViews.jsx
 import { Modal } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
-// Small search-as-you-type picker over the full TestIndicator pool. No
-// searchable combobox component exists elsewhere in the codebase yet, so
-// this is a minimal one built just for this page (client-side filter over
-// an already-fetched pool — the pool is small enough not to need a
-// server-side search-as-you-type endpoint).
+// Search-as-you-type picker over the full TestIndicator pool, shown inside
+// a modal (see the shared "picker" Modal below) rather than inline — with
+// 2500+ indicators, an always-rendered inline list made the page balloon to
+// several screens tall. No searchable combobox component exists elsewhere
+// in the codebase, so this is a minimal one built just for this page
+// (client-side filter over an already-fetched pool).
 function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
@@ -24,20 +25,21 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
           (i.standardCode || '').toLowerCase().includes(q) ||
           (i.positionCode || '').toLowerCase().includes(q)
       )
-      .slice(0, 30);
+      .slice(0, 50);
   }, [pool, excludeIds, query]);
 
   return (
-    <div className="mt-2 rounded-lg border border-dashed border-border p-2">
+    <div>
       <input
+        autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Ko'rsatkich qidirish..."
-        className="input-field !py-1.5 !text-sm"
+        placeholder="Nomi, standart yoki pozitsiya kodi bo'yicha qidiring..."
+        className="input-field"
       />
-      <div className="mt-2 max-h-48 overflow-y-auto space-y-1">
+      <div className="mt-3 max-h-96 overflow-y-auto space-y-1">
         {filtered.length === 0 ? (
-          <p className="text-xs text-slate-400 px-1 py-2">Hech narsa topilmadi.</p>
+          <p className="text-sm text-slate-400 px-1 py-4 text-center">Hech narsa topilmadi.</p>
         ) : (
           filtered.map((i) => (
             <button
@@ -45,7 +47,7 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
               type="button"
               disabled={adding === i.id}
               onClick={() => onAdd(i.id)}
-              className="w-full flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-bg-light disabled:opacity-50"
+              className="w-full flex items-center justify-between gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-bg-light disabled:opacity-50"
             >
               <span className="truncate">
                 {i.positionCode && <span className="text-slate-400">#{i.positionCode} </span>}
@@ -56,7 +58,24 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
             </button>
           ))
         )}
+        {filtered.length === 50 && (
+          <p className="text-xs text-slate-400 px-2 py-1">Faqat birinchi 50 ta natija ko'rsatilmoqda — aniqroq qidiring.</p>
+        )}
       </div>
+    </div>
+  );
+}
+
+// Already-attached indicators for one context (baseline or one option) —
+// capped height + scroll so a long list doesn't push the rest of the page
+// down.
+function AssignmentList({ assignments, onRemove, busy, emptyLabel }) {
+  if (assignments.length === 0) return <p className="text-xs text-slate-400">{emptyLabel}</p>;
+  return (
+    <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+      {assignments.map((a) => (
+        <AssignmentChip key={a.id} assignment={a} onRemove={onRemove} removing={busy === a.id} />
+      ))}
     </div>
   );
 }
@@ -104,6 +123,7 @@ export default function AdminTestProgramBuilder() {
 
   const [questionModal, setQuestionModal] = useState(null); // { mode, data, questionId? }
   const [optionModal, setOptionModal] = useState(null); // { mode, data, questionId, optionId? }
+  const [pickerTarget, setPickerTarget] = useState(null); // { conditionOptionId, label }
   const [saving, setSaving] = useState(false);
 
   const load = () => {
@@ -231,24 +251,29 @@ export default function AdminTestProgramBuilder() {
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left: baseline (always-included) indicators */}
         <div className="card p-5">
-          <h2 className="font-semibold text-ink flex items-center gap-2">
-            <ListChecks className="h-4 w-4 text-primary" /> Asosiy ko'rsatkichlar
-          </h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-semibold text-ink flex items-center gap-2">
+              <ListChecks className="h-4 w-4 text-primary" /> Asosiy ko'rsatkichlar
+            </h2>
+            <span className="text-xs font-medium text-slate-400 shrink-0">{baselineAssignments.length} ta</span>
+          </div>
           <p className="mt-1 text-xs text-slate-400">Har doim sinov dasturiga kiritiladi.</p>
 
-          <div className="mt-3 space-y-2">
-            {baselineAssignments.length === 0 && <p className="text-xs text-slate-400">Hali qo'shilmagan.</p>}
-            {baselineAssignments.map((a) => (
-              <AssignmentChip key={a.id} assignment={a} onRemove={removeAssignment} removing={busy === a.id} />
-            ))}
+          <div className="mt-3">
+            <AssignmentList
+              assignments={baselineAssignments}
+              onRemove={removeAssignment}
+              busy={busy}
+              emptyLabel="Hali qo'shilmagan."
+            />
           </div>
 
-          <IndicatorPicker
-            pool={pool}
-            excludeIds={attachedIndicatorIds}
-            adding={busy}
-            onAdd={(indicatorId) => addIndicator(null, indicatorId)}
-          />
+          <button
+            className="btn-secondary !py-2 !px-3 text-sm w-full mt-3 justify-center"
+            onClick={() => setPickerTarget({ conditionOptionId: null, label: "Asosiy ko'rsatkichlar" })}
+          >
+            <Plus className="h-4 w-4" /> Ko'rsatkich qo'shish
+          </button>
         </div>
 
         {/* Right: questions, each with options and their conditional indicators */}
@@ -332,21 +357,24 @@ export default function AdminTestProgramBuilder() {
                         </div>
                       </div>
 
-                      <p className="mt-2 text-xs font-medium text-slate-500">Shu variantga xos ko'rsatkichlar:</p>
-                      <div className="mt-1.5 space-y-1.5">
-                        {optionAssignments.length === 0 && (
-                          <p className="text-xs text-slate-400">Hali qo'shilmagan.</p>
-                        )}
-                        {optionAssignments.map((a) => (
-                          <AssignmentChip key={a.id} assignment={a} onRemove={removeAssignment} removing={busy === a.id} />
-                        ))}
+                      <div className="mt-2 flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-slate-500">Shu variantga xos ko'rsatkichlar:</p>
+                        <span className="text-xs text-slate-400 shrink-0">{optionAssignments.length} ta</span>
                       </div>
-                      <IndicatorPicker
-                        pool={pool}
-                        excludeIds={attachedIndicatorIds}
-                        adding={busy}
-                        onAdd={(indicatorId) => addIndicator(opt.id, indicatorId)}
-                      />
+                      <div className="mt-1.5">
+                        <AssignmentList
+                          assignments={optionAssignments}
+                          onRemove={removeAssignment}
+                          busy={busy}
+                          emptyLabel="Hali qo'shilmagan."
+                        />
+                      </div>
+                      <button
+                        className="text-sm font-medium text-primary inline-flex items-center gap-1.5 hover:underline mt-2"
+                        onClick={() => setPickerTarget({ conditionOptionId: opt.id, label: opt.labelUz })}
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Ko'rsatkich qo'shish
+                      </button>
                     </div>
                   );
                 })}
@@ -370,9 +398,13 @@ export default function AdminTestProgramBuilder() {
       >
         {questionModal && (
           <div className="space-y-3">
+            <p className="text-xs text-slate-400 -mt-1">
+              Savol shaklida yozing (masalan "Ishlaydigan kuchlanish?"), keyingi qadamda uning variantlarini
+              (220V, 380V...) qo'shasiz.
+            </p>
             <input
               className="input-field"
-              placeholder="Savol (UZ)"
+              placeholder='Savol (UZ) — masalan "Ishlaydigan kuchlanish?"'
               value={questionModal.data.questionUz}
               onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, questionUz: e.target.value } })}
             />
@@ -449,6 +481,22 @@ export default function AdminTestProgramBuilder() {
               </button>
             </div>
           </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={!!pickerTarget}
+        onClose={() => setPickerTarget(null)}
+        title={pickerTarget ? `Ko'rsatkich qo'shish — ${pickerTarget.label}` : ''}
+        size="lg"
+      >
+        {pickerTarget && (
+          <IndicatorPicker
+            pool={pool}
+            excludeIds={attachedIndicatorIds}
+            adding={busy}
+            onAdd={(indicatorId) => addIndicator(pickerTarget.conditionOptionId, indicatorId)}
+          />
         )}
       </Modal>
     </div>
