@@ -17,7 +17,13 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
     const q = query.trim().toLowerCase();
     return pool
       .filter((i) => !excludeIds.has(i.id))
-      .filter((i) => !q || i.nameUz.toLowerCase().includes(q) || (i.standardCode || '').toLowerCase().includes(q))
+      .filter(
+        (i) =>
+          !q ||
+          i.nameUz.toLowerCase().includes(q) ||
+          (i.standardCode || '').toLowerCase().includes(q) ||
+          (i.positionCode || '').toLowerCase().includes(q)
+      )
       .slice(0, 30);
   }, [pool, excludeIds, query]);
 
@@ -42,6 +48,7 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
               className="w-full flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-bg-light disabled:opacity-50"
             >
               <span className="truncate">
+                {i.positionCode && <span className="text-slate-400">#{i.positionCode} </span>}
                 {i.nameUz}
                 {i.standardCode && <span className="text-slate-400"> — {i.standardCode}</span>}
               </span>
@@ -58,7 +65,12 @@ function AssignmentChip({ assignment, onRemove, removing }) {
   return (
     <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm">
       <div className="min-w-0">
-        <p className="font-medium text-ink truncate">{assignment.indicator?.nameUz}</p>
+        <p className="font-medium text-ink truncate">
+          {assignment.indicator?.positionCode && (
+            <span className="text-slate-400">#{assignment.indicator.positionCode} </span>
+          )}
+          {assignment.indicator?.nameUz}
+        </p>
         {(assignment.indicator?.standardCode || assignment.indicator?.unit) && (
           <p className="text-xs text-slate-400 truncate">
             {[assignment.indicator?.standardCode, assignment.indicator?.unit].filter(Boolean).join(' · ')}

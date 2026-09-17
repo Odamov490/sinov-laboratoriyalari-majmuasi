@@ -375,12 +375,14 @@ export const testIndicatorConfig = {
   path: 'test-indicators',
   title: "Ko'rsatkichlar hovuzi",
   columns: [
+    { key: 'positionCode', label: 'Pozitsiya kodi', render: (i) => i.positionCode || '—' },
     { key: 'nameUz', label: 'Nomi' },
     { key: 'standardCode', label: 'Standart kodi', render: (i) => i.standardCode || '—' },
     { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
     { key: 'unit', label: "O'lchov birligi", render: (i) => i.unit || '—' },
   ],
   fields: [
+    { name: 'positionCode', label: 'Pozitsiya kodi' },
     { name: 'nameUz', label: 'Nomi (UZ)', required: true, fullWidth: true },
     { name: 'nameRu', label: 'Nomi (RU)', required: true, fullWidth: true },
     { name: 'nameEn', label: 'Nomi (EN)', required: true, fullWidth: true },

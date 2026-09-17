@@ -512,6 +512,9 @@ model TestIndicator {
   nameUz       String
   nameRu       String
   nameEn       String
+  // Position number in the official accreditation-scope registry (e.g.
+  // "21"), distinct from the indicator's own database id.
+  positionCode String?
   standardCode String?
   laboratoryId String?
   laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
