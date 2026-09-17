@@ -29,7 +29,9 @@
     "method": "Test method",
     "unit": "Unit",
     "noIndicators": "No indicators found.",
-    "answerQuestions": "Answer the questions below"
+    "answerQuestions": "Answer the questions below",
+    "unanswered": "Not answered",
+    "answerRequired": "Please answer all questions before viewing the test program."
   },
   "hero": {
     "title": "TESTING LABORATORIES COMPLEX",

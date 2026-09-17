@@ -29,7 +29,9 @@
     "method": "Sinov usuli",
     "unit": "O'lchov birligi",
     "noIndicators": "Ko'rsatkichlar topilmadi.",
-    "answerQuestions": "Quyidagi savollarga javob bering"
+    "answerQuestions": "Quyidagi savollarga javob bering",
+    "unanswered": "Javob berilmagan",
+    "answerRequired": "Sinov dasturini ko'rish uchun avval barcha savollarga javob bering."
   },
   "hero": {
     "title": "SINOV LABORATORIYALARI MAJMUASI",

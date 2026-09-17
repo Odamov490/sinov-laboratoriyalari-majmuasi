@@ -33,7 +33,11 @@ export default function ProductDetail() {
     .filter(([, optionId]) => optionId)
     .map(([questionId, optionId]) => ({ questionId, optionId }));
 
+  const unansweredQuestions = product.questions.filter((q) => !selected[q.id]);
+  const allAnswered = unansweredQuestions.length === 0;
+
   const handleGenerate = async () => {
+    if (!allAnswered) return;
     setGenerating(true);
     try {
       const res = await generateTestProgram(slug, selectedOptions);
@@ -83,42 +87,60 @@ export default function ProductDetail() {
       {product.questions.length > 0 && (
         <div className="mt-8 card p-6 max-w-3xl">
           <h2 className="font-semibold text-ink">{t('testProgram.answerQuestions')}</h2>
-          <div className="mt-4 space-y-5">
-            {product.questions.map((q) => (
-              <div key={q.id}>
-                <p className="text-sm font-medium text-ink">{getLocalized(q, 'question', i18n.language)}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {q.options.map((opt) => (
-                    <label
-                      key={opt.id}
-                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm cursor-pointer transition-colors ${
-                        selected[q.id] === opt.id
-                          ? 'border-primary bg-primary/5 text-primary font-medium'
-                          : 'border-border text-slate-600 hover:bg-bg-light'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name={`q-${q.id}`}
-                        className="sr-only"
-                        checked={selected[q.id] === opt.id}
-                        onChange={() => {
-                          setSelected((s) => ({ ...s, [q.id]: opt.id }));
-                          setResult(null);
-                        }}
-                      />
-                      {getLocalized(opt, 'label', i18n.language)}
-                    </label>
-                  ))}
+          <div className="mt-4 space-y-6">
+            {product.questions.map((q) => {
+              const answered = !!selected[q.id];
+              return (
+                <div key={q.id}>
+                  <p className="text-sm font-medium text-ink flex items-center gap-1.5">
+                    {getLocalized(q, 'question', i18n.language)}
+                    <span className="text-red-500">*</span>
+                    {!answered && (
+                      <span className="ml-1 text-xs font-normal text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                        {t('testProgram.unanswered')}
+                      </span>
+                    )}
+                  </p>
+                  <div className="mt-2.5 space-y-2">
+                    {q.options.map((opt) => {
+                      const checked = selected[q.id] === opt.id;
+                      return (
+                        <label
+                          key={opt.id}
+                          className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm cursor-pointer transition-colors ${
+                            checked ? 'border-primary bg-primary/5' : 'border-border hover:bg-bg-light'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name={`q-${q.id}`}
+                            checked={checked}
+                            onChange={() => {
+                              setSelected((s) => ({ ...s, [q.id]: opt.id }));
+                              setResult(null);
+                            }}
+                            className="h-4 w-4 shrink-0 accent-primary"
+                          />
+                          <span className={checked ? 'font-medium text-primary' : 'text-ink'}>
+                            {getLocalized(opt, 'label', i18n.language)}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <button onClick={handleGenerate} disabled={generating} className="btn-primary inline-flex items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <button
+          onClick={handleGenerate}
+          disabled={generating || !allAnswered}
+          className="btn-primary inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <FileSearch className="h-4 w-4" />
           {t('testProgram.viewProgram')}
         </button>
@@ -128,6 +150,7 @@ export default function ProductDetail() {
             {t('testProgram.downloadDocx')}
           </button>
         )}
+        {!allAnswered && <p className="text-sm text-amber-600">{t('testProgram.answerRequired')}</p>}
       </div>
 
       {result && (
