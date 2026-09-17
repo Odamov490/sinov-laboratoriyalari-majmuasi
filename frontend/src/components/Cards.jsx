@@ -137,6 +137,24 @@ export function StaffCard({ person }) {
   );
 }
 
+export function ProductCard({ product }) {
+  const { t, i18n } = useTranslation();
+  return (
+    <Link to={`/mahsulotlar/${product.slug}`} className="card group p-5 flex flex-col">
+      <p className="text-xs font-medium text-secondary uppercase tracking-wide">
+        {getLocalized(product.laboratory, 'name', i18n.language)}
+      </p>
+      <h3 className="mt-1 font-semibold text-ink group-hover:text-primary transition-colors">
+        {getLocalized(product, 'name', i18n.language)}
+      </h3>
+      {product.descriptionUz && <p className="mt-2 text-sm text-slate-500 line-clamp-2 flex-1">{product.descriptionUz}</p>}
+      <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+        {t('testProgram.viewProgram')} <ArrowRight className="h-3.5 w-3.5" />
+      </span>
+    </Link>
+  );
+}
+
 export function EquipmentCard({ item }) {
   const { t } = useTranslation();
   return (

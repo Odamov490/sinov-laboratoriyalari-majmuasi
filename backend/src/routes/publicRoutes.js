@@ -3,6 +3,7 @@ const ctrl = require('../controllers/publicController');
 const { createApplication, trackApplication, trackByPhone } = require('../controllers/applicationController');
 const { createContactMessage } = require('../controllers/contactController');
 const { checkTnVedRegulation, suggestTnVedCodes } = require('../controllers/tnvedController');
+const { getProducts, getProductBySlug, generateTestProgram, downloadTestProgramDocx } = require('../controllers/productController');
 const { upload } = require('../middleware/upload');
 const { applicationLimiter } = require('../middleware/rateLimit');
 
@@ -41,5 +42,10 @@ router.post('/contact', createContactMessage);
 
 router.get('/tnved-check', checkTnVedRegulation);
 router.get('/tnved-suggest', suggestTnVedCodes);
+
+router.get('/products', getProducts);
+router.get('/products/:slug', getProductBySlug);
+router.post('/products/:slug/generate', generateTestProgram);
+router.post('/products/:slug/download-docx', downloadTestProgramDocx);
 
 module.exports = router;

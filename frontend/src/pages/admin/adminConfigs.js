@@ -8,6 +8,7 @@
 // This is a plain .js file (not .jsx), so column `render` functions that
 // need markup use React.createElement instead of JSX syntax.
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export const laboratoryConfig = {
   path: 'laboratories',
@@ -367,6 +368,68 @@ export const tnVedRegulationConfig = {
     { key: 'tnVedRaw', label: 'TN VED' },
     { key: 'category', label: 'Talab', render: (i) => (i.category === 'SERTIFIKAT' ? 'Sertifikat' : 'Deklaratsiya') },
     { key: 'decision', label: 'Qaror' },
+  ],
+};
+
+export const testIndicatorConfig = {
+  path: 'test-indicators',
+  title: "Ko'rsatkichlar hovuzi",
+  columns: [
+    { key: 'nameUz', label: 'Nomi' },
+    { key: 'standardCode', label: 'Standart kodi', render: (i) => i.standardCode || '—' },
+    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
+    { key: 'unit', label: "O'lchov birligi", render: (i) => i.unit || '—' },
+  ],
+  fields: [
+    { name: 'nameUz', label: 'Nomi (UZ)', required: true, fullWidth: true },
+    { name: 'nameRu', label: 'Nomi (RU)', required: true, fullWidth: true },
+    { name: 'nameEn', label: 'Nomi (EN)', required: true, fullWidth: true },
+    { name: 'standardCode', label: 'Standart kodi' },
+    { name: 'unit', label: "O'lchov birligi" },
+    {
+      name: 'laboratoryId',
+      label: 'Laboratoriya',
+      type: 'async-select',
+      optionsResource: 'laboratories',
+      optionsLabel: (item) => item.nameUz,
+    },
+    { name: 'method', label: 'Sinov usuli', type: 'textarea', fullWidth: true },
+  ],
+};
+
+export const productConfig = {
+  path: 'products',
+  title: 'Mahsulotlar (sinov dasturlari)',
+  columns: [
+    { key: 'nameUz', label: 'Nomi' },
+    { key: 'slug', label: 'Slug' },
+    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
+    { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") },
+    {
+      key: 'builder',
+      label: 'Konstruktor',
+      render: (i) =>
+        React.createElement(
+          Link,
+          { to: `/admin/sinov-dasturlari/${i.id}`, className: 'text-primary font-medium hover:underline' },
+          'Konstruktor'
+        ),
+    },
+  ],
+  fields: [
+    { name: 'slug', label: 'Slug', required: true },
+    { name: 'nameUz', label: 'Nomi (UZ)', required: true },
+    { name: 'nameRu', label: 'Nomi (RU)', required: true },
+    { name: 'nameEn', label: 'Nomi (EN)', required: true },
+    {
+      name: 'laboratoryId',
+      label: 'Laboratoriya',
+      type: 'async-select',
+      optionsResource: 'laboratories',
+      optionsLabel: (item) => item.nameUz,
+    },
+    { name: 'descriptionUz', label: 'Tavsif (UZ)', type: 'textarea', fullWidth: true },
+    { name: 'isActive', label: 'Faol', type: 'checkbox' },
   ],
 };
 

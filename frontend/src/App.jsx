@@ -26,6 +26,8 @@ import ApplicationForm from './pages/ApplicationForm.jsx';
 import TnVedCheck from './pages/TnVedCheck.jsx';
 import DeclarationInfo from './pages/DeclarationInfo.jsx';
 import TrackApplication from './pages/TrackApplication.jsx';
+import Products from './pages/Products.jsx';
+import ProductDetail from './pages/ProductDetail.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 import AdminLogin from './pages/admin/AdminLogin.jsx';
@@ -40,6 +42,7 @@ import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
+import AdminTestProgramBuilder from './pages/admin/AdminTestProgramBuilder.jsx';
 import {
   laboratoryConfig,
   serviceConfig,
@@ -53,6 +56,8 @@ import {
   accreditationConfig,
   contactMessageConfig,
   tnVedRegulationConfig,
+  testIndicatorConfig,
+  productConfig,
 } from './pages/admin/adminConfigs.js';
 
 export default function App() {
@@ -80,6 +85,8 @@ export default function App() {
         <Route path="/ariza" element={<ApplicationForm />} />
         <Route path="/tnved-tekshirish" element={<TnVedCheck />} />
         <Route path="/deklaratsiya-va-sertifikat" element={<DeclarationInfo />} />
+        <Route path="/mahsulotlar" element={<Products />} />
+        <Route path="/mahsulotlar/:slug" element={<ProductDetail />} />
         <Route path="/aloqa" element={<Contact />} />
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -101,6 +108,9 @@ export default function App() {
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
         <Route path="tnved-reglament" element={<AdminCrudPage config={tnVedRegulationConfig} />} />
+        <Route path="korsatkichlar" element={<AdminCrudPage config={testIndicatorConfig} />} />
+        <Route path="sinov-dasturlari" element={<AdminCrudPage config={productConfig} />} />
+        <Route path="sinov-dasturlari/:id" element={<AdminTestProgramBuilder />} />
         <Route path="deklaratsiya-sertifikat" element={<AdminDeclarationInfo />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />

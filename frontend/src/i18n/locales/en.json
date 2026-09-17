@@ -17,7 +17,19 @@
     "track": "Track Application",
     "apply": "Submit Application",
     "tnvedCheck": "Check TN VED Code",
-    "declarationInfo": "Declaration & Certificate"
+    "declarationInfo": "Declaration & Certificate",
+    "testPrograms": "Test Programs"
+  },
+  "testProgram": {
+    "title": "Test Programs",
+    "viewProgram": "View test program",
+    "downloadDocx": "Download as Word",
+    "indicatorName": "Indicator name",
+    "standardCode": "Standard code",
+    "method": "Test method",
+    "unit": "Unit",
+    "noIndicators": "No indicators found.",
+    "answerQuestions": "Answer the questions below"
   },
   "hero": {
     "title": "TESTING LABORATORIES COMPLEX",

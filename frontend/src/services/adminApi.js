@@ -68,6 +68,34 @@ export const adminTestItems = {
     apiClient.delete(`/admin/applications/${applicationId}/test-items/${itemId}`).then((r) => r.data),
 };
 
+export const adminTestIndicators = adminResource('test-indicators');
+export const adminProducts = adminResource('products');
+
+export const adminProductBuilder = {
+  get: (productId) => apiClient.get(`/admin/products/${productId}/builder`).then((r) => r.data),
+  addQuestion: (productId, data) =>
+    apiClient.post(`/admin/products/${productId}/questions`, data).then((r) => r.data),
+  updateQuestion: (productId, questionId, data) =>
+    apiClient.put(`/admin/products/${productId}/questions/${questionId}`, data).then((r) => r.data),
+  removeQuestion: (productId, questionId) =>
+    apiClient.delete(`/admin/products/${productId}/questions/${questionId}`).then((r) => r.data),
+  addOption: (productId, questionId, data) =>
+    apiClient.post(`/admin/products/${productId}/questions/${questionId}/options`, data).then((r) => r.data),
+  updateOption: (productId, questionId, optionId, data) =>
+    apiClient
+      .put(`/admin/products/${productId}/questions/${questionId}/options/${optionId}`, data)
+      .then((r) => r.data),
+  removeOption: (productId, questionId, optionId) =>
+    apiClient
+      .delete(`/admin/products/${productId}/questions/${questionId}/options/${optionId}`)
+      .then((r) => r.data),
+  listIndicators: (productId) => apiClient.get(`/admin/products/${productId}/indicators`).then((r) => r.data),
+  addIndicator: (productId, data) =>
+    apiClient.post(`/admin/products/${productId}/indicators`, data).then((r) => r.data),
+  removeIndicator: (productId, assignmentId) =>
+    apiClient.delete(`/admin/products/${productId}/indicators/${assignmentId}`).then((r) => r.data),
+};
+
 export const adminSamples = {
   list: (params) => apiClient.get('/admin/samples', { params }).then((r) => r.data),
   create: (data) => apiClient.post('/admin/samples', data).then((r) => r.data),

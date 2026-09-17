@@ -40,3 +40,12 @@ export const sendContactMessage = (payload) => apiClient.post('/contact', payloa
 
 export const checkTnVedRegulation = (code) => apiClient.get('/tnved-check', { params: { code } }).then((r) => r.data);
 export const suggestTnVedCodes = (q) => apiClient.get('/tnved-suggest', { params: { q } }).then((r) => r.data);
+
+export const getProducts = (params) => apiClient.get('/products', { params }).then((r) => r.data);
+export const getProduct = (slug) => apiClient.get(`/products/${slug}`).then((r) => r.data);
+export const generateTestProgram = (slug, selectedOptions) =>
+  apiClient.post(`/products/${slug}/generate`, { selectedOptions }).then((r) => r.data);
+export const downloadTestProgramDocx = (slug, selectedOptions) =>
+  apiClient
+    .post(`/products/${slug}/download-docx`, { selectedOptions }, { responseType: 'blob' })
+    .then((r) => r.data);

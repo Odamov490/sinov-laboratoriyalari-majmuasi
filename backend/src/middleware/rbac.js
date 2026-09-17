@@ -17,6 +17,7 @@ const MODULE_ACCESS = {
   users: ['SUPER_ADMIN'],
   samples: ['SUPER_ADMIN', 'MANAGER'],
   tnved: ['SUPER_ADMIN', 'MANAGER'],
+  testPrograms: ['SUPER_ADMIN', 'MANAGER'],
   settings: ['SUPER_ADMIN'],
   analytics: ['SUPER_ADMIN'],
 };

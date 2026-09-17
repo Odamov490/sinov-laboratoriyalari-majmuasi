@@ -23,6 +23,8 @@ import {
   ScanLine,
   ScrollText,
   Info,
+  ClipboardList,
+  Layers,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
@@ -37,6 +39,8 @@ const MENU = [
   { to: '/admin/narxlar', label: 'Narxlar', icon: Tag, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/standartlar', label: 'Standartlar', icon: BookOpen, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/tnved-reglament', label: 'TN VED reglament', icon: ScrollText, roles: ['SUPER_ADMIN', 'MANAGER'] },
+  { to: '/admin/korsatkichlar', label: "Ko'rsatkichlar hovuzi", icon: ClipboardList, roles: ['SUPER_ADMIN', 'MANAGER'] },
+  { to: '/admin/sinov-dasturlari', label: 'Sinov dasturlari', icon: Layers, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/yangiliklar', label: 'Yangiliklar', icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR'] },
   { to: '/admin/hujjatlar', label: 'Hujjatlar', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR'] },
   { to: '/admin/mutaxassislar', label: 'Mutaxassislar', icon: Users, roles: ['SUPER_ADMIN', 'MANAGER'] },

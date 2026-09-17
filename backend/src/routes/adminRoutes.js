@@ -13,6 +13,18 @@ const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminContro
 const { getAnalyticsOverview } = require('../controllers/analyticsController');
 const { updateProfile } = require('../controllers/authController');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
+const {
+  getProductBuilder,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion,
+  createOption,
+  updateOption,
+  deleteOption,
+  listProductIndicators,
+  addProductIndicator,
+  removeProductIndicator,
+} = require('../controllers/testProgramAdminController');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
@@ -204,6 +216,37 @@ router.get('/notifications', getNotifications);
 // Info pages (admin-editable public explainer pages, e.g. declaration vs certificate)
 router.get('/info-pages/:slug', requireModule('applications'), getInfoPage);
 router.put('/info-pages/:slug', requireModule('applications'), updateInfoPage);
+
+// Test Program Builder: indicator pool + products with conditional
+// question/option-driven indicator sets.
+mountCrud('test-indicators', 'testPrograms', 'testIndicator', {
+  include: { laboratory: true },
+  searchFields: ['nameUz', 'nameRu', 'nameEn', 'standardCode'],
+  softDelete: true,
+});
+mountCrud('products', 'testPrograms', 'product', {
+  include: { laboratory: true },
+  searchFields: ['nameUz', 'nameRu', 'nameEn', 'slug'],
+  softDelete: true,
+});
+router.get('/products/:id/builder', requireModule('testPrograms'), getProductBuilder);
+router.post('/products/:id/questions', requireModule('testPrograms'), createQuestion);
+router.put('/products/:id/questions/:questionId', requireModule('testPrograms'), updateQuestion);
+router.delete('/products/:id/questions/:questionId', requireModule('testPrograms'), deleteQuestion);
+router.post('/products/:id/questions/:questionId/options', requireModule('testPrograms'), createOption);
+router.put(
+  '/products/:productId/questions/:questionId/options/:optionId',
+  requireModule('testPrograms'),
+  updateOption
+);
+router.delete(
+  '/products/:productId/questions/:questionId/options/:optionId',
+  requireModule('testPrograms'),
+  deleteOption
+);
+router.get('/products/:id/indicators', requireModule('testPrograms'), listProductIndicators);
+router.post('/products/:id/indicators', requireModule('testPrograms'), addProductIndicator);
+router.delete('/products/:id/indicators/:assignmentId', requireModule('testPrograms'), removeProductIndicator);
 
 // Sample tracking (QR-based check-in/check-out between laboratories)
 router.get('/samples/stats', requireModule('samples'), getStats);

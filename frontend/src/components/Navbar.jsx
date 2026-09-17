@@ -28,6 +28,7 @@ export default function Navbar() {
     { to: '/biz-haqimizda', label: t('nav.about') },
     { to: '/laboratoriyalar', label: t('nav.laboratories') },
     { to: '/xizmatlar', label: t('nav.services') },
+    { to: '/sinov-dasturlari', label: t('nav.testPrograms') },
     { to: '/narxlar', label: t('nav.prices') },
     { to: '/akkreditatsiya', label: t('nav.accreditation') },
     { to: '/deklaratsiya-va-sertifikat', label: t('nav.declarationInfo') },

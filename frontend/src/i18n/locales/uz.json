@@ -17,7 +17,19 @@
     "track": "Arizani tekshirish",
     "apply": "Ariza yuborish",
     "tnvedCheck": "TN VED tekshirish",
-    "declarationInfo": "Deklaratsiya va sertifikat"
+    "declarationInfo": "Deklaratsiya va sertifikat",
+    "testPrograms": "Sinov dasturlari"
+  },
+  "testProgram": {
+    "title": "Sinov dasturlari",
+    "viewProgram": "Sinov dasturini ko'rish",
+    "downloadDocx": "Word formatda yuklab olish",
+    "indicatorName": "Ko'rsatkich nomi",
+    "standardCode": "Standart kodi",
+    "method": "Sinov usuli",
+    "unit": "O'lchov birligi",
+    "noIndicators": "Ko'rsatkichlar topilmadi.",
+    "answerQuestions": "Quyidagi savollarga javob bering"
   },
   "hero": {
     "title": "SINOV LABORATORIYALARI MAJMUASI",

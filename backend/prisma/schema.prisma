@@ -64,6 +64,8 @@ model Laboratory {
   movementsFrom       SampleMovement[] @relation("MovementFrom")
   movementsTo         SampleMovement[] @relation("MovementTo")
   users               User[]
+  testIndicators      TestIndicator[]
+  products            Product[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -497,4 +499,82 @@ model InfoPage {
   faqRu           String?
   faqEn           String?
   updatedAt       DateTime @updatedAt
+}
+
+// Test Program Builder: admins assemble a per-product accreditation-scope
+// test program from a pool of TestIndicator rows, with some indicators
+// conditional on a question/option (e.g. "Ishlaydigan kuchlanish?" -> 220V
+// vs 380V pulls in different indicators). Public users answer the
+// questions on the product page and get back the resolved indicator list,
+// downloadable as a .docx.
+model TestIndicator {
+  id           String   @id @default(uuid())
+  nameUz       String
+  nameRu       String
+  nameEn       String
+  standardCode String?
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
+  method       String?
+  unit         String?
+  assignments  ProductIndicatorAssignment[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  nameUz        String
+  nameRu        String
+  nameEn        String
+  laboratoryId  String
+  laboratory    Laboratory @relation(fields: [laboratoryId], references: [id])
+  descriptionUz String?
+  questions     ProductQuestion[]
+  indicators    ProductIndicatorAssignment[]
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  deletedAt     DateTime?
+}
+
+model ProductQuestion {
+  id          String   @id @default(uuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  questionUz  String
+  questionRu  String
+  questionEn  String
+  order       Int      @default(0)
+  options     ProductQuestionOption[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ProductQuestionOption {
+  id          String   @id @default(uuid())
+  questionId  String
+  question    ProductQuestion @relation(fields: [questionId], references: [id])
+  labelUz     String
+  labelRu     String
+  labelEn     String
+  order       Int      @default(0)
+  assignments ProductIndicatorAssignment[]
+  createdAt   DateTime @default(now())
+}
+
+// conditionOptionId = null means the indicator is "asosiy" (baseline) and
+// is always included in the generated program; otherwise it is only
+// included when the linked option is among the caller's selectedOptions.
+model ProductIndicatorAssignment {
+  id                String   @id @default(uuid())
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id])
+  indicatorId       String
+  indicator         TestIndicator @relation(fields: [indicatorId], references: [id])
+  conditionOptionId String?
+  conditionOption   ProductQuestionOption? @relation(fields: [conditionOptionId], references: [id])
+  createdAt         DateTime @default(now())
 }
