@@ -148,7 +148,18 @@ export default function AdminTestProgramBuilder() {
   if (!product) return <Loading />;
 
   const baselineAssignments = product.indicators.filter((a) => !a.conditionOptionId);
-  const attachedIndicatorIds = new Set(product.indicators.map((a) => a.indicatorId));
+
+  // Which indicators to hide from the picker is scoped to the target
+  // (baseline, or one specific option) being edited — the same indicator
+  // can legitimately be attached separately to several different options
+  // (or to both baseline and an option), so "already attached somewhere on
+  // this product" must never be used as the exclusion set here.
+  const attachedIndicatorIdsFor = (conditionOptionId) =>
+    new Set(
+      product.indicators
+        .filter((a) => (a.conditionOptionId || null) === (conditionOptionId || null))
+        .map((a) => a.indicatorId)
+    );
 
   const addIndicator = async (conditionOptionId, indicatorId) => {
     setBusy(indicatorId);
@@ -501,7 +512,7 @@ export default function AdminTestProgramBuilder() {
         {pickerTarget && (
           <IndicatorPicker
             pool={pool}
-            excludeIds={attachedIndicatorIds}
+            excludeIds={attachedIndicatorIdsFor(pickerTarget.conditionOptionId)}
             adding={busy}
             onAdd={(indicatorId) => addIndicator(pickerTarget.conditionOptionId, indicatorId)}
           />
