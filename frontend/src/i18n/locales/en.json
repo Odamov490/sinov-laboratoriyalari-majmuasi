@@ -31,7 +31,8 @@
     "noIndicators": "No indicators found.",
     "answerQuestions": "Answer the questions below",
     "unanswered": "Not answered",
-    "answerRequired": "Please answer all questions before viewing the test program."
+    "answerRequired": "Please answer all questions before viewing the test program.",
+    "indicatorsCount": "indicators"
   },
   "hero": {
     "title": "TESTING LABORATORIES COMPLEX",

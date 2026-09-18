@@ -41,7 +41,7 @@ export default function ProductDetail() {
     setGenerating(true);
     try {
       const res = await generateTestProgram(slug, selectedOptions);
-      setResult(res.indicators);
+      setResult(res.groups);
     } catch {
       setResult([]);
     } finally {
@@ -154,30 +154,42 @@ export default function ProductDetail() {
       </div>
 
       {result && (
-        <div className="mt-8 card overflow-x-auto max-w-4xl">
+        <div className="mt-8 max-w-4xl space-y-6">
           {result.length === 0 ? (
-            <div className="p-6"><EmptyState message={t('testProgram.noIndicators')} /></div>
+            <div className="card p-6"><EmptyState message={t('testProgram.noIndicators')} /></div>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-bg-light text-left text-xs uppercase text-slate-500">
-                <tr>
-                  <th className="px-4 py-3">{t('testProgram.indicatorName')}</th>
-                  <th className="px-4 py-3">{t('testProgram.standardCode')}</th>
-                  <th className="px-4 py-3">{t('testProgram.method')}</th>
-                  <th className="px-4 py-3">{t('testProgram.unit')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {result.map((ind, idx) => (
-                  <tr key={idx}>
-                    <td className="px-4 py-3 font-medium text-ink">{getLocalized(ind, 'name', i18n.language)}</td>
-                    <td className="px-4 py-3 text-slate-500">{ind.standardCode || '—'}</td>
-                    <td className="px-4 py-3 text-slate-500">{ind.method || '—'}</td>
-                    <td className="px-4 py-3 text-slate-500">{ind.unit || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            result.map((group, gIdx) => (
+              <div key={gIdx}>
+                <h3 className="mb-2 font-semibold text-ink flex items-center gap-2">
+                  {getLocalized(group, 'label', i18n.language)}
+                  <span className="text-xs font-normal text-slate-400">
+                    ({group.indicators.length} {t('testProgram.indicatorsCount')})
+                  </span>
+                </h3>
+                <div className="card overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-bg-light text-left text-xs uppercase text-slate-500">
+                      <tr>
+                        <th className="px-4 py-3">{t('testProgram.indicatorName')}</th>
+                        <th className="px-4 py-3">{t('testProgram.standardCode')}</th>
+                        <th className="px-4 py-3">{t('testProgram.method')}</th>
+                        <th className="px-4 py-3">{t('testProgram.unit')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border">
+                      {group.indicators.map((ind, idx) => (
+                        <tr key={idx}>
+                          <td className="px-4 py-3 font-medium text-ink">{getLocalized(ind, 'name', i18n.language)}</td>
+                          <td className="px-4 py-3 text-slate-500">{ind.standardCode || '—'}</td>
+                          <td className="px-4 py-3 text-slate-500">{ind.method || '—'}</td>
+                          <td className="px-4 py-3 text-slate-500">{ind.unit || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))
           )}
         </div>
       )}

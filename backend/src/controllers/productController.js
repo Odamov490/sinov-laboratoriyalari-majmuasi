@@ -63,8 +63,12 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 });
 
 // Shared by /generate and /download-docx: resolves the baseline indicators
-// plus any indicators conditional on the caller's selectedOptions into one
-// deduped, display-ready list.
+// plus any indicators conditional on the caller's selectedOptions, grouped
+// into labeled "sub-programs" — one for the baseline set, and one per
+// selected option that actually contributes indicators — rather than a
+// single flat merged list. This is what makes it obvious that baseline
+// indicators are present (they get their own section) instead of silently
+// blending into (or seeming to drop out of) the option-specific results.
 async function resolveIndicators(slug, selectedOptions) {
   const product = await prisma.product.findFirst({
     where: { slug, isActive: true, deletedAt: null },
@@ -78,39 +82,62 @@ async function resolveIndicators(slug, selectedOptions) {
       productId: product.id,
       OR: [{ conditionOptionId: null }, { conditionOptionId: { in: optionIds } }],
     },
-    include: { indicator: true },
+    include: { indicator: true, conditionOption: true },
     orderBy: { createdAt: 'asc' },
   });
 
-  const seen = new Set();
-  const indicators = [];
-  for (const a of assignments) {
-    if (a.indicator.deletedAt || seen.has(a.indicatorId)) continue;
-    seen.add(a.indicatorId);
-    indicators.push({
-      nameUz: a.indicator.nameUz,
-      nameRu: a.indicator.nameRu,
-      nameEn: a.indicator.nameEn,
-      standardCode: a.indicator.standardCode,
-      method: a.indicator.method,
-      unit: a.indicator.unit,
+  const toRow = (indicator) => ({
+    nameUz: indicator.nameUz,
+    nameRu: indicator.nameRu,
+    nameEn: indicator.nameEn,
+    standardCode: indicator.standardCode,
+    method: indicator.method,
+    unit: indicator.unit,
+  });
+
+  const groups = [];
+
+  const baselineRows = assignments
+    .filter((a) => !a.conditionOptionId && !a.indicator.deletedAt)
+    .map((a) => toRow(a.indicator));
+  if (baselineRows.length) {
+    groups.push({
+      labelUz: "Asosiy ko'rsatkichlar",
+      labelRu: 'Основные показатели',
+      labelEn: 'Baseline indicators',
+      indicators: baselineRows,
     });
   }
-  return { product, indicators };
+
+  // One sub-program per selected option, in the order the caller selected
+  // them, skipped if that option happens to carry no indicators.
+  for (const optId of optionIds) {
+    const optionAssignments = assignments.filter((a) => a.conditionOptionId === optId && !a.indicator.deletedAt);
+    if (!optionAssignments.length) continue;
+    const option = optionAssignments[0].conditionOption;
+    groups.push({
+      labelUz: option?.labelUz || '',
+      labelRu: option?.labelRu || option?.labelUz || '',
+      labelEn: option?.labelEn || option?.labelUz || '',
+      indicators: optionAssignments.map((a) => toRow(a.indicator)),
+    });
+  }
+
+  return { product, groups };
 }
 
 const generateTestProgram = asyncHandler(async (req, res) => {
   const { selectedOptions } = req.body;
   const result = await resolveIndicators(req.params.slug, selectedOptions);
   if (!result) return res.status(404).json({ error: 'Mahsulot topilmadi.' });
-  res.json({ indicators: result.indicators });
+  res.json({ groups: result.groups });
 });
 
 const downloadTestProgramDocx = asyncHandler(async (req, res) => {
   const { selectedOptions } = req.body;
   const result = await resolveIndicators(req.params.slug, selectedOptions);
   if (!result) return res.status(404).json({ error: 'Mahsulot topilmadi.' });
-  const { product, indicators } = result;
+  const { product, groups } = result;
   const laboratory = product.laboratoryId
     ? await prisma.laboratory.findUnique({ where: { id: product.laboratoryId } })
     : null;
@@ -137,23 +164,39 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
       children: [new Paragraph(text || '-')],
     });
 
-  const rows = [
-    new TableRow({
-      tableHeader: true,
-      children: [
-        headerCell("Ko'rsatkich nomi"),
-        headerCell('Standart kodi'),
-        headerCell('Sinov usuli'),
-        headerCell("O'lchov birligi"),
-      ],
-    }),
-    ...indicators.map(
-      (ind) =>
+  const groupTable = (group) =>
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
         new TableRow({
-          children: [bodyCell(ind.nameUz), bodyCell(ind.standardCode), bodyCell(ind.method), bodyCell(ind.unit)],
-        })
-    ),
-  ];
+          tableHeader: true,
+          children: [
+            headerCell("Ko'rsatkich nomi"),
+            headerCell('Standart kodi'),
+            headerCell('Sinov usuli'),
+            headerCell("O'lchov birligi"),
+          ],
+        }),
+        ...group.indicators.map(
+          (ind) =>
+            new TableRow({
+              children: [bodyCell(ind.nameUz), bodyCell(ind.standardCode), bodyCell(ind.method), bodyCell(ind.unit)],
+            })
+        ),
+      ],
+    });
+
+  // Each group ("sub-program") gets its own heading + table, one after the
+  // other — a spacer paragraph separates consecutive tables since docx has
+  // no native margin-between-tables option.
+  const groupBlocks = groups.flatMap((group, idx) => [
+    new Paragraph({
+      heading: HeadingLevel.HEADING_2,
+      spacing: { before: idx === 0 ? 0 : 300, after: 120 },
+      children: [new TextRun({ text: group.labelUz, bold: true })],
+    }),
+    groupTable(group),
+  ]);
 
   const doc = new Document({
     sections: [
@@ -177,9 +220,9 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
               new TextRun({ text: new Date().toLocaleDateString('uz-UZ') }),
             ],
           }),
-          indicators.length
-            ? new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows })
-            : new Paragraph({ children: [new TextRun({ text: "Ko'rsatkichlar topilmadi." })] }),
+          ...(groupBlocks.length
+            ? groupBlocks
+            : [new Paragraph({ children: [new TextRun({ text: "Ko'rsatkichlar topilmadi." })] })]),
         ],
       },
     ],
