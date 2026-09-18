@@ -420,13 +420,17 @@ export default function AdminTestProgramBuilder() {
               value={questionModal.data.questionEn}
               onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, questionEn: e.target.value } })}
             />
-            <input
-              type="number"
-              className="input-field"
-              placeholder="Tartib"
-              value={questionModal.data.order}
-              onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, order: e.target.value } })}
-            />
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">
+                Tartib raqami (bir nechta savol bo'lsa, kichik raqam avvalroq chiqadi)
+              </label>
+              <input
+                type="number"
+                className="input-field"
+                value={questionModal.data.order}
+                onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, order: e.target.value } })}
+              />
+            </div>
             <div className="flex justify-end gap-3 pt-2">
               <button className="btn-secondary" onClick={() => setQuestionModal(null)}>
                 Bekor qilish
@@ -465,13 +469,17 @@ export default function AdminTestProgramBuilder() {
               value={optionModal.data.labelEn}
               onChange={(e) => setOptionModal({ ...optionModal, data: { ...optionModal.data, labelEn: e.target.value } })}
             />
-            <input
-              type="number"
-              className="input-field"
-              placeholder="Tartib"
-              value={optionModal.data.order}
-              onChange={(e) => setOptionModal({ ...optionModal, data: { ...optionModal.data, order: e.target.value } })}
-            />
+            <div>
+              <label className="block text-xs font-medium text-slate-500 mb-1">
+                Tartib raqami (bir nechta variant bo'lsa, kichik raqam avvalroq chiqadi)
+              </label>
+              <input
+                type="number"
+                className="input-field"
+                value={optionModal.data.order}
+                onChange={(e) => setOptionModal({ ...optionModal, data: { ...optionModal.data, order: e.target.value } })}
+              />
+            </div>
             <div className="flex justify-end gap-3 pt-2">
               <button className="btn-secondary" onClick={() => setOptionModal(null)}>
                 Bekor qilish
