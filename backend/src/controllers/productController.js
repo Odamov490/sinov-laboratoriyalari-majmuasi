@@ -100,9 +100,20 @@ async function resolveIndicators(slug, selectedOptions) {
 
   const groups = [];
 
-  const baselineRows = assignments
-    .filter((a) => !a.conditionOptionId && !a.indicator.deletedAt)
-    .map((a) => toRow(a.indicator));
+  // The final result is the deduped UNION of baseline + every selected
+  // option's indicators: if the same indicator was (mistakenly) attached
+  // under more than one selected option, it must still appear only once
+  // overall — `seen` is shared across baseline and every option group
+  // below, so whichever group hits an indicator first "keeps" it and every
+  // later duplicate is silently dropped.
+  const seen = new Set();
+
+  const baselineRows = [];
+  for (const a of assignments) {
+    if (a.conditionOptionId || a.indicator.deletedAt || seen.has(a.indicatorId)) continue;
+    seen.add(a.indicatorId);
+    baselineRows.push(toRow(a.indicator));
+  }
   if (baselineRows.length) {
     groups.push({
       labelUz: "Asosiy ko'rsatkichlar",
@@ -113,16 +124,24 @@ async function resolveIndicators(slug, selectedOptions) {
   }
 
   // One sub-program per selected option, in the order the caller selected
-  // them, skipped if that option happens to carry no indicators.
+  // them, skipped if that option contributes no new (non-duplicate)
+  // indicators.
   for (const optId of optionIds) {
-    const optionAssignments = assignments.filter((a) => a.conditionOptionId === optId && !a.indicator.deletedAt);
-    if (!optionAssignments.length) continue;
-    const option = optionAssignments[0].conditionOption;
+    const rows = [];
+    let option = null;
+    for (const a of assignments) {
+      if (a.conditionOptionId !== optId || a.indicator.deletedAt) continue;
+      option = option || a.conditionOption;
+      if (seen.has(a.indicatorId)) continue;
+      seen.add(a.indicatorId);
+      rows.push(toRow(a.indicator));
+    }
+    if (!rows.length) continue;
     groups.push({
       labelUz: option?.labelUz || '',
       labelRu: option?.labelRu || option?.labelUz || '',
       labelEn: option?.labelEn || option?.labelUz || '',
-      indicators: optionAssignments.map((a) => toRow(a.indicator)),
+      indicators: rows,
     });
   }
 
