@@ -189,7 +189,14 @@ export default function AdminTestProgramBuilder() {
     setSaving(true);
     try {
       if (questionModal.mode === 'create') {
-        await adminProductBuilder.addQuestion(id, questionModal.data);
+        const created = await adminProductBuilder.addQuestion(id, questionModal.data);
+        // Binary shortcut: instead of making the admin add "Ha"/"Yo'q" as
+        // two separate manual options, create them automatically so the
+        // question is immediately ready for indicators to be attached.
+        if (questionModal.binary) {
+          await adminProductBuilder.addOption(id, created.id, { labelUz: 'Ha', labelRu: 'Да', labelEn: 'Yes', order: 0 });
+          await adminProductBuilder.addOption(id, created.id, { labelUz: "Yo'q", labelRu: 'Нет', labelEn: 'No', order: 1 });
+        }
       } else {
         await adminProductBuilder.updateQuestion(id, questionModal.questionId, questionModal.data);
       }
@@ -293,7 +300,7 @@ export default function AdminTestProgramBuilder() {
             <h2 className="font-semibold text-ink">Savollar</h2>
             <button
               className="btn-secondary !py-2 !px-3 text-sm inline-flex items-center gap-1.5"
-              onClick={() => setQuestionModal({ mode: 'create', data: { ...emptyQuestion } })}
+              onClick={() => setQuestionModal({ mode: 'create', data: { ...emptyQuestion }, binary: false })}
             >
               <Plus className="h-4 w-4" /> Savol qo'shish
             </button>
@@ -431,6 +438,22 @@ export default function AdminTestProgramBuilder() {
               value={questionModal.data.questionEn}
               onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, questionEn: e.target.value } })}
             />
+            {questionModal.mode === 'create' && (
+              <label className="flex items-start gap-2.5 rounded-lg border border-border bg-bg-light/60 px-3 py-2.5 text-sm text-ink cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={!!questionModal.binary}
+                  onChange={(e) => setQuestionModal({ ...questionModal, binary: e.target.checked })}
+                  className="mt-0.5 h-4 w-4 rounded border-border text-primary shrink-0"
+                />
+                <span>
+                  <span className="font-medium">Ha / Yo'q savoli sifatida yaratish</span>
+                  <span className="block text-xs text-slate-500 mt-0.5">
+                    "Ha" va "Yo'q" variantlari avtomatik qo'shiladi — o'zingiz alohida yaratmaysiz.
+                  </span>
+                </span>
+              </label>
+            )}
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">
                 Tartib raqami (bir nechta savol bo'lsa, kichik raqam avvalroq chiqadi)
