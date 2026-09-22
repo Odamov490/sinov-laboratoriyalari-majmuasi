@@ -8,9 +8,12 @@ const {
   Table,
   TableRow,
   TableCell,
-  HeadingLevel,
   WidthType,
   BorderStyle,
+  AlignmentType,
+  VerticalAlign,
+  Footer,
+  PageNumber,
 } = require('docx');
 
 const getProducts = asyncHandler(async (req, res) => {
@@ -133,6 +136,19 @@ const generateTestProgram = asyncHandler(async (req, res) => {
   res.json({ groups: result.groups });
 });
 
+// Fixed column layout for the indicator table — widths as % of the table,
+// a leading "№" numbering column (standard for official Uzbek documents),
+// and per-column text alignment.
+const DOCX_COLUMNS = [
+  { label: '№', width: 6, align: AlignmentType.CENTER },
+  { label: "Ko'rsatkich nomi", width: 38, align: AlignmentType.LEFT },
+  { label: 'Standart kodi', width: 24, align: AlignmentType.LEFT },
+  { label: 'Sinov usuli', width: 22, align: AlignmentType.LEFT },
+  { label: "O'lchov birligi", width: 10, align: AlignmentType.CENTER },
+];
+
+const ACCENT_COLOR = '1F4E78';
+
 const downloadTestProgramDocx = asyncHandler(async (req, res) => {
   const { selectedOptions } = req.body;
   const result = await resolveIndicators(req.params.slug, selectedOptions);
@@ -143,25 +159,32 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
     : null;
 
   const cellBorders = {
-    top: { style: BorderStyle.SINGLE, size: 2, color: '999999' },
-    bottom: { style: BorderStyle.SINGLE, size: 2, color: '999999' },
-    left: { style: BorderStyle.SINGLE, size: 2, color: '999999' },
-    right: { style: BorderStyle.SINGLE, size: 2, color: '999999' },
+    top: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+    bottom: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+    left: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
+    right: { style: BorderStyle.SINGLE, size: 4, color: '000000' },
   };
 
-  const headerCell = (text) =>
+  const headerCell = (text, width) =>
     new TableCell({
-      width: { size: 25, type: WidthType.PERCENTAGE },
-      shading: { fill: 'F2F2F2' },
+      width: { size: width, type: WidthType.PERCENTAGE },
+      shading: { fill: 'DCE6F1' },
+      verticalAlign: VerticalAlign.CENTER,
       borders: cellBorders,
-      children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text, bold: true })],
+        }),
+      ],
     });
 
-  const bodyCell = (text) =>
+  const bodyCell = (text, width, align) =>
     new TableCell({
-      width: { size: 25, type: WidthType.PERCENTAGE },
+      width: { size: width, type: WidthType.PERCENTAGE },
+      verticalAlign: VerticalAlign.CENTER,
       borders: cellBorders,
-      children: [new Paragraph(text || '-')],
+      children: [new Paragraph({ alignment: align, children: [new TextRun({ text: text || '-' })] })],
     });
 
   const groupTable = (group) =>
@@ -170,51 +193,83 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
       rows: [
         new TableRow({
           tableHeader: true,
-          children: [
-            headerCell("Ko'rsatkich nomi"),
-            headerCell('Standart kodi'),
-            headerCell('Sinov usuli'),
-            headerCell("O'lchov birligi"),
-          ],
+          children: DOCX_COLUMNS.map((c) => headerCell(c.label, c.width)),
         }),
         ...group.indicators.map(
-          (ind) =>
+          (ind, idx) =>
             new TableRow({
-              children: [bodyCell(ind.nameUz), bodyCell(ind.standardCode), bodyCell(ind.method), bodyCell(ind.unit)],
+              children: [
+                bodyCell(String(idx + 1), DOCX_COLUMNS[0].width, DOCX_COLUMNS[0].align),
+                bodyCell(ind.nameUz, DOCX_COLUMNS[1].width, DOCX_COLUMNS[1].align),
+                bodyCell(ind.standardCode, DOCX_COLUMNS[2].width, DOCX_COLUMNS[2].align),
+                bodyCell(ind.method, DOCX_COLUMNS[3].width, DOCX_COLUMNS[3].align),
+                bodyCell(ind.unit, DOCX_COLUMNS[4].width, DOCX_COLUMNS[4].align),
+              ],
             })
         ),
       ],
     });
 
-  // Each group ("sub-program") gets its own heading + table, one after the
-  // other — a spacer paragraph separates consecutive tables since docx has
-  // no native margin-between-tables option.
+  // Each group ("sub-program") gets a numbered heading (with a bottom
+  // border as a section divider) followed by its own table.
   const groupBlocks = groups.flatMap((group, idx) => [
     new Paragraph({
-      heading: HeadingLevel.HEADING_2,
-      spacing: { before: idx === 0 ? 0 : 300, after: 120 },
-      children: [new TextRun({ text: group.labelUz, bold: true })],
+      spacing: { before: idx === 0 ? 0 : 360, after: 160 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: ACCENT_COLOR, space: 4 } },
+      children: [new TextRun({ text: `${idx + 1}. ${group.labelUz}`, bold: true, size: 26, color: ACCENT_COLOR })],
     }),
     groupTable(group),
   ]);
 
   const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: { font: 'Times New Roman', size: 24 },
+        },
+      },
+    },
     sections: [
       {
+        properties: {
+          page: {
+            margin: { top: 1134, bottom: 1134, left: 1701, right: 850 },
+          },
+        },
+        footers: {
+          default: new Footer({
+            children: [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                children: [
+                  new TextRun({ children: [PageNumber.CURRENT] }),
+                  new TextRun({ text: ' / ' }),
+                  new TextRun({ children: [PageNumber.TOTAL_PAGES] }),
+                ],
+              }),
+            ],
+          }),
+        },
         children: [
           new Paragraph({
-            heading: HeadingLevel.HEADING_1,
-            children: [new TextRun({ text: `Sinov dasturi: ${product.nameUz}`, bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 80 },
+            children: [new TextRun({ text: 'SINOV DASTURI', bold: true, size: 32, color: ACCENT_COLOR })],
           }),
           new Paragraph({
-            spacing: { before: 200, after: 100 },
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 320 },
+            children: [new TextRun({ text: product.nameUz, bold: true, size: 28 })],
+          }),
+          new Paragraph({
+            spacing: { after: 80 },
             children: [
               new TextRun({ text: 'Laboratoriya: ', bold: true }),
               new TextRun({ text: laboratory ? laboratory.nameUz : '-' }),
             ],
           }),
           new Paragraph({
-            spacing: { after: 300 },
+            spacing: { after: 360 },
             children: [
               new TextRun({ text: 'Sana: ', bold: true }),
               new TextRun({ text: new Date().toLocaleDateString('uz-UZ') }),
