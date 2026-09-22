@@ -66,12 +66,10 @@ const getProductBySlug = asyncHandler(async (req, res) => {
 });
 
 // Shared by /generate and /download-docx: resolves the baseline indicators
-// plus any indicators conditional on the caller's selectedOptions, grouped
-// into labeled "sub-programs" — one for the baseline set, and one per
-// selected option that actually contributes indicators — rather than a
-// single flat merged list. This is what makes it obvious that baseline
-// indicators are present (they get their own section) instead of silently
-// blending into (or seeming to drop out of) the option-specific results.
+// plus any indicators conditional on the caller's selectedOptions into one
+// single deduped list — the UNION of baseline + every selected option's
+// indicators, each indicator appearing at most once even if it was
+// (mistakenly) attached under more than one selected option.
 async function resolveIndicators(slug, selectedOptions) {
   const product = await prisma.product.findFirst({
     where: { slug, isActive: true, deletedAt: null },
@@ -85,74 +83,33 @@ async function resolveIndicators(slug, selectedOptions) {
       productId: product.id,
       OR: [{ conditionOptionId: null }, { conditionOptionId: { in: optionIds } }],
     },
-    include: { indicator: true, conditionOption: true },
+    include: { indicator: true },
     orderBy: { order: 'asc' },
   });
 
-  const toRow = (indicator) => ({
-    nameUz: indicator.nameUz,
-    nameRu: indicator.nameRu,
-    nameEn: indicator.nameEn,
-    standardCode: indicator.standardCode,
-    method: indicator.method,
-    unit: indicator.unit,
-  });
-
-  const groups = [];
-
-  // The final result is the deduped UNION of baseline + every selected
-  // option's indicators: if the same indicator was (mistakenly) attached
-  // under more than one selected option, it must still appear only once
-  // overall — `seen` is shared across baseline and every option group
-  // below, so whichever group hits an indicator first "keeps" it and every
-  // later duplicate is silently dropped.
   const seen = new Set();
-
-  const baselineRows = [];
+  const indicators = [];
   for (const a of assignments) {
-    if (a.conditionOptionId || a.indicator.deletedAt || seen.has(a.indicatorId)) continue;
+    if (a.indicator.deletedAt || seen.has(a.indicatorId)) continue;
     seen.add(a.indicatorId);
-    baselineRows.push(toRow(a.indicator));
-  }
-  if (baselineRows.length) {
-    groups.push({
-      labelUz: "Asosiy ko'rsatkichlar",
-      labelRu: 'Основные показатели',
-      labelEn: 'Baseline indicators',
-      indicators: baselineRows,
+    indicators.push({
+      nameUz: a.indicator.nameUz,
+      nameRu: a.indicator.nameRu,
+      nameEn: a.indicator.nameEn,
+      standardCode: a.indicator.standardCode,
+      method: a.indicator.method,
+      unit: a.indicator.unit,
     });
   }
 
-  // One sub-program per selected option, in the order the caller selected
-  // them, skipped if that option contributes no new (non-duplicate)
-  // indicators.
-  for (const optId of optionIds) {
-    const rows = [];
-    let option = null;
-    for (const a of assignments) {
-      if (a.conditionOptionId !== optId || a.indicator.deletedAt) continue;
-      option = option || a.conditionOption;
-      if (seen.has(a.indicatorId)) continue;
-      seen.add(a.indicatorId);
-      rows.push(toRow(a.indicator));
-    }
-    if (!rows.length) continue;
-    groups.push({
-      labelUz: option?.labelUz || '',
-      labelRu: option?.labelRu || option?.labelUz || '',
-      labelEn: option?.labelEn || option?.labelUz || '',
-      indicators: rows,
-    });
-  }
-
-  return { product, groups };
+  return { product, indicators };
 }
 
 const generateTestProgram = asyncHandler(async (req, res) => {
   const { selectedOptions } = req.body;
   const result = await resolveIndicators(req.params.slug, selectedOptions);
   if (!result) return res.status(404).json({ error: 'Mahsulot topilmadi.' });
-  res.json({ groups: result.groups });
+  res.json({ indicators: result.indicators });
 });
 
 // Fixed column layout for the indicator table — widths as % of the table,
@@ -172,7 +129,7 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
   const { selectedOptions } = req.body;
   const result = await resolveIndicators(req.params.slug, selectedOptions);
   if (!result) return res.status(404).json({ error: 'Mahsulot topilmadi.' });
-  const { product, groups } = result;
+  const { product, indicators } = result;
   const laboratory = product.laboratoryId
     ? await prisma.laboratory.findUnique({ where: { id: product.laboratoryId } })
     : null;
@@ -206,39 +163,27 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
       children: [new Paragraph({ alignment: align, children: [new TextRun({ text: text || '-' })] })],
     });
 
-  const groupTable = (group) =>
-    new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          tableHeader: true,
-          children: DOCX_COLUMNS.map((c) => headerCell(c.label, c.width)),
-        }),
-        ...group.indicators.map(
-          (ind, idx) =>
-            new TableRow({
-              children: [
-                bodyCell(String(idx + 1), DOCX_COLUMNS[0].width, DOCX_COLUMNS[0].align),
-                bodyCell(ind.nameUz, DOCX_COLUMNS[1].width, DOCX_COLUMNS[1].align),
-                bodyCell(ind.standardCode, DOCX_COLUMNS[2].width, DOCX_COLUMNS[2].align),
-                bodyCell(ind.method, DOCX_COLUMNS[3].width, DOCX_COLUMNS[3].align),
-                bodyCell(ind.unit, DOCX_COLUMNS[4].width, DOCX_COLUMNS[4].align),
-              ],
-            })
-        ),
-      ],
-    });
-
-  // Each group ("sub-program") gets a numbered heading (with a bottom
-  // border as a section divider) followed by its own table.
-  const groupBlocks = groups.flatMap((group, idx) => [
-    new Paragraph({
-      spacing: { before: idx === 0 ? 0 : 360, after: 160 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: ACCENT_COLOR, space: 4 } },
-      children: [new TextRun({ text: `${idx + 1}. ${group.labelUz}`, bold: true, size: 26, color: ACCENT_COLOR })],
-    }),
-    groupTable(group),
-  ]);
+  const indicatorsTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        children: DOCX_COLUMNS.map((c) => headerCell(c.label, c.width)),
+      }),
+      ...indicators.map(
+        (ind, idx) =>
+          new TableRow({
+            children: [
+              bodyCell(String(idx + 1), DOCX_COLUMNS[0].width, DOCX_COLUMNS[0].align),
+              bodyCell(ind.nameUz, DOCX_COLUMNS[1].width, DOCX_COLUMNS[1].align),
+              bodyCell(ind.standardCode, DOCX_COLUMNS[2].width, DOCX_COLUMNS[2].align),
+              bodyCell(ind.method, DOCX_COLUMNS[3].width, DOCX_COLUMNS[3].align),
+              bodyCell(ind.unit, DOCX_COLUMNS[4].width, DOCX_COLUMNS[4].align),
+            ],
+          })
+      ),
+    ],
+  });
 
   const doc = new Document({
     styles: {
@@ -294,8 +239,8 @@ const downloadTestProgramDocx = asyncHandler(async (req, res) => {
               new TextRun({ text: new Date().toLocaleDateString('uz-UZ') }),
             ],
           }),
-          ...(groupBlocks.length
-            ? groupBlocks
+          ...(indicators.length
+            ? [indicatorsTable]
             : [new Paragraph({ children: [new TextRun({ text: "Ko'rsatkichlar topilmadi." })] })]),
         ],
       },
