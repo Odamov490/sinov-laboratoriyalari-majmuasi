@@ -94,6 +94,8 @@ export const adminProductBuilder = {
     apiClient.post(`/admin/products/${productId}/indicators`, data).then((r) => r.data),
   removeIndicator: (productId, assignmentId) =>
     apiClient.delete(`/admin/products/${productId}/indicators/${assignmentId}`).then((r) => r.data),
+  reorderIndicators: (productId, assignmentIds) =>
+    apiClient.post(`/admin/products/${productId}/indicators/reorder`, { assignmentIds }).then((r) => r.data),
 };
 
 export const adminSamples = {

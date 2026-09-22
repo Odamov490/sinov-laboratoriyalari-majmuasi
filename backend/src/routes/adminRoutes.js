@@ -24,6 +24,7 @@ const {
   listProductIndicators,
   addProductIndicator,
   removeProductIndicator,
+  reorderProductIndicators,
 } = require('../controllers/testProgramAdminController');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
@@ -246,6 +247,7 @@ router.delete(
 );
 router.get('/products/:id/indicators', requireModule('testPrograms'), listProductIndicators);
 router.post('/products/:id/indicators', requireModule('testPrograms'), addProductIndicator);
+router.post('/products/:id/indicators/reorder', requireModule('testPrograms'), reorderProductIndicators);
 router.delete('/products/:id/indicators/:assignmentId', requireModule('testPrograms'), removeProductIndicator);
 
 // Sample tracking (QR-based check-in/check-out between laboratories)

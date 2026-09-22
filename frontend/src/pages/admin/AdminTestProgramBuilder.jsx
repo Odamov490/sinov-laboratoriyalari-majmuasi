@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Plus, X, ChevronLeft, Pencil, ListChecks } from 'lucide-react';
+import { Plus, X, ChevronLeft, Pencil, ListChecks, GripVertical } from 'lucide-react';
 import { adminProductBuilder, adminTestIndicators } from '../../services/adminApi';
 import { Loading, ErrorState, EmptyState } from '../../components/StateViews.jsx';
 import { Modal } from '../../components/Modal.jsx';
@@ -68,22 +68,74 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
 
 // Already-attached indicators for one context (baseline or one option) —
 // capped height + scroll so a long list doesn't push the rest of the page
-// down.
-function AssignmentList({ assignments, onRemove, busy, emptyLabel }) {
+// down. Drag-and-drop reordering (native HTML5 DnD, no extra dependency)
+// is enabled whenever a parent passes onReorder; the list re-sorts
+// optimistically as soon as the drop lands, then persists the new order.
+function AssignmentList({ assignments, onRemove, busy, emptyLabel, onReorder }) {
+  const [dragId, setDragId] = useState(null);
+  const [overId, setOverId] = useState(null);
+
   if (assignments.length === 0) return <p className="text-xs text-slate-400">{emptyLabel}</p>;
+
+  const handleDrop = (targetId) => {
+    setOverId(null);
+    if (!dragId || dragId === targetId) {
+      setDragId(null);
+      return;
+    }
+    const fromIndex = assignments.findIndex((a) => a.id === dragId);
+    const toIndex = assignments.findIndex((a) => a.id === targetId);
+    setDragId(null);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const reordered = [...assignments];
+    const [moved] = reordered.splice(fromIndex, 1);
+    reordered.splice(toIndex, 0, moved);
+    onReorder?.(reordered.map((a) => a.id));
+  };
+
   return (
     <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1">
       {assignments.map((a) => (
-        <AssignmentChip key={a.id} assignment={a} onRemove={onRemove} removing={busy === a.id} />
+        <div
+          key={a.id}
+          draggable={!!onReorder}
+          onDragStart={() => setDragId(a.id)}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (overId !== a.id) setOverId(a.id);
+          }}
+          onDragLeave={() => setOverId((cur) => (cur === a.id ? null : cur))}
+          onDrop={(e) => {
+            e.preventDefault();
+            handleDrop(a.id);
+          }}
+          onDragEnd={() => {
+            setDragId(null);
+            setOverId(null);
+          }}
+          className={overId === a.id && dragId && dragId !== a.id ? 'rounded-lg ring-2 ring-primary' : ''}
+        >
+          <AssignmentChip
+            assignment={a}
+            onRemove={onRemove}
+            removing={busy === a.id}
+            draggable={!!onReorder}
+          />
+        </div>
       ))}
     </div>
   );
 }
 
-function AssignmentChip({ assignment, onRemove, removing }) {
+function AssignmentChip({ assignment, onRemove, removing, draggable }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm">
-      <div className="min-w-0">
+    <div
+      className={`flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm ${
+        draggable ? 'cursor-move' : ''
+      }`}
+    >
+      {draggable && <GripVertical className="h-4 w-4 text-slate-300 shrink-0" />}
+      <div className="min-w-0 flex-1">
         <p className="font-medium text-ink truncate">
           {assignment.indicator?.positionCode && (
             <span className="text-slate-400">#{assignment.indicator.positionCode} </span>
@@ -185,6 +237,15 @@ export default function AdminTestProgramBuilder() {
     }
   };
 
+  const reorderAssignments = async (assignmentIds) => {
+    try {
+      await adminProductBuilder.reorderIndicators(id, assignmentIds);
+      load();
+    } catch {
+      showToast("Tartibni saqlashda xatolik yuz berdi.", 'error');
+    }
+  };
+
   const saveQuestion = async () => {
     setSaving(true);
     try {
@@ -283,6 +344,7 @@ export default function AdminTestProgramBuilder() {
               onRemove={removeAssignment}
               busy={busy}
               emptyLabel="Hali qo'shilmagan."
+              onReorder={reorderAssignments}
             />
           </div>
 
@@ -385,6 +447,7 @@ export default function AdminTestProgramBuilder() {
                           onRemove={removeAssignment}
                           busy={busy}
                           emptyLabel="Hali qo'shilmagan."
+                          onReorder={reorderAssignments}
                         />
                       </div>
                       <button

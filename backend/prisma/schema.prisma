@@ -579,5 +579,8 @@ model ProductIndicatorAssignment {
   indicator         TestIndicator @relation(fields: [indicatorId], references: [id])
   conditionOptionId String?
   conditionOption   ProductQuestionOption? @relation(fields: [conditionOptionId], references: [id])
+  // Display order within its group (baseline, or the assignments under one
+  // option) — admin-editable via drag-and-drop in the constructor.
+  order             Int      @default(0)
   createdAt         DateTime @default(now())
 }

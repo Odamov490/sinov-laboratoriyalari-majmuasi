@@ -54,7 +54,7 @@ const getProductBySlug = asyncHandler(async (req, res) => {
       indicators: {
         where: { conditionOptionId: null },
         include: { indicator: true },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { order: 'asc' },
       },
     },
   });
@@ -83,7 +83,7 @@ async function resolveIndicators(slug, selectedOptions) {
       OR: [{ conditionOptionId: null }, { conditionOptionId: { in: optionIds } }],
     },
     include: { indicator: true, conditionOption: true },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { order: 'asc' },
   });
 
   const toRow = (indicator) => ({

@@ -18,7 +18,7 @@ const getProductBuilder = asyncHandler(async (req, res) => {
       },
       indicators: {
         include: { indicator: { include: { laboratory: true } }, conditionOption: true },
-        orderBy: { createdAt: 'asc' },
+        orderBy: { order: 'asc' },
       },
     },
   });
@@ -97,18 +97,26 @@ const listProductIndicators = asyncHandler(async (req, res) => {
   const items = await prisma.productIndicatorAssignment.findMany({
     where: { productId: req.params.id },
     include: { indicator: { include: { laboratory: true } }, conditionOption: { include: { question: true } } },
-    orderBy: { createdAt: 'asc' },
+    orderBy: { order: 'asc' },
   });
   res.json(items);
 });
 
 const addProductIndicator = asyncHandler(async (req, res) => {
   const { indicatorId, conditionOptionId } = req.body;
+  // New indicators join at the end of their group (baseline, or the
+  // option's list) rather than always at order 0, so adding one doesn't
+  // jumble a list the admin has already arranged.
+  const last = await prisma.productIndicatorAssignment.findFirst({
+    where: { productId: req.params.id, conditionOptionId: conditionOptionId || null },
+    orderBy: { order: 'desc' },
+  });
   const item = await prisma.productIndicatorAssignment.create({
     data: {
       productId: req.params.id,
       indicatorId,
       conditionOptionId: conditionOptionId || null,
+      order: (last?.order ?? -1) + 1,
     },
     include: { indicator: true, conditionOption: { include: { question: true } } },
   });
@@ -117,6 +125,19 @@ const addProductIndicator = asyncHandler(async (req, res) => {
 
 const removeProductIndicator = asyncHandler(async (req, res) => {
   await prisma.productIndicatorAssignment.delete({ where: { id: req.params.assignmentId } });
+  res.status(204).send();
+});
+
+// Persists a new drag-and-drop order for one group (baseline, or one
+// option's list) — assignmentIds arrives already in the desired order, and
+// each row's `order` becomes its index in that array.
+const reorderProductIndicators = asyncHandler(async (req, res) => {
+  const { assignmentIds } = req.body;
+  await Promise.all(
+    (assignmentIds || []).map((assignmentId, index) =>
+      prisma.productIndicatorAssignment.update({ where: { id: assignmentId }, data: { order: index } })
+    )
+  );
   res.status(204).send();
 });
 
@@ -131,4 +152,5 @@ module.exports = {
   listProductIndicators,
   addProductIndicator,
   removeProductIndicator,
+  reorderProductIndicators,
 };
