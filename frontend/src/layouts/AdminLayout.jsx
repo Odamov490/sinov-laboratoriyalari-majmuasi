@@ -26,28 +26,6 @@ import {
   ClipboardList,
   Layers,
   Award,
-  AlertTriangle,
-  MessageSquare,
-  FileCheck,
-  History,
-  ClipboardCheck,
-  Search,
-  Gauge,
-  GraduationCap,
-  CheckSquare,
-  Target,
-  Calculator,
-  FileSearch,
-  Scale,
-  Truck,
-  Handshake,
-  Thermometer,
-  UserCheck,
-  Presentation,
-  AlertOctagon,
-  Flag,
-  Lightbulb,
-  Archive,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
@@ -77,77 +55,10 @@ const MENU = [
   { to: '/admin/skanerlash', label: 'Skanerlash', icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
   { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
-  {
-    // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — grouped separately
-    // since it's a large, growing set of sub-modules built out in phases;
-    // more entries land here in `items` as later phases ship.
-    group: 'SMK',
-    icon: Award,
-    items: [
-      {
-        to: '/admin/smk/nomuvofiqliklar',
-        label: 'Nomuvofiqliklar (CAPA)',
-        icon: AlertTriangle,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      {
-        to: '/admin/smk/shikoyatlar',
-        label: 'Sifat shikoyatlari',
-        icon: MessageSquare,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      { to: '/admin/smk/hujjatlar', label: 'SMK Hujjatlar', icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      {
-        to: '/admin/smk/hujjat-versiyalari',
-        label: 'Hujjat versiyalari',
-        icon: History,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      { to: '/admin/smk/auditlar', label: 'Ichki auditlar', icon: ClipboardCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/audit-topilmalari', label: 'Audit topilmalari', icon: Search, roles: ['SUPER_ADMIN'] },
-      {
-        to: '/admin/smk/kalibrlash',
-        label: 'Uskunalar kalibrlash',
-        icon: Gauge,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      {
-        to: '/admin/smk/treninglar',
-        label: 'Xodimlar treningi',
-        icon: GraduationCap,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      { to: '/admin/smk/qc', label: 'Ichki sifat nazorati', icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/malakaviy-sinovlar', label: 'Malakaviy sinovlar', icon: Target, roles: ['SUPER_ADMIN'] },
-      {
-        to: '/admin/smk/olchov-noaniqligi',
-        label: "O'lchov noaniqligi",
-        icon: Calculator,
-        roles: ['SUPER_ADMIN'],
-      },
-      { to: '/admin/smk/metodika', label: 'Metodikani tasdiqlash', icon: FileSearch, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/xolislik', label: 'Xolislik deklaratsiyasi', icon: Scale, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/taminotchilar', label: "Ta'minotchilarni baholash", icon: Truck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/subpudratchilar', label: 'Subpudratchilar', icon: Handshake, roles: ['SUPER_ADMIN'] },
-      {
-        to: '/admin/smk/muhit-monitoring',
-        label: 'Muhit sharoitlari',
-        icon: Thermometer,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      { to: '/admin/smk/tanishtirish', label: 'Hujjat bilan tanishtirish', icon: UserCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/boshqaruv-sharhi', label: 'Boshqaruv sharhi', icon: Presentation, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/risklar', label: 'Risklar reestri', icon: AlertOctagon, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/maqsadlar', label: 'Sifat maqsadlari (KPI)', icon: Flag, roles: ['SUPER_ADMIN'] },
-      {
-        to: '/admin/smk/takliflar',
-        label: 'Yaxshilash takliflari',
-        icon: Lightbulb,
-        roles: ['SUPER_ADMIN', 'MANAGER'],
-      },
-      { to: '/admin/smk/arxiv-siyosati', label: 'Arxiv/saqlash siyosati', icon: Archive, roles: ['SUPER_ADMIN'] },
-    ],
-  },
+  // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — barcha 20 quyi-modul
+  // bitta sahifa ichida, tab orqali almashtiriladi (AdminSMK.jsx), shuning
+  // uchun bu yerda faqat bitta havola bor.
+  { to: '/admin/smk', label: 'SMK', icon: Award, roles: ['SUPER_ADMIN', 'MANAGER'] },
 ];
 
 export default function AdminLayout() {
@@ -177,13 +88,7 @@ export default function AdminLayout() {
   if (!user) return <Navigate to="/admin/login" replace />;
 
   const badgeValues = { unreadMessages };
-  const items = MENU.map((m) => {
-    if (m.group) {
-      const groupItems = m.items.filter((i) => i.roles.includes(user.role));
-      return groupItems.length ? { ...m, items: groupItems } : null;
-    }
-    return m.roles.includes(user.role) ? m : null;
-  }).filter(Boolean);
+  const items = MENU.filter((m) => m.roles.includes(user.role));
 
   const renderLink = (item) => {
     const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
@@ -225,18 +130,7 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
-          {items.map((item) =>
-            item.group ? (
-              <div key={item.group} className="pt-3 mt-2 border-t border-white/10">
-                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-2">
-                  <item.icon className="h-3.5 w-3.5" /> {item.group}
-                </p>
-                {item.items.map((sub) => renderLink(sub))}
-              </div>
-            ) : (
-              renderLink(item)
-            )
-          )}
+          {items.map((item) => renderLink(item))}
           <button
             onClick={logout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white mt-4"
