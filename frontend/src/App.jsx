@@ -58,6 +58,8 @@ import {
   tnVedRegulationConfig,
   testIndicatorConfig,
   productConfig,
+  nonConformanceConfig,
+  complaintConfig,
 } from './pages/admin/adminConfigs.js';
 
 export default function App() {
@@ -112,6 +114,8 @@ export default function App() {
         <Route path="sinov-dasturlari" element={<AdminCrudPage config={productConfig} />} />
         <Route path="sinov-dasturlari/:id" element={<AdminTestProgramBuilder />} />
         <Route path="deklaratsiya-sertifikat" element={<AdminDeclarationInfo />} />
+        <Route path="smk/nomuvofiqliklar" element={<AdminCrudPage config={nonConformanceConfig} />} />
+        <Route path="smk/shikoyatlar" element={<AdminCrudPage config={complaintConfig} />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="skanerlash" element={<AdminScanner />} />

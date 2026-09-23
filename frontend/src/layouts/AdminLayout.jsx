@@ -25,6 +25,9 @@ import {
   Info,
   ClipboardList,
   Layers,
+  Award,
+  AlertTriangle,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
@@ -54,6 +57,27 @@ const MENU = [
   { to: '/admin/skanerlash', label: 'Skanerlash', icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
   { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
   { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
+  {
+    // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — grouped separately
+    // since it's a large, growing set of sub-modules built out in phases;
+    // more entries land here in `items` as later phases ship.
+    group: 'SMK',
+    icon: Award,
+    items: [
+      {
+        to: '/admin/smk/nomuvofiqliklar',
+        label: 'Nomuvofiqliklar (CAPA)',
+        icon: AlertTriangle,
+        roles: ['SUPER_ADMIN', 'MANAGER'],
+      },
+      {
+        to: '/admin/smk/shikoyatlar',
+        label: 'Sifat shikoyatlari',
+        icon: MessageSquare,
+        roles: ['SUPER_ADMIN', 'MANAGER'],
+      },
+    ],
+  },
 ];
 
 export default function AdminLayout() {
@@ -83,7 +107,39 @@ export default function AdminLayout() {
   if (!user) return <Navigate to="/admin/login" replace />;
 
   const badgeValues = { unreadMessages };
-  const items = MENU.filter((m) => m.roles.includes(user.role));
+  const items = MENU.map((m) => {
+    if (m.group) {
+      const groupItems = m.items.filter((i) => i.roles.includes(user.role));
+      return groupItems.length ? { ...m, items: groupItems } : null;
+    }
+    return m.roles.includes(user.role) ? m : null;
+  }).filter(Boolean);
+
+  const renderLink = (item) => {
+    const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        className={({ isActive }) =>
+          `flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+            isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
+          }`
+        }
+        onClick={() => setOpen(false)}
+      >
+        <span className="flex items-center gap-3">
+          <item.icon className="h-4 w-4" />
+          {item.label}
+        </span>
+        {badgeCount > 0 && (
+          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+            {badgeCount > 99 ? '99+' : badgeCount}
+          </span>
+        )}
+      </NavLink>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-bg-light flex">
@@ -99,31 +155,18 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
-          {items.map((item) => {
-            const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                    isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
-                  }`
-                }
-                onClick={() => setOpen(false)}
-              >
-                <span className="flex items-center gap-3">
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </span>
-                            {badgeCount > 0 && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                    {badgeCount > 99 ? '99+' : badgeCount}
-                  </span>
-                )}
-              </NavLink>
-            );
-          })}
+          {items.map((item) =>
+            item.group ? (
+              <div key={item.group} className="pt-3 mt-2 border-t border-white/10">
+                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-2">
+                  <item.icon className="h-3.5 w-3.5" /> {item.group}
+                </p>
+                {item.items.map((sub) => renderLink(sub))}
+              </div>
+            ) : (
+              renderLink(item)
+            )
+          )}
           <button
             onClick={logout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white mt-4"

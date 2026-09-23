@@ -435,6 +435,155 @@ export const productConfig = {
   ],
 };
 
+// ===== SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — FAZA 1 =====
+
+function statusBadge(status, styles, labels) {
+  return React.createElement(
+    'span',
+    {
+      className: `inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+        styles[status] || 'bg-slate-50 text-slate-600 border-slate-200'
+      }`,
+    },
+    labels[status] || status
+  );
+}
+
+const NC_SOURCE_LABELS = {
+  AUDIT: 'Audit',
+  SHIKOYAT: 'Shikoyat',
+  ICHKI_KUZATUV: 'Ichki kuzatuv',
+  NAMUNA_MUAMMOSI: 'Namuna muammosi',
+};
+
+const NC_STATUS_LABELS = {
+  OCHIQ: 'Ochiq',
+  JARAYONDA: 'Jarayonda',
+  YOPILDI: 'Yopildi',
+  TASDIQLANDI: 'Tasdiqlandi',
+};
+
+const NC_STATUS_STYLES = {
+  OCHIQ: 'bg-red-50 text-red-700 border-red-200',
+  JARAYONDA: 'bg-amber-50 text-amber-700 border-amber-200',
+  YOPILDI: 'bg-blue-50 text-blue-700 border-blue-200',
+  TASDIQLANDI: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
+
+export const nonConformanceConfig = {
+  path: 'smk/nonconformances',
+  title: 'Nomuvofiqliklar (CAPA)',
+  columns: [
+    { key: 'code', label: 'Kod' },
+    { key: 'source', label: 'Manba', render: (i) => NC_SOURCE_LABELS[i.source] || i.source },
+    { key: 'description', label: 'Tavsif' },
+    { key: 'responsibleUser', label: "Mas'ul", render: (i) => i.responsibleUser?.fullName || '—' },
+    { key: 'dueDate', label: 'Muddat', render: (i) => (i.dueDate ? String(i.dueDate).slice(0, 10) : '—') },
+    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, NC_STATUS_STYLES, NC_STATUS_LABELS) },
+  ],
+  fields: [
+    {
+      name: 'source',
+      label: 'Manba',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'AUDIT', label: 'Audit' },
+        { value: 'SHIKOYAT', label: 'Shikoyat' },
+        { value: 'ICHKI_KUZATUV', label: 'Ichki kuzatuv' },
+        { value: 'NAMUNA_MUAMMOSI', label: 'Namuna muammosi' },
+      ],
+    },
+    { name: 'description', label: 'Tavsif', type: 'textarea', fullWidth: true, required: true },
+    { name: 'detectedDate', label: 'Aniqlangan sana', type: 'date', required: true },
+    {
+      name: 'responsibleUserId',
+      label: "Mas'ul xodim",
+      type: 'async-select',
+      optionsResource: 'users',
+      optionsLabel: (item) => item.fullName,
+    },
+    { name: 'rootCauseAnalysis', label: 'Ildiz sabab tahlili', type: 'textarea', fullWidth: true },
+    { name: 'correctiveAction', label: "To'g'rilash chorasi", type: 'textarea', fullWidth: true },
+    { name: 'dueDate', label: 'Bajarish muddati', type: 'date' },
+    { name: 'closedDate', label: 'Yopilgan sana', type: 'date' },
+    {
+      name: 'status',
+      label: 'Holati',
+      type: 'select',
+      default: 'OCHIQ',
+      options: [
+        { value: 'OCHIQ', label: 'Ochiq' },
+        { value: 'JARAYONDA', label: 'Jarayonda' },
+        { value: 'YOPILDI', label: 'Yopildi' },
+        { value: 'TASDIQLANDI', label: 'Tasdiqlandi' },
+      ],
+    },
+  ],
+};
+
+const COMPLAINT_STATUS_LABELS = {
+  QABUL_QILINDI: 'Qabul qilindi',
+  TEKSHIRILMOQDA: 'Tekshirilmoqda',
+  HAL_QILINDI: 'Hal qilindi',
+};
+
+const COMPLAINT_STATUS_STYLES = {
+  QABUL_QILINDI: 'bg-blue-50 text-blue-700 border-blue-200',
+  TEKSHIRILMOQDA: 'bg-amber-50 text-amber-700 border-amber-200',
+  HAL_QILINDI: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
+
+export const complaintConfig = {
+  path: 'smk/complaints',
+  title: 'Sifat shikoyatlari',
+  columns: [
+    { key: 'code', label: 'Kod' },
+    { key: 'fullName', label: 'Mijoz' },
+    { key: 'receivedDate', label: 'Qabul qilingan sana', render: (i) => (i.receivedDate ? String(i.receivedDate).slice(0, 10) : '—') },
+    { key: 'responsibleUser', label: "Mas'ul", render: (i) => i.responsibleUser?.fullName || '—' },
+    {
+      key: 'status',
+      label: 'Holati',
+      render: (i) => statusBadge(i.status, COMPLAINT_STATUS_STYLES, COMPLAINT_STATUS_LABELS),
+    },
+  ],
+  fields: [
+    { name: 'fullName', label: 'Mijoz F.I.Sh. / tashkilot', required: true },
+    { name: 'phone', label: 'Telefon' },
+    { name: 'email', label: 'Email' },
+    {
+      name: 'relatedApplicationId',
+      label: "Bog'liq ariza (ixtiyoriy)",
+      type: 'async-select',
+      optionsResource: 'applications',
+      optionsLabel: (item) => `${item.applicationNumber} — ${item.productName}`,
+    },
+    { name: 'description', label: 'Shikoyat tavsifi', type: 'textarea', fullWidth: true, required: true },
+    { name: 'receivedDate', label: 'Qabul qilingan sana', type: 'date', required: true },
+    { name: 'investigationNotes', label: 'Tekshiruv izohlari', type: 'textarea', fullWidth: true },
+    { name: 'resolution', label: 'Yechim', type: 'textarea', fullWidth: true },
+    {
+      name: 'responsibleUserId',
+      label: "Mas'ul xodim",
+      type: 'async-select',
+      optionsResource: 'users',
+      optionsLabel: (item) => item.fullName,
+    },
+    {
+      name: 'status',
+      label: 'Holati',
+      type: 'select',
+      default: 'QABUL_QILINDI',
+      options: [
+        { value: 'QABUL_QILINDI', label: 'Qabul qilindi' },
+        { value: 'TEKSHIRILMOQDA', label: 'Tekshirilmoqda' },
+        { value: 'HAL_QILINDI', label: 'Hal qilindi' },
+      ],
+    },
+  ],
+};
+
 export const contactMessageConfig = {
   path: 'contact-messages',
   title: 'Murojaatlar',

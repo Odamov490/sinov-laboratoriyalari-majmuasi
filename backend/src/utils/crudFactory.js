@@ -11,7 +11,9 @@ const { asyncHandler } = require('../middleware/errorHandler');
  *  - orderBy: default ordering
  *  - buildData(body, { isUpdate }): optional transform from req.body to the
  *    Prisma `data` payload — needed when a field must become a nested write
- *    (e.g. an array of related IDs turned into `connect`/`set`)
+ *    (e.g. an array of related IDs turned into `connect`/`set`), or when
+ *    creation needs a server-computed value (e.g. a sequential document
+ *    code) that requires its own DB query. May return a Promise.
  */
 function crudFactory(modelName, opts = {}) {
   const model = prisma[modelName];
@@ -50,13 +52,13 @@ function crudFactory(modelName, opts = {}) {
   });
 
   const create = asyncHandler(async (req, res) => {
-    const data = buildData ? buildData(req.body, { isUpdate: false }) : req.body;
+    const data = buildData ? await buildData(req.body, { isUpdate: false }) : req.body;
     const item = await model.create({ data, include });
     res.status(201).json(item);
   });
 
   const update = asyncHandler(async (req, res) => {
-    const data = buildData ? buildData(req.body, { isUpdate: true }) : req.body;
+    const data = buildData ? await buildData(req.body, { isUpdate: true }) : req.body;
     const item = await model.update({
       where: { id: req.params.id },
       data,

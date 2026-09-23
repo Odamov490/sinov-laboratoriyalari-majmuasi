@@ -26,6 +26,7 @@ const {
   removeProductIndicator,
   reorderProductIndicators,
 } = require('../controllers/testProgramAdminController');
+const { nextSequentialCode } = require('../utils/sequentialCode');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
@@ -249,6 +250,29 @@ router.get('/products/:id/indicators', requireModule('testPrograms'), listProduc
 router.post('/products/:id/indicators', requireModule('testPrograms'), addProductIndicator);
 router.post('/products/:id/indicators/reorder', requireModule('testPrograms'), reorderProductIndicators);
 router.delete('/products/:id/indicators/:assignmentId', requireModule('testPrograms'), removeProductIndicator);
+
+// SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — FAZA 1: muammo
+// boshqaruvi. `code` har ikkalasida ham server tomonidan avtomatik
+// generatsiya qilinadi (Application.applicationNumber kabi), shuning uchun
+// admin formasida tahrirlanmaydi — faqat ro'yxatda ko'rinadi.
+mountCrud('smk/nonconformances', 'smk_nonconformances', 'nonConformance', {
+  include: { responsibleUser: true },
+  searchFields: ['code', 'description'],
+  orderBy: { createdAt: 'desc' },
+  buildData: async (body, { isUpdate }) => {
+    if (isUpdate) return body;
+    return { ...body, code: await nextSequentialCode('nonConformance', 'NC') };
+  },
+});
+mountCrud('smk/complaints', 'smk_complaints', 'complaint', {
+  include: { responsibleUser: true, relatedApplication: true },
+  searchFields: ['code', 'fullName', 'phone', 'description'],
+  orderBy: { createdAt: 'desc' },
+  buildData: async (body, { isUpdate }) => {
+    if (isUpdate) return body;
+    return { ...body, code: await nextSequentialCode('complaint', 'SHK') };
+  },
+});
 
 // Sample tracking (QR-based check-in/check-out between laboratories)
 router.get('/samples/stats', requireModule('samples'), getStats);

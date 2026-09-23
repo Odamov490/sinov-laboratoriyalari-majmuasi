@@ -36,6 +36,8 @@ model User {
   deletedAt    DateTime?
   sampleMovements SampleMovement[]
   testItemsAdded  ApplicationTestItem[]
+  nonConformancesResponsible NonConformance[]
+  complaintsResponsible      Complaint[]
 }
 
 model Laboratory {
@@ -302,6 +304,7 @@ model Application {
   samples         Sample[]
   files             ApplicationFile[]
   testItems         ApplicationTestItem[]
+  complaints        Complaint[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -583,4 +586,70 @@ model ProductIndicatorAssignment {
   // option) — admin-editable via drag-and-drop in the constructor.
   order             Int      @default(0)
   createdAt         DateTime @default(now())
+}
+
+// ===== SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — FAZA 1 =====
+// Muammo boshqaruvi: nomuvofiqliklar/CAPA va rasmiy sifat shikoyatlari.
+// Qolgan 18 modul keyingi fazalarda shu bo'limga qo'shiladi.
+
+enum NonConformanceSource {
+  AUDIT
+  SHIKOYAT
+  ICHKI_KUZATUV
+  NAMUNA_MUAMMOSI
+}
+
+enum NonConformanceStatus {
+  OCHIQ
+  JARAYONDA
+  YOPILDI
+  TASDIQLANDI
+}
+
+// code avtomatik "NC-<yil>-<tartib>" shaklida generatsiya qilinadi (backend
+// crudFactory buildData orqali, adminRoutes.js'da).
+model NonConformance {
+  id                String               @id @default(uuid())
+  code              String               @unique
+  source            NonConformanceSource
+  description       String
+  detectedDate      DateTime
+  responsibleUserId String?
+  responsibleUser   User?                @relation(fields: [responsibleUserId], references: [id])
+  rootCauseAnalysis String?
+  correctiveAction  String?
+  dueDate           DateTime?
+  closedDate        DateTime?
+  status            NonConformanceStatus @default(OCHIQ)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+}
+
+enum ComplaintStatus {
+  QABUL_QILINDI
+  TEKSHIRILMOQDA
+  HAL_QILINDI
+}
+
+// Rasmiy ISO shikoyat protsedurasi — mavjud ContactMessage'dan farqli:
+// ContactMessage umumiy murojaatlar uchun, bu esa rasmiy tekshiruv/yechim
+// jarayoni kuzatib boriladigan sifat shikoyatlari uchun. code avtomatik
+// "SHK-<yil>-<tartib>" shaklida generatsiya qilinadi.
+model Complaint {
+  id                    String          @id @default(uuid())
+  code                  String          @unique
+  fullName              String
+  phone                 String?
+  email                 String?
+  relatedApplicationId  String?
+  relatedApplication    Application?    @relation(fields: [relatedApplicationId], references: [id])
+  description           String
+  receivedDate          DateTime
+  investigationNotes    String?
+  resolution            String?
+  responsibleUserId     String?
+  responsibleUser       User?           @relation(fields: [responsibleUserId], references: [id])
+  status                ComplaintStatus @default(QABUL_QILINDI)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 }
