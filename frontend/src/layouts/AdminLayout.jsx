@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Outlet, Navigate } from 'react-router-dom';
+import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   FlaskConical,
@@ -48,6 +48,7 @@ import {
   Flag,
   Lightbulb,
   Archive,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
@@ -112,8 +113,14 @@ const MENU = [
 
 export default function AdminLayout() {
   const { user, loading, logout } = useAuth();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [smkOpen, setSmkOpen] = useState(location.pathname.startsWith('/admin/smk'));
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/admin/smk')) setSmkOpen(true);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!user || !['SUPER_ADMIN', 'MANAGER'].includes(user.role)) return;
@@ -188,10 +195,17 @@ export default function AdminLayout() {
           {items.map((item) =>
             item.group ? (
               <div key={item.group} className="pt-3 mt-2 border-t border-white/10">
-                <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-2">
-                  <item.icon className="h-3.5 w-3.5" /> {item.group}
-                </p>
-                {item.items.map((sub) => renderLink(sub))}
+                <button
+                  type="button"
+                  onClick={() => setSmkOpen((v) => !v)}
+                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-white/60 hover:text-white transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <item.icon className="h-3.5 w-3.5" /> {item.group}
+                  </span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${smkOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {smkOpen && <div className="space-y-1">{item.items.map((sub) => renderLink(sub))}</div>}
               </div>
             ) : (
               renderLink(item)
