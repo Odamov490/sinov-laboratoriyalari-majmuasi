@@ -184,7 +184,7 @@ export default function AdminLayout() {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+        <nav className="admin-sidebar-nav p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
           {items.map((item) =>
             item.group ? (
               <div key={item.group} className="pt-3 mt-2 border-t border-white/10">
