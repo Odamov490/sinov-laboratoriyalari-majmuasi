@@ -274,6 +274,112 @@ mountCrud('smk/complaints', 'smk_complaints', 'complaint', {
   },
 });
 
+// SMK — FAZA 2: Hujjat boshqaruvi
+mountCrud('smk/documents', 'smk_documents', 'sMKDocument', {
+  include: { ownerUser: true },
+  searchFields: ['code', 'titleUz', 'titleRu', 'titleEn'],
+  orderBy: { createdAt: 'desc' },
+});
+mountCrud('smk/document-versions', 'smk_documents', 'sMKDocumentVersion', {
+  include: { document: true, approvedByUser: true },
+  searchFields: ['versionNumber', 'changeDescription'],
+  orderBy: { createdAt: 'desc' },
+});
+
+// SMK — FAZA 3: Auditlar
+mountCrud('smk/audits', 'smk_audits', 'internalAudit', {
+  include: { laboratory: true, auditorUser: true },
+  orderBy: { plannedDate: 'desc' },
+});
+mountCrud('smk/audit-findings', 'smk_audits', 'auditFinding', {
+  include: { audit: true, linkedNonConformance: true },
+  searchFields: ['description'],
+  orderBy: { createdAt: 'desc' },
+});
+
+// SMK — FAZA 4: Texnik yadro
+mountCrud('smk/calibration', 'smk_calibration', 'calibrationRecord', {
+  include: { equipment: true },
+  orderBy: { nextDueDate: 'asc' },
+});
+mountCrud('smk/training', 'smk_training', 'trainingRecord', {
+  include: { user: true },
+  searchFields: ['trainingTitle', 'provider'],
+  orderBy: { trainingDate: 'desc' },
+});
+mountCrud('smk/qc', 'smk_qc', 'qualityControlRecord', {
+  include: { laboratory: true },
+  searchFields: ['testType'],
+  orderBy: { controlDate: 'desc' },
+});
+mountCrud('smk/proficiency-tests', 'smk_pt', 'proficiencyTest', {
+  include: { laboratory: true },
+  searchFields: ['testProgram', 'providerName'],
+  orderBy: { testDate: 'desc' },
+});
+mountCrud('smk/uncertainty', 'smk_uncertainty', 'measurementUncertainty', {
+  include: { service: true },
+  searchFields: ['testMethodName', 'unit'],
+  orderBy: { updatedAt: 'desc' },
+});
+mountCrud('smk/methods', 'smk_methods', 'methodValidation', {
+  searchFields: ['methodName', 'standardReference'],
+  orderBy: { validationDate: 'desc' },
+});
+
+// SMK — FAZA 5: Tashkiliy
+mountCrud('smk/impartiality', 'smk_impartiality', 'impartialityDeclaration', {
+  include: { user: true },
+  orderBy: { declarationYear: 'desc' },
+});
+mountCrud('smk/suppliers', 'smk_suppliers', 'supplierEvaluation', {
+  searchFields: ['supplierName', 'category'],
+  orderBy: { evaluationDate: 'desc' },
+});
+mountCrud('smk/subcontractors', 'smk_subcontractors', 'subcontractor', {
+  searchFields: ['name'],
+  orderBy: { createdAt: 'desc' },
+});
+mountCrud('smk/environment', 'smk_environment', 'environmentLog', {
+  include: { laboratory: true },
+  orderBy: { recordedAt: 'desc' },
+});
+mountCrud('smk/acknowledgments', 'smk_acknowledgments', 'documentAcknowledgment', {
+  include: { documentVersion: { include: { document: true } }, user: true },
+  orderBy: { acknowledgedAt: 'desc' },
+});
+
+// SMK — FAZA 6: Strategik
+mountCrud('smk/reviews', 'smk_reviews', 'managementReview', {
+  orderBy: { reviewDate: 'desc' },
+});
+mountCrud('smk/risks', 'smk_risks', 'riskItem', {
+  include: { ownerUser: true },
+  searchFields: ['description', 'category'],
+  orderBy: { riskScore: 'desc' },
+  // riskScore admin qo'lda kiritmaydi — likelihood * impact dan avtomatik
+  // hisoblanadi, shu jumladan tahrirlashda ham (ikkalasi o'zgarganida
+  // qayta hisoblanishi kerak).
+  buildData: (body) => {
+    const likelihood = Number(body.likelihood) || 0;
+    const impact = Number(body.impact) || 0;
+    return { ...body, likelihood, impact, riskScore: likelihood * impact };
+  },
+});
+mountCrud('smk/objectives', 'smk_objectives', 'qualityObjective', {
+  searchFields: ['objectiveText'],
+  orderBy: { year: 'desc' },
+});
+mountCrud('smk/improvements', 'smk_improvements', 'improvementSuggestion', {
+  include: { submittedByUser: true },
+  searchFields: ['description'],
+  orderBy: { submittedDate: 'desc' },
+});
+mountCrud('smk/retention', 'smk_retention', 'retentionPolicy', {
+  searchFields: ['documentType'],
+  orderBy: { documentType: 'asc' },
+});
+
 // Sample tracking (QR-based check-in/check-out between laboratories)
 router.get('/samples/stats', requireModule('samples'), getStats);
 router.get('/samples', requireModule('samples'), listSamples);

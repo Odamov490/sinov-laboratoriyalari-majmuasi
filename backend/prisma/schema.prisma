@@ -38,6 +38,14 @@ model User {
   testItemsAdded  ApplicationTestItem[]
   nonConformancesResponsible NonConformance[]
   complaintsResponsible      Complaint[]
+  smkDocumentsOwned            SMKDocument[]
+  smkDocumentVersionsApproved   SMKDocumentVersion[]
+  internalAuditsAsAuditor       InternalAudit[]
+  trainingRecords                TrainingRecord[]
+  impartialityDeclarations       ImpartialityDeclaration[]
+  documentAcknowledgments         DocumentAcknowledgment[]
+  riskItemsOwned                  RiskItem[]
+  improvementSuggestions           ImprovementSuggestion[]
 }
 
 model Laboratory {
@@ -68,6 +76,10 @@ model Laboratory {
   users               User[]
   testIndicators      TestIndicator[]
   products            Product[]
+  internalAudits          InternalAudit[]
+  qualityControlRecords   QualityControlRecord[]
+  proficiencyTests        ProficiencyTest[]
+  environmentLogs         EnvironmentLog[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -104,6 +116,7 @@ model Service {
   prices          Price[]
   applications    Application[]
   testItems       ApplicationTestItem[]
+  measurementUncertainties MeasurementUncertainty[]
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -243,6 +256,7 @@ model Equipment {
   photo          String?
   laboratoryId   String?
   laboratory     Laboratory? @relation(fields: [laboratoryId], references: [id])
+  calibrationRecords CalibrationRecord[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   deletedAt      DateTime?
@@ -621,6 +635,7 @@ model NonConformance {
   dueDate           DateTime?
   closedDate        DateTime?
   status            NonConformanceStatus @default(OCHIQ)
+  auditFindings     AuditFinding[]
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 }
@@ -652,4 +667,309 @@ model Complaint {
   status                ComplaintStatus @default(QABUL_QILINDI)
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
+}
+
+// ===== SMK — FAZA 2: Hujjat boshqaruvi =====
+
+enum SMKDocumentCategory {
+  PROTSEDURA
+  KORSATMA
+  FORMA
+  JURNAL
+}
+
+enum SMKDocumentStatus {
+  AMALDA
+  QORALAMA
+  BEKOR_QILINGAN
+}
+
+model SMKDocument {
+  id          String              @id @default(uuid())
+  code        String              @unique
+  titleUz     String
+  titleRu     String
+  titleEn     String
+  category    SMKDocumentCategory
+  ownerUserId String?
+  ownerUser   User?               @relation(fields: [ownerUserId], references: [id])
+  status      SMKDocumentStatus   @default(QORALAMA)
+  versions    SMKDocumentVersion[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model SMKDocumentVersion {
+  id                String    @id @default(uuid())
+  documentId        String
+  document          SMKDocument @relation(fields: [documentId], references: [id])
+  versionNumber     String
+  fileUrl           String?
+  changeDescription String?
+  approvedByUserId  String?
+  approvedByUser    User?     @relation(fields: [approvedByUserId], references: [id])
+  approvedAt        DateTime?
+  acknowledgments   DocumentAcknowledgment[]
+  createdAt         DateTime  @default(now())
+}
+
+// ===== SMK — FAZA 3: Auditlar =====
+
+enum InternalAuditStatus {
+  REJALASHTIRILGAN
+  OTKAZILDI
+  YAKUNLANDI
+}
+
+model InternalAudit {
+  id            String              @id @default(uuid())
+  plannedDate   DateTime
+  actualDate    DateTime?
+  laboratoryId  String?
+  laboratory    Laboratory?         @relation(fields: [laboratoryId], references: [id])
+  auditorUserId String?
+  auditorUser   User?               @relation(fields: [auditorUserId], references: [id])
+  status        InternalAuditStatus @default(REJALASHTIRILGAN)
+  summary       String?
+  findings      AuditFinding[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+enum AuditFindingSeverity {
+  KATTA
+  KICHIK
+  KUZATUV
+}
+
+model AuditFinding {
+  id                     String               @id @default(uuid())
+  auditId                String
+  audit                  InternalAudit        @relation(fields: [auditId], references: [id])
+  description            String
+  severity               AuditFindingSeverity
+  linkedNonConformanceId String?
+  linkedNonConformance   NonConformance?      @relation(fields: [linkedNonConformanceId], references: [id])
+  createdAt              DateTime             @default(now())
+}
+
+// ===== SMK — FAZA 4: Texnik yadro =====
+
+// CalibrationRecord'da "status" atayin saqlanmaydi — u nextDueDate'ga
+// nisbatan har doim hozirgi sanadan hisoblanadi (frontend'da), shuning
+// uchun uni DB ustuniga aylantirish uni yangilab turish uchun alohida fon
+// vazifasini (cron) talab qilardi, bu esa hozircha loyihada yo'q.
+model CalibrationRecord {
+  id              String    @id @default(uuid())
+  equipmentId     String
+  equipment       Equipment @relation(fields: [equipmentId], references: [id])
+  calibrationDate DateTime
+  nextDueDate     DateTime
+  certificateUrl  String?
+  performedBy     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model TrainingRecord {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  trainingTitle   String
+  trainingDate    DateTime
+  provider        String?
+  certificateUrl  String?
+  expiryDate      DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model QualityControlRecord {
+  id            String      @id @default(uuid())
+  laboratoryId  String?
+  laboratory    Laboratory? @relation(fields: [laboratoryId], references: [id])
+  testType      String
+  controlDate   DateTime
+  expectedValue String?
+  actualValue   String?
+  deviation     String?
+  withinLimits  Boolean     @default(true)
+  notes         String?
+  createdAt     DateTime    @default(now())
+}
+
+enum ProficiencyResultStatus {
+  QONIQARLI
+  QONIQARSIZ
+  OGOHLANTIRISH
+}
+
+model ProficiencyTest {
+  id           String                   @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory?              @relation(fields: [laboratoryId], references: [id])
+  testProgram  String
+  providerName String
+  testDate     DateTime
+  resultStatus ProficiencyResultStatus
+  reportUrl    String?
+  createdAt    DateTime                 @default(now())
+}
+
+model MeasurementUncertainty {
+  id                String   @id @default(uuid())
+  serviceId         String?
+  service           Service? @relation(fields: [serviceId], references: [id])
+  testMethodName    String?
+  uncertaintyValue  String
+  unit              String?
+  calculationMethod String?
+  documentUrl       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+enum MethodValidationStatus {
+  TASDIQLANGAN
+  JARAYONDA
+}
+
+model MethodValidation {
+  id                String                  @id @default(uuid())
+  methodName        String
+  standardReference String?
+  validationDate    DateTime
+  validatedBy       String?
+  reportUrl         String?
+  status            MethodValidationStatus  @default(JARAYONDA)
+  createdAt         DateTime                @default(now())
+}
+
+// ===== SMK — FAZA 5: Tashkiliy =====
+
+model ImpartialityDeclaration {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  declarationYear Int
+  signedDate      DateTime
+  fileUrl         String?
+  createdAt       DateTime @default(now())
+}
+
+model SupplierEvaluation {
+  id                 String    @id @default(uuid())
+  supplierName       String
+  category           String?
+  evaluationDate     DateTime
+  score              Int
+  notes              String?
+  nextEvaluationDate DateTime?
+  createdAt          DateTime  @default(now())
+}
+
+model Subcontractor {
+  id                String    @id @default(uuid())
+  name              String
+  accreditationInfo String?
+  servicesProvided  String?
+  contractUrl       String?
+  validUntil        DateTime?
+  createdAt         DateTime  @default(now())
+}
+
+model EnvironmentLog {
+  id           String      @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
+  recordedAt   DateTime
+  temperature  Float?
+  humidity     Float?
+  withinLimits Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+}
+
+model DocumentAcknowledgment {
+  id                String             @id @default(uuid())
+  documentVersionId String
+  documentVersion   SMKDocumentVersion @relation(fields: [documentVersionId], references: [id])
+  userId            String
+  user              User               @relation(fields: [userId], references: [id])
+  acknowledgedAt    DateTime           @default(now())
+}
+
+// ===== SMK — FAZA 6: Strategik =====
+
+model ManagementReview {
+  id             String    @id @default(uuid())
+  reviewDate     DateTime
+  participants   String?
+  agendaItems    String?
+  decisions      String?
+  nextReviewDate DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+enum RiskStatus {
+  FAOL
+  NAZORAT_OSTIDA
+  YOPILDI
+}
+
+// riskScore = likelihood * impact, backend tomonidan avtomatik hisoblanadi
+// (adminRoutes.js'dagi buildData orqali) — admin qo'lda kiritmaydi.
+model RiskItem {
+  id             String     @id @default(uuid())
+  description    String
+  category       String?
+  likelihood     Int
+  impact         Int
+  riskScore      Int
+  mitigationPlan String?
+  ownerUserId    String?
+  ownerUser      User?      @relation(fields: [ownerUserId], references: [id])
+  status         RiskStatus @default(FAOL)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+}
+
+enum QualityObjectiveStatus {
+  BAJARILMOQDA
+  BAJARILDI
+  BAJARILMADI
+}
+
+model QualityObjective {
+  id            String                  @id @default(uuid())
+  year          Int
+  objectiveText String
+  targetValue   String?
+  actualValue   String?
+  status        QualityObjectiveStatus  @default(BAJARILMOQDA)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+}
+
+enum ImprovementSuggestionStatus {
+  KORIB_CHIQILMOQDA
+  QABUL_QILINDI
+  RAD_ETILDI
+}
+
+model ImprovementSuggestion {
+  id                  String                       @id @default(uuid())
+  submittedByUserId   String?
+  submittedByUser     User?                        @relation(fields: [submittedByUserId], references: [id])
+  description         String
+  submittedDate       DateTime
+  status              ImprovementSuggestionStatus  @default(KORIB_CHIQILMOQDA)
+  implementationNotes String?
+  createdAt           DateTime                     @default(now())
+}
+
+model RetentionPolicy {
+  id             String   @id @default(uuid())
+  documentType   String
+  retentionYears Int
+  notes          String?
+  createdAt      DateTime @default(now())
 }
