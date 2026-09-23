@@ -1,0 +1,19 @@
+-- Corrective fix: 9 more regulation rows (items 11, 53, 57, 58, 66-1, 78,
+-- 81, 99, 54) had the same missing-comma issue as item 101 (fixed in the
+-- previous migration): two or more TN VED codes written back-to-back with
+-- only a space between them, no comma. The range parser reads a comma-
+-- less gap as one continuous range spanning from the first code to the
+-- last, so each of these rows was silently claiming a much wider code
+-- range than the resolution text actually lists. Found via a full-table
+-- scan for segments whose concatenated digit count exceeds 10 (the max
+-- length of a real TN VED code), which flags any two-or-more codes glued
+-- together without a separator.
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '2814 20 000 0, 2827 10 000 0, 2827 39 850 0, 2834 29 800 0, 2835 24 000 0, 2835 25 000 0, 2835 26 000 0, 2833 29 800 0, 2810 дан, 2827 дан, 2833 дан, 2840 дан, 2841 70' WHERE "id" = '13873314-77f1-4c44-a88d-adb96b9e49da';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '7616 99 100 2, 7616 99 100 3' WHERE "id" = 'c8eb91b4-a039-4874-8749-66e314cfdcad';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '8402 11 000 — 8402 20 000 0, 8403 10, 8405 10 000 0, 8410 11 000 0, 8410 12 000 0, 8410 13 000 0, 8412 10 — 8412 80, 8413 11 000 0 — 8413 81 000 0, (8413 20 000 0, 8413 30 200 1, 8413 30 800 1 дан ташқари), 8414 10 — 8414 80, (8414 30 200 1, 8414 30 810 1, 8414 30 810 5, 8414 30 890 1, 8414 80 110 0, 8414 80 190 0 дан ташқари), 8415 10 — 8415 83 0000, (8415 20 000 1 дан ташқари), 8416 10 — 8416 20 800 0, 8418 10 — 8418 69 000 (8418 50 190 0 дан ташқари), 8419 11 000 0 — 8419 89, 8421 11 000 0 — 8421 39, 8422 11 000 0 — 8422 40 000 8, 8425 (8425 39 000 2 дан ташқари), 8427, 8428 (8428 20 800 1, 8428 33 000 0, 8428 90 дан ташқари), 8429, 8430, 8433 11 — 8433 60 000 0, (8433 30 000 0, 8433 40 000, 8433 51 000, 8433 52 000 0, 8433 59 дан ташқари), 8434 10 000 0, 8434 20 000 0, 8435 10 000 0, 8436 10 0000 — 8436 80 900 0, (8436 21 000 0 дан ташқари), 8437 10 000 0, 8437 80 000 0, 8438 10 — 8438 80 990 0, 8450 11 — 8450 20 000 0, 8452 10 900 0 — 8452 29 000 0 (фақат двигателли машиналар), 8471 30 000 0, 8471 41 000 0, 8471 49 000 0, 8471 50 000 0, 8472 10 000 0, 8476 21 000 0 — 8476 89 000 0, 8481 10 050 0 — 8481 80 990 7' WHERE "id" = '67aee280-15b0-4e90-885d-67235022b7a9';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '8501 71 000 0, 8501 72 000 0, 8501 80 000 0, 8541 42 000 0, 8541 43 000 0' WHERE "id" = '9acfb14a-6ca5-41d6-8e1e-81a20b588728';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '8601 10 000 0, 8601 20 000 0, 8602 10 000 0, 8602 90 000 0, 8603 10, 8603 90 000 0, 8604 00 000 0, 8605 00 000, 8606 10 000 0, 8606 30 000 0, 8606 91 100 0, 8606 91 800 0, 8606 92 000 0, 8606 99 000 0, 8607 11 000 0, 8607 12 000 0, 8607 19 100 9, 8607 19 900 0, 8607 21, 8607 29 000 0, 8607 30 000 0, 8607 91 100 0, 8607 91 900 0, 8607 99 100 0, 8607 99 800 0, 8608 00 000 1, 8608 00 000 9, 8609 00' WHERE "id" = '0fb19457-bec1-4359-945c-4ec723657ff9';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '4410, 4411 12 900 0, 4411 13 900 0, 4411 14 900 0, 4411 92 900 0, 4411 93 900 0, 4411 94 900 0, 4412' WHERE "id" = '91628686-fa01-4807-9fd6-165facb48432';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '4812 00 000 0, 4813, 4814, 4818, 4819, 4823 20 000, 4823 69' WHERE "id" = '26f9f0ea-2be6-4caa-a9f2-6bcd6c648068';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '8106 10 000 0, 8105 20 000 1 — 8105 90 000 9, 8107 20 000 0 — 8107 90 000 0, 8104 11 000 0 — 8104 19 000 0, 8108, 8112 61 000 0-8112 69 000 9' WHERE "id" = 'eac37238-decb-45c7-aab3-cbbe40ab1fbf';
+UPDATE "TnVedRegulation" SET "tnVedRaw" = '2401 20 600 0, 2402 10 000 0, 2402 20 100 0, 2402 20 900 0, 2403 11 000 0, 2403 19 100 0, 2403 19 900 0, 2403 91 000 0, 2403 99 100 0, 2403 99 900 8, 2404 11 000, 2404 12 000 0, 2404 19 000, 2404 91 000 1, 2404 91 000 2' WHERE "id" = '8b8a0eb0-8b13-478b-86da-3a470f9fc54a';
