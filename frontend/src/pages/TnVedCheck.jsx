@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AlertTriangle, Info, Loader2, ChevronDown, ShieldQuestion, FileSearch } from 'lucide-react';
+import { AlertTriangle, Info, Loader2, ChevronDown, ShieldQuestion, FileSearch, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import { Breadcrumb } from '../components/UI.jsx';
 import { checkTnVedRegulation, getInfoPage } from '../services/publicApi';
@@ -164,7 +164,8 @@ export default function TnVedCheck() {
   const legalDisclaimer = t('tnvedCheck.disclaimer');
 
   return (
-    <div className="section container-page max-w-2xl">
+    <div className="section container-page">
+     <div className="max-w-2xl mx-auto">
       <SEO title={t('nav.tnvedCheck')} description={t('tnvedCheck.subtitle')} />
       <Breadcrumb items={[{ label: t('nav.tnvedCheck') }]} />
       <h1 className="mt-4 text-3xl font-extrabold text-primary">{t('tnvedCheck.title')}</h1>
@@ -248,7 +249,47 @@ export default function TnVedCheck() {
             as reference information regardless of what code is entered. */}
         <GeneralExceptions />
       </div>
+     </div>
+
+      <MxikSearch />
     </div>
+  );
+}
+
+const MXIK_SEARCH_URL = 'https://mxik-uz.vercel.app/';
+
+// External MXIK code search (activity / product name / TIF TN code -> MXIK),
+// embedded as-is — the site is a self-contained static page with no
+// query-string API, so an iframe plus an "open in new tab" fallback is the
+// only way to bring its search in.
+function MxikSearch() {
+  const { t } = useTranslation();
+
+  return (
+    <section className="mt-12 max-w-6xl mx-auto">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-extrabold text-primary">{t('tnvedCheck.mxikTitle')}</h2>
+          <p className="mt-1 text-sm text-slate-500">{t('tnvedCheck.mxikSubtitle')}</p>
+        </div>
+        <a
+          href={MXIK_SEARCH_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          {t('tnvedCheck.mxikOpenNew')} <ExternalLink className="h-4 w-4" />
+        </a>
+      </div>
+      <div className="mt-4 card overflow-hidden p-0">
+        <iframe
+          src={MXIK_SEARCH_URL}
+          title={t('tnvedCheck.mxikTitle')}
+          loading="lazy"
+          className="block w-full h-[80vh] min-h-[600px] border-0"
+        />
+      </div>
+    </section>
   );
 }
 

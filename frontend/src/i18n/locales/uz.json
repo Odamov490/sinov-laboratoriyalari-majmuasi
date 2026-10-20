@@ -212,7 +212,10 @@
     "codeVersionConvertedTitle": "Diqqat: bu eski (2017-yilgi) TIF TN kodi",
     "codeVersionConvertedText": "2022-yilgi tahririda quyidagi yangi kod(lar)ga o'zgargan/bo'lingan:",
     "codeVersionUnchangedTitle": "Ushbu kod 733-son qaror ro'yxatida (kodi o'zgargan mahsulotlar) uchramadi — demak, ehtimol 2017 va 2022-yilgi tahrirlarda o'zgarmagan. Ushbu ro'yxat faqat o'zgargan kodlarni qamrab olgani uchun, mahsulot nomi haqida ma'lumotimiz yo'q.",
-    "codeVersionSource": "Manba: Vazirlar Mahkamasining 2022-yil 31-dekabrdagi 733-son qarori, 1-ilova."
+    "codeVersionSource": "Manba: Vazirlar Mahkamasining 2022-yil 31-dekabrdagi 733-son qarori, 1-ilova.",
+    "mxikTitle": "MXIK kodlarini qidirish",
+    "mxikSubtitle": "Faoliyat turi, mahsulot nomi yoki TIF TN kodi boʻyicha mos MXIK kodlarini toping.",
+    "mxikOpenNew": "Yangi oynada ochish"
   },
   "declarationInfo": {
     "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",
