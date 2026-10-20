@@ -215,7 +215,11 @@
     "codeVersionSource": "Manba: Vazirlar Mahkamasining 2022-yil 31-dekabrdagi 733-son qarori, 1-ilova.",
     "mxikTitle": "MXIK kodlarini qidirish",
     "mxikSubtitle": "Faoliyat turi, mahsulot nomi yoki TIF TN kodi boʻyicha mos MXIK kodlarini toping.",
-    "mxikOpenNew": "Yangi oynada ochish"
+    "mxikOpenNew": "Yangi oynada ochish",
+    "mxikSourceTitle": "Maʼlumot manbasi",
+    "mxikSourceText": "Ushbu qidiruv xizmati va undagi MXIK kodlari tashqi saytdan olinadi:",
+    "mxikSourceAuthor": "Muallif: «Buxgalteriya va Bojxona»",
+    "mxikDisclaimer": "Sinov laboratoriyalari majmuasi ushbu maʼlumotlarni yaratmaydi va ularning toʻgʻriligi uchun javobgar emas. Maʼlumotlar tanishish uchun berilgan va rasmiy manba oʻrnini bosmaydi — muhim hujjatlardan oldin kodni rasmiy MXIK katalogida tekshiring:"
   },
   "declarationInfo": {
     "subtitle": "Muvofiqlik deklaratsiyasi va sertifikati o'rtasidagi farq, talablar va ariza berish tartibi haqida to'liq ma'lumot.",

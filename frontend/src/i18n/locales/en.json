@@ -215,7 +215,11 @@
     "codeVersionSource": "Source: Cabinet of Ministers Resolution No. 733 of December 31, 2022, Annex 1.",
     "mxikTitle": "MXIK code search",
     "mxikSubtitle": "Find matching MXIK codes by activity type, product name or TN VED code.",
-    "mxikOpenNew": "Open in new tab"
+    "mxikOpenNew": "Open in new tab",
+    "mxikSourceTitle": "Data source",
+    "mxikSourceText": "This search service and the MXIK codes in it are loaded from a third-party website:",
+    "mxikSourceAuthor": "Author: “Buxgalteriya va Bojxona”",
+    "mxikDisclaimer": "The testing laboratory complex does not produce this data and is not responsible for its accuracy. It is provided for reference only and does not replace the official source — verify the code in the official MXIK catalogue before preparing important documents:"
   },
   "declarationInfo": {
     "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",
