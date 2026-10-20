@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Info, Loader2, ChevronDown, ShieldQuestion, FileSearch, ExternalLink } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
@@ -315,6 +316,14 @@ function MxikSearch() {
   const [srcDoc, setSrcDoc] = useState(null);
   const [failed, setFailed] = useState(false);
   const frameRef = useRef(null);
+  const sectionRef = useRef(null);
+  const { hash } = useLocation();
+
+  // Home page "MXIK" button links to /tnved-tekshirish#mxik — React Router
+  // doesn't scroll to hash targets itself.
+  useEffect(() => {
+    if (hash === '#mxik') sectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [hash]);
 
   useEffect(() => {
     const onMessage = async (e) => {
@@ -352,7 +361,7 @@ function MxikSearch() {
   }, []);
 
   return (
-    <section className="mt-12 max-w-6xl mx-auto">
+    <section id="mxik" ref={sectionRef} className="mt-12 max-w-6xl mx-auto scroll-mt-28">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-extrabold text-primary">{t('tnvedCheck.mxikTitle')}</h2>

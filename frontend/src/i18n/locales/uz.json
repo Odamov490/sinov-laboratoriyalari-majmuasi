@@ -18,7 +18,8 @@
     "apply": "Ariza yuborish",
     "tnvedCheck": "TN VED tekshirish",
     "declarationInfo": "Deklaratsiya va sertifikat",
-    "testPrograms": "Sinov dasturlari"
+    "testPrograms": "Sinov dasturlari",
+    "mxikCheck": "MXIK tekshirish"
   },
   "testProgram": {
     "title": "Sinov dasturlari",

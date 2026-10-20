@@ -18,7 +18,8 @@
     "apply": "Submit Application",
     "tnvedCheck": "Check TN VED Code",
     "declarationInfo": "Declaration & Certificate",
-    "testPrograms": "Test Programs"
+    "testPrograms": "Test Programs",
+    "mxikCheck": "Check MXIK Code"
   },
   "testProgram": {
     "title": "Test Programs",

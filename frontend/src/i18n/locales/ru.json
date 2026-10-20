@@ -18,7 +18,8 @@
     "apply": "Подать заявку",
     "tnvedCheck": "Проверить ТН ВЭД",
     "declarationInfo": "Декларация и сертификат",
-    "testPrograms": "Программы испытаний"
+    "testPrograms": "Программы испытаний",
+    "mxikCheck": "Проверить ИКПУ (MXIK)"
   },
   "testProgram": {
     "title": "Программы испытаний",
