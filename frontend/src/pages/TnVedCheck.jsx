@@ -258,12 +258,38 @@ export default function TnVedCheck() {
 
 const MXIK_SEARCH_URL = 'https://mxik-uz.vercel.app/';
 
-// External MXIK code search (activity / product name / TIF TN code -> MXIK),
-// embedded as-is — the site is a self-contained static page with no
-// query-string API, so an iframe plus an "open in new tab" fallback is the
-// only way to bring its search in.
+// The external site's own footer (its Telegram channel, sources, data
+// status) is hidden when embedded here.
+const MXIK_HIDE_CSS = '<style>.site-foot{display:none!important}</style>';
+
+// External MXIK code search (activity / product name / TIF TN code -> MXIK).
+// The site is a single self-contained static HTML page served with CORS "*",
+// so it is fetched, its footer hidden via injected CSS, and rendered through
+// srcdoc in a sandbox (opaque origin — its scripts can't touch this site).
+// If the fetch fails, the plain URL is embedded instead.
 function MxikSearch() {
   const { t } = useTranslation();
+  const [srcDoc, setSrcDoc] = useState(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(MXIK_SEARCH_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.text();
+      })
+      .then((html) => {
+        if (cancelled) return;
+        setSrcDoc(html.replace(/<\/head>/i, `${MXIK_HIDE_CSS}</head>`));
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <section className="mt-12 max-w-6xl mx-auto">
@@ -282,12 +308,25 @@ function MxikSearch() {
         </a>
       </div>
       <div className="mt-4 card overflow-hidden p-0">
-        <iframe
-          src={MXIK_SEARCH_URL}
-          title={t('tnvedCheck.mxikTitle')}
-          loading="lazy"
-          className="block w-full h-[80vh] min-h-[600px] border-0"
-        />
+        {srcDoc ? (
+          <iframe
+            srcDoc={srcDoc}
+            title={t('tnvedCheck.mxikTitle')}
+            sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+            allow="clipboard-write"
+            className="block w-full h-[80vh] min-h-[600px] border-0"
+          />
+        ) : failed ? (
+          <iframe
+            src={MXIK_SEARCH_URL}
+            title={t('tnvedCheck.mxikTitle')}
+            className="block w-full h-[80vh] min-h-[600px] border-0"
+          />
+        ) : (
+          <div className="flex h-[80vh] min-h-[600px] items-center justify-center text-slate-400">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        )}
       </div>
     </section>
   );
