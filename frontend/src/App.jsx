@@ -24,6 +24,7 @@ import Faq from './pages/Faq.jsx';
 import Contact from './pages/Contact.jsx';
 import ApplicationForm from './pages/ApplicationForm.jsx';
 import TnVedCheck from './pages/TnVedCheck.jsx';
+import MxikCheck from './pages/MxikCheck.jsx';
 import DeclarationInfo from './pages/DeclarationInfo.jsx';
 import TrackApplication from './pages/TrackApplication.jsx';
 import Products from './pages/Products.jsx';
@@ -106,6 +107,7 @@ export default function App() {
         <Route path="/arizani-tekshirish" element={<TrackApplication />} />
         <Route path="/ariza" element={<ApplicationForm />} />
         <Route path="/tnved-tekshirish" element={<TnVedCheck />} />
+        <Route path="/mxik-tekshirish" element={<MxikCheck />} />
         <Route path="/deklaratsiya-va-sertifikat" element={<DeclarationInfo />} />
         <Route path="/mahsulotlar" element={<Products />} />
         <Route path="/mahsulotlar/:slug" element={<ProductDetail />} />

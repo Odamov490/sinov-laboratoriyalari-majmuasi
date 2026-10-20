@@ -278,7 +278,7 @@ export default function Home() {
                 {t('nav.tnvedCheck')}
               </Link>
               <Link
-                to="/tnved-tekshirish#mxik"
+                to="/mxik-tekshirish"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
                 {t('nav.mxikCheck')}

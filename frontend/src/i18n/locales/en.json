@@ -213,14 +213,7 @@
     "codeVersionConvertedTitle": "Note: this is an old (2017) TN VED code",
     "codeVersionConvertedText": "It was changed/split into the following new code(s) in the 2022 revision:",
     "codeVersionUnchangedTitle": "This code does not appear in Resolution No. 733's list (products whose code changed) — so it likely stayed the same between the 2017 and 2022 revisions. Since that list only covers changed codes, we don't have a product name on file for it.",
-    "codeVersionSource": "Source: Cabinet of Ministers Resolution No. 733 of December 31, 2022, Annex 1.",
-    "mxikTitle": "MXIK code search",
-    "mxikSubtitle": "Find matching MXIK codes by activity type, product name or TN VED code.",
-    "mxikOpenNew": "Open in new tab",
-    "mxikSourceTitle": "Data source",
-    "mxikSourceText": "This search service and the MXIK codes in it are loaded from a third-party website:",
-    "mxikSourceAuthor": "Author: “Buxgalteriya va Bojxona”",
-    "mxikDisclaimer": "The testing laboratory complex does not produce this data and is not responsible for its accuracy. It is provided for reference only and does not replace the official source — verify the code in the official MXIK catalogue before preparing important documents:"
+    "codeVersionSource": "Source: Cabinet of Ministers Resolution No. 733 of December 31, 2022, Annex 1."
   },
   "declarationInfo": {
     "subtitle": "Full guidance on the difference between a declaration and a certificate of conformity, the requirements, and how to apply.",
@@ -309,5 +302,14 @@
     "NATIJA_TAYYOR": "Result ready",
     "YAKUNLANDI": "Completed",
     "BEKOR_QILINDI": "Cancelled"
+  },
+  "mxikCheck": {
+    "title": "MXIK code search",
+    "subtitle": "Find matching MXIK codes by activity type, product name or TN VED code.",
+    "openNew": "Open in new tab",
+    "sourceTitle": "Data source",
+    "sourceText": "This search service and the MXIK codes in it are loaded from a third-party website:",
+    "sourceAuthor": "Author: “Buxgalteriya va Bojxona”",
+    "disclaimer": "The testing laboratory complex does not produce this data and is not responsible for its accuracy. It is provided for reference only and does not replace the official source — verify the code in the official MXIK catalogue before preparing important documents:"
   }
 }
