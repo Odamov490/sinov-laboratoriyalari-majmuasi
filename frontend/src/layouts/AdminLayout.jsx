@@ -48,43 +48,72 @@ import {
   Flag,
   Lightbulb,
   Archive,
-  ChevronDown,
+  Briefcase,
+  Library,
+  PenLine,
+  MoreHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
 import { adminResource } from '../services/adminApi';
 import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
+import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
 
-const MENU = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] },
-  { to: '/admin/arizalar', label: 'Arizalar', icon: Inbox, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/laboratoriyalar', label: 'Laboratoriyalar', icon: FlaskConical, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/xizmatlar', label: 'Xizmatlar', icon: Wrench, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/narxlar', label: 'Narxlar', icon: Tag, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/standartlar', label: 'Standartlar', icon: BookOpen, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/tnved-reglament', label: 'TN VED reglament', icon: ScrollText, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/korsatkichlar', label: "Ko'rsatkichlar hovuzi", icon: ClipboardList, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/sinov-dasturlari', label: 'Sinov dasturlari', icon: Layers, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/yangiliklar', label: 'Yangiliklar', icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR'] },
-  { to: '/admin/hujjatlar', label: 'Hujjatlar', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR'] },
-  { to: '/admin/mutaxassislar', label: 'Mutaxassislar', icon: Users, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/uskunalar', label: 'Uskunalar', icon: Cpu, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/galereya', label: 'Galereya', icon: Image, roles: ['SUPER_ADMIN', 'EDITOR'] },
-  { to: '/admin/faq', label: 'FAQ', icon: HelpCircle, roles: ['SUPER_ADMIN', 'EDITOR'] },
-  { to: '/admin/akkreditatsiya', label: 'Akkreditatsiya', icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/deklaratsiya-sertifikat', label: 'Deklaratsiya/sertifikat', icon: Info, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/murojaatlar', label: 'Murojaatlar', icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'], badgeKey: 'unreadMessages' },
-  { to: '/admin/namunalar', label: 'Namunalar', icon: Package, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/skanerlash', label: 'Skanerlash', icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
-  { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
-  { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
+// Always shown at the very top, outside any collapsible group.
+const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] };
+
+// Sidebar groups. Each item keeps its own to/label/icon/roles/badgeKey; a
+// group whose items are all hidden for the current role is not rendered.
+// New modules go into the fitting group's items (SMK modules -> 'sifat');
+// anything that fits nowhere goes into 'boshqa' so it never drops out of the
+// menu.
+const MENU_GROUPS = [
   {
-    // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — barcha 22 quyi-sahifa
-    // (20 modul, ikkitasi ikki sahifali) doimiy ochiq bitta ustunda,
-    // ketma-ket ro'yxat holida — na tab, na accordion.
-    group: 'SMK',
+    key: 'operatsiyalar',
+    label: 'Operatsiyalar',
+    icon: Briefcase,
+    items: [
+      { to: '/admin/arizalar', label: 'Arizalar', icon: Inbox, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/namunalar', label: 'Namunalar', icon: Package, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/skanerlash', label: 'Skanerlash', icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/murojaatlar', label: 'Murojaatlar', icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'], badgeKey: 'unreadMessages' },
+    ],
+  },
+  {
+    key: 'katalog',
+    label: 'Katalog',
+    icon: Library,
+    items: [
+      { to: '/admin/laboratoriyalar', label: 'Laboratoriyalar', icon: FlaskConical, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/xizmatlar', label: 'Xizmatlar', icon: Wrench, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/narxlar', label: 'Narxlar', icon: Tag, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/standartlar', label: 'Standartlar', icon: BookOpen, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/mutaxassislar', label: 'Mutaxassislar', icon: Users, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/uskunalar', label: 'Uskunalar', icon: Cpu, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/tnved-reglament', label: 'TN VED reglament', icon: ScrollText, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/korsatkichlar', label: "Ko'rsatkichlar hovuzi", icon: ClipboardList, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/sinov-dasturlari', label: 'Sinov dasturlari', icon: Layers, roles: ['SUPER_ADMIN', 'MANAGER'] },
+    ],
+  },
+  {
+    key: 'kontent',
+    label: 'Kontent',
+    icon: PenLine,
+    items: [
+      { to: '/admin/yangiliklar', label: 'Yangiliklar', icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/hujjatlar', label: 'Hujjatlar', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/galereya', label: 'Galereya', icon: Image, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/faq', label: 'FAQ', icon: HelpCircle, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/deklaratsiya-sertifikat', label: 'Deklaratsiya/sertifikat', icon: Info, roles: ['SUPER_ADMIN', 'MANAGER'] },
+    ],
+  },
+  {
+    // Akkreditatsiya + SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) modullari.
+    key: 'sifat',
+    label: 'Sifat',
     icon: Award,
     items: [
+      { to: '/admin/akkreditatsiya', label: 'Akkreditatsiya', icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/smk/nomuvofiqliklar', label: 'Nomuvofiqliklar (CAPA)', icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/smk/shikoyatlar', label: 'Sifat shikoyatlari', icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/smk/hujjatlar', label: 'SMK Hujjatlar', icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
@@ -109,18 +138,64 @@ const MENU = [
       { to: '/admin/smk/arxiv-siyosati', label: 'Arxiv/saqlash siyosati', icon: Archive, roles: ['SUPER_ADMIN'] },
     ],
   },
+  {
+    key: 'tizim',
+    label: 'Tizim',
+    icon: Settings,
+    items: [
+      { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
+    ],
+  },
+  {
+    key: 'boshqa',
+    label: 'Boshqa',
+    icon: MoreHorizontal,
+    items: [],
+  },
 ];
+
+const MENU_STORAGE_KEY = 'admin_menu_groups';
+const DEFAULT_OPEN_GROUP = 'operatsiyalar';
+
+const isItemActive = (item, pathname) => pathname === item.to || pathname.startsWith(`${item.to}/`);
+
+const findActiveGroupKey = (pathname) =>
+  MENU_GROUPS.find((group) => group.items.some((item) => isItemActive(item, pathname)))?.key;
+
+function loadOpenGroups(pathname) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(MENU_STORAGE_KEY));
+    if (saved && typeof saved === 'object') return saved;
+  } catch {
+    // unreadable/blocked storage -> fall through to defaults
+  }
+  const active = findActiveGroupKey(pathname);
+  return { [DEFAULT_OPEN_GROUP]: true, ...(active ? { [active]: true } : {}) };
+}
 
 export default function AdminLayout() {
   const { user, loading, logout } = useAuth();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const [smkOpen, setSmkOpen] = useState(location.pathname.startsWith('/admin/smk'));
+  const [openGroups, setOpenGroups] = useState(() => loadOpenGroups(location.pathname));
+
+  // The group holding the current page is always expanded on navigation.
+  useEffect(() => {
+    const active = findActiveGroupKey(location.pathname);
+    if (active) setOpenGroups((prev) => (prev[active] ? prev : { ...prev, [active]: true }));
+  }, [location.pathname]);
 
   useEffect(() => {
-    if (location.pathname.startsWith('/admin/smk')) setSmkOpen(true);
-  }, [location.pathname]);
+    try {
+      localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(openGroups));
+    } catch {
+      // storage unavailable — state just won't persist
+    }
+  }, [openGroups]);
+
+  const toggleGroup = (key) => setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
     if (!user || !['SUPER_ADMIN', 'MANAGER'].includes(user.role)) return;
@@ -144,13 +219,10 @@ export default function AdminLayout() {
   if (!user) return <Navigate to="/admin/login" replace />;
 
   const badgeValues = { unreadMessages };
-  const items = MENU.map((m) => {
-    if (m.group) {
-      const groupItems = m.items.filter((i) => i.roles.includes(user.role));
-      return groupItems.length ? { ...m, items: groupItems } : null;
-    }
-    return m.roles.includes(user.role) ? m : null;
-  }).filter(Boolean);
+  const canSee = (item) => item.roles.includes(user.role);
+  const groups = MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter(canSee) })).filter(
+    (group) => group.items.length > 0
+  );
 
   const renderLink = (item) => {
     const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
@@ -192,25 +264,18 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="admin-sidebar-nav p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
-          {items.map((item) =>
-            item.group ? (
-              <div key={item.group} className="pt-3 mt-2 border-t border-white/10">
-                <button
-                  type="button"
-                  onClick={() => setSmkOpen((v) => !v)}
-                  className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-white/60 hover:text-white transition-colors"
-                >
-                  <span className="flex items-center gap-2">
-                    <item.icon className="h-3.5 w-3.5" /> {item.group}
-                  </span>
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${smkOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {smkOpen && <div className="space-y-1">{item.items.map((sub) => renderLink(sub))}</div>}
-              </div>
-            ) : (
-              renderLink(item)
-            )
-          )}
+          {canSee(DASHBOARD_ITEM) && renderLink(DASHBOARD_ITEM)}
+          {groups.map((group) => (
+            <AdminMenuGroup
+              key={group.key}
+              group={group}
+              isOpen={Boolean(openGroups[group.key])}
+              onToggle={() => toggleGroup(group.key)}
+              badgeCount={group.items.reduce((sum, item) => sum + (item.badgeKey ? badgeValues[item.badgeKey] || 0 : 0), 0)}
+            >
+              {group.items.map((item) => renderLink(item))}
+            </AdminMenuGroup>
+          ))}
           <button
             onClick={logout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white mt-4"
