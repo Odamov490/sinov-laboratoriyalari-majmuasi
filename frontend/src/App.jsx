@@ -39,6 +39,7 @@ import AdminUsers from './pages/admin/AdminUsers.jsx';
 import AdminSettings from './pages/admin/AdminSettings.jsx';
 import AdminDeclarationInfo from './pages/admin/AdminDeclarationInfo.jsx';
 import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
+import AdminSmkPage, { AdminSmkLegacyRedirect } from './pages/admin/AdminSmkPage.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
@@ -136,28 +137,29 @@ export default function App() {
         <Route path="sinov-dasturlari" element={<AdminCrudPage config={productConfig} />} />
         <Route path="sinov-dasturlari/:id" element={<AdminTestProgramBuilder />} />
         <Route path="deklaratsiya-sertifikat" element={<AdminDeclarationInfo />} />
-        <Route path="smk/nomuvofiqliklar" element={<AdminCrudPage config={nonConformanceConfig} />} />
-        <Route path="smk/shikoyatlar" element={<AdminCrudPage config={complaintConfig} />} />
-        <Route path="smk/hujjatlar" element={<AdminCrudPage config={smkDocumentConfig} />} />
-        <Route path="smk/hujjat-versiyalari" element={<AdminCrudPage config={smkDocumentVersionConfig} />} />
-        <Route path="smk/auditlar" element={<AdminCrudPage config={internalAuditConfig} />} />
-        <Route path="smk/audit-topilmalari" element={<AdminCrudPage config={auditFindingConfig} />} />
-        <Route path="smk/kalibrlash" element={<AdminCrudPage config={calibrationRecordConfig} />} />
-        <Route path="smk/treninglar" element={<AdminCrudPage config={trainingRecordConfig} />} />
-        <Route path="smk/qc" element={<AdminCrudPage config={qualityControlRecordConfig} />} />
-        <Route path="smk/malakaviy-sinovlar" element={<AdminCrudPage config={proficiencyTestConfig} />} />
-        <Route path="smk/olchov-noaniqligi" element={<AdminCrudPage config={measurementUncertaintyConfig} />} />
-        <Route path="smk/metodika" element={<AdminCrudPage config={methodValidationConfig} />} />
-        <Route path="smk/xolislik" element={<AdminCrudPage config={impartialityDeclarationConfig} />} />
-        <Route path="smk/taminotchilar" element={<AdminCrudPage config={supplierEvaluationConfig} />} />
-        <Route path="smk/subpudratchilar" element={<AdminCrudPage config={subcontractorConfig} />} />
-        <Route path="smk/muhit-monitoring" element={<AdminCrudPage config={environmentLogConfig} />} />
-        <Route path="smk/tanishtirish" element={<AdminCrudPage config={documentAcknowledgmentConfig} />} />
-        <Route path="smk/boshqaruv-sharhi" element={<AdminCrudPage config={managementReviewConfig} />} />
-        <Route path="smk/risklar" element={<AdminCrudPage config={riskItemConfig} />} />
-        <Route path="smk/maqsadlar" element={<AdminCrudPage config={qualityObjectiveConfig} />} />
-        <Route path="smk/takliflar" element={<AdminCrudPage config={improvementSuggestionConfig} />} />
-        <Route path="smk/arxiv-siyosati" element={<AdminCrudPage config={retentionPolicyConfig} />} />
+        <Route path="smk/:labSlug/nomuvofiqliklar" element={<AdminSmkPage config={nonConformanceConfig} />} />
+        <Route path="smk/:labSlug/shikoyatlar" element={<AdminSmkPage config={complaintConfig} />} />
+        <Route path="smk/:labSlug/hujjatlar" element={<AdminSmkPage config={smkDocumentConfig} />} />
+        <Route path="smk/:labSlug/hujjat-versiyalari" element={<AdminSmkPage config={smkDocumentVersionConfig} />} />
+        <Route path="smk/:labSlug/auditlar" element={<AdminSmkPage config={internalAuditConfig} />} />
+        <Route path="smk/:labSlug/audit-topilmalari" element={<AdminSmkPage config={auditFindingConfig} />} />
+        <Route path="smk/:labSlug/kalibrlash" element={<AdminSmkPage config={calibrationRecordConfig} />} />
+        <Route path="smk/:labSlug/treninglar" element={<AdminSmkPage config={trainingRecordConfig} />} />
+        <Route path="smk/:labSlug/qc" element={<AdminSmkPage config={qualityControlRecordConfig} />} />
+        <Route path="smk/:labSlug/malakaviy-sinovlar" element={<AdminSmkPage config={proficiencyTestConfig} />} />
+        <Route path="smk/:labSlug/olchov-noaniqligi" element={<AdminSmkPage config={measurementUncertaintyConfig} />} />
+        <Route path="smk/:labSlug/metodika" element={<AdminSmkPage config={methodValidationConfig} />} />
+        <Route path="smk/:labSlug/xolislik" element={<AdminSmkPage config={impartialityDeclarationConfig} />} />
+        <Route path="smk/:labSlug/taminotchilar" element={<AdminSmkPage config={supplierEvaluationConfig} />} />
+        <Route path="smk/:labSlug/subpudratchilar" element={<AdminSmkPage config={subcontractorConfig} />} />
+        <Route path="smk/:labSlug/muhit-monitoring" element={<AdminSmkPage config={environmentLogConfig} />} />
+        <Route path="smk/:labSlug/tanishtirish" element={<AdminSmkPage config={documentAcknowledgmentConfig} />} />
+        <Route path="smk/:labSlug/boshqaruv-sharhi" element={<AdminSmkPage config={managementReviewConfig} />} />
+        <Route path="smk/:labSlug/risklar" element={<AdminSmkPage config={riskItemConfig} />} />
+        <Route path="smk/:labSlug/maqsadlar" element={<AdminSmkPage config={qualityObjectiveConfig} />} />
+        <Route path="smk/:labSlug/takliflar" element={<AdminSmkPage config={improvementSuggestionConfig} />} />
+        <Route path="smk/:labSlug/arxiv-siyosati" element={<AdminSmkPage config={retentionPolicyConfig} />} />
+        <Route path="smk/:module" element={<AdminSmkLegacyRedirect />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="skanerlash" element={<AdminScanner />} />

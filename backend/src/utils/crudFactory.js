@@ -14,13 +14,53 @@ const { asyncHandler } = require('../middleware/errorHandler');
  *    (e.g. an array of related IDs turned into `connect`/`set`), or when
  *    creation needs a server-computed value (e.g. a sequential document
  *    code) that requires its own DB query. May return a Promise.
+ *  - labScoped: boolean - records belong to a laboratory (`laboratoryId`).
+ *    The list is filtered by `?laboratoryId=<id>` (or `none` for records
+ *    not yet assigned to any lab). A non-SUPER_ADMIN user bound to a lab
+ *    (User.labId) is confined to that lab: they only see, create and edit
+ *    its records, whatever laboratoryId the request carries.
  */
+
+const UNASSIGNED_LAB = 'none';
+
+// The lab a user is confined to, or null if they may see every lab. Read
+// from the DB rather than the JWT, which doesn't carry labId and would go
+// stale when an admin reassigns the user.
+async function confinedLabId(req) {
+  if (!req.user || req.user.role === 'SUPER_ADMIN') return null;
+  const user = await prisma.user.findUnique({ where: { id: req.user.sub }, select: { labId: true } });
+  return user?.labId || null;
+}
+
 function crudFactory(modelName, opts = {}) {
   const model = prisma[modelName];
   if (!model) throw new Error(`Unknown Prisma model: ${modelName}`);
-  const { include, searchFields = [], softDelete = false, orderBy = { createdAt: 'desc' }, buildData } = opts;
+  const { include, searchFields = [], softDelete = false, orderBy = { createdAt: 'desc' }, buildData, labScoped = false } = opts;
 
   const baseWhere = () => (softDelete ? { deletedAt: null } : {});
+
+  // Extra where-clause restricting a lab-bound user to their own lab's rows.
+  const labWhere = async (req) => {
+    if (!labScoped) return {};
+    const labId = await confinedLabId(req);
+    return labId ? { laboratoryId: labId } : {};
+  };
+
+  // Pins laboratoryId on the write payload for a lab-bound user.
+  const scopeData = async (req, data) => {
+    if (!labScoped) return data;
+    const labId = await confinedLabId(req);
+    return labId ? { ...data, laboratoryId: labId } : data;
+  };
+
+  // A lab-bound user may only edit/delete their own lab's rows; to them,
+  // other labs' rows simply don't exist (404).
+  const isOwned = async (req) => {
+    const scope = await labWhere(req);
+    if (!Object.keys(scope).length) return true;
+    const owned = await model.findFirst({ where: { id: req.params.id, ...scope }, select: { id: true } });
+    return Boolean(owned);
+  };
 
   const list = asyncHandler(async (req, res) => {
     const { page = 1, pageSize = 20, q } = req.query;
@@ -28,6 +68,13 @@ function crudFactory(modelName, opts = {}) {
     const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
 
     const where = { ...baseWhere() };
+    if (labScoped) {
+      const confined = await confinedLabId(req);
+      const requested = req.query.laboratoryId;
+      if (confined) where.laboratoryId = confined;
+      else if (requested === UNASSIGNED_LAB) where.laboratoryId = null;
+      else if (requested) where.laboratoryId = String(requested);
+    }
     if (q && searchFields.length) {
       where.OR = searchFields.map((field) => ({
         [field]: { contains: q, mode: 'insensitive' },
@@ -44,7 +91,7 @@ function crudFactory(modelName, opts = {}) {
 
   const getOne = asyncHandler(async (req, res) => {
     const item = await model.findFirst({
-      where: { id: req.params.id, ...baseWhere() },
+      where: { id: req.params.id, ...baseWhere(), ...(await labWhere(req)) },
       include,
     });
     if (!item) return res.status(404).json({ error: 'Ma\'lumot topilmadi.' });
@@ -52,13 +99,16 @@ function crudFactory(modelName, opts = {}) {
   });
 
   const create = asyncHandler(async (req, res) => {
-    const data = buildData ? await buildData(req.body, { isUpdate: false }) : req.body;
+    const built = buildData ? await buildData(req.body, { isUpdate: false }) : req.body;
+    const data = await scopeData(req, built);
     const item = await model.create({ data, include });
     res.status(201).json(item);
   });
 
   const update = asyncHandler(async (req, res) => {
-    const data = buildData ? await buildData(req.body, { isUpdate: true }) : req.body;
+    if (!(await isOwned(req))) return res.status(404).json({ error: 'Ma\'lumot topilmadi.' });
+    const built = buildData ? await buildData(req.body, { isUpdate: true }) : req.body;
+    const data = await scopeData(req, built);
     const item = await model.update({
       where: { id: req.params.id },
       data,
@@ -68,6 +118,7 @@ function crudFactory(modelName, opts = {}) {
   });
 
   const remove = asyncHandler(async (req, res) => {
+    if (!(await isOwned(req))) return res.status(404).json({ error: 'Ma\'lumot topilmadi.' });
     if (softDelete) {
       await model.update({ where: { id: req.params.id }, data: { deletedAt: new Date() } });
     } else {

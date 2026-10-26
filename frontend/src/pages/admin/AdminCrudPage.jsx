@@ -13,8 +13,29 @@ const MONTH_NAMES_UZ = [
 
 const PAGE_SIZE_OPTIONS = [15, 25, 50, 100, 200, 500];
 
-export default function AdminCrudPage({ config }) {
+const LAB_FIELD = {
+  name: 'laboratoryId',
+  label: 'Laboratoriya',
+  type: 'async-select',
+  optionsResource: 'laboratories',
+  optionsLabel: (item) => item.nameUz,
+};
+
+// labScope ({ id, name }) — set for SMK pages, which are kept per laboratory:
+// the list shows only that lab's records and new records are created in it,
+// so the form's laboratoryId field is dropped. id === null is the
+// "unassigned" view, where the field is kept (added if the config lacks it)
+// so old records can be assigned to a lab.
+export default function AdminCrudPage({ config, labScope }) {
   const resource = adminResource(config.path);
+  const labParams = labScope ? { laboratoryId: labScope.id ?? 'none' } : {};
+  const fields = !labScope
+    ? config.fields
+    : labScope.id
+      ? config.fields.filter((f) => f.name !== 'laboratoryId')
+      : config.fields.some((f) => f.name === 'laboratoryId')
+        ? config.fields
+        : [LAB_FIELD, ...config.fields];
   const { showToast } = useToast();
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
@@ -40,7 +61,7 @@ export default function AdminCrudPage({ config }) {
   const load = () => {
     setError(false);
     resource
-      .list({ q: q || undefined, page, pageSize })
+      .list({ q: q || undefined, page, pageSize, ...labParams })
       .then(setData)
       .catch(() => setError(true));
   };
@@ -79,10 +100,12 @@ export default function AdminCrudPage({ config }) {
   }, []);
 
   const loadAsyncOptions = () => {
-    const asyncFields = config.fields.filter((f) => f.type === 'async-select' || f.type === 'async-multi-select');
+    const asyncFields = fields.filter((f) => f.type === 'async-select' || f.type === 'async-multi-select');
     asyncFields.forEach((f) => {
+      // Options from other SMK modules (e.g. a finding's audit) come from the same lab.
+      const scoped = f.optionsResource.startsWith('smk/') ? labParams : {};
       adminResource(f.optionsResource)
-        .list({ pageSize: 200 })
+        .list({ pageSize: 200, ...scoped })
         .then((d) => setAsyncOptions((prev) => ({ ...prev, [f.name]: d.items })))
         .catch(() => setAsyncOptions((prev) => ({ ...prev, [f.name]: [] })));
     });
@@ -91,7 +114,7 @@ export default function AdminCrudPage({ config }) {
   const openCreate = () => {
     setEditing(null);
     const initial = {};
-    config.fields.forEach((f) => {
+    fields.forEach((f) => {
       if (f.default !== undefined) initial[f.name] = f.default;
       else if (f.type === 'checkbox') initial[f.name] = false;
       else if (f.type === 'async-multi-select') initial[f.name] = [];
@@ -110,7 +133,7 @@ export default function AdminCrudPage({ config }) {
     // Prisma on save. `fromItem` lets a field derive its form value from a
     // differently-shaped relation on the item (e.g. a m2m array of objects).
     const initial = {};
-    config.fields.forEach((f) => {
+    fields.forEach((f) => {
       let val;
       if (f.fromItem) val = f.fromItem(item);
       else if (f.type === 'checkbox') val = item[f.name] ?? false;
@@ -171,7 +194,7 @@ export default function AdminCrudPage({ config }) {
     setSaving(true);
     try {
       const payload = { ...form };
-      config.fields.forEach((f) => {
+      fields.forEach((f) => {
         if (f.type === 'number' && payload[f.name] !== '') payload[f.name] = Number(payload[f.name]);
         if (f.type === 'select-bool') payload[f.name] = payload[f.name] === 'true' || payload[f.name] === true;
         if (f.name.endsWith('Id') && payload[f.name] === '') payload[f.name] = null;
@@ -185,6 +208,8 @@ export default function AdminCrudPage({ config }) {
           if (!payload[target]) payload[target] = payload[source];
         });
       }
+
+      if (labScope?.id && !editing) payload.laboratoryId = labScope.id;
 
       if (editing) {
         await resource.update(editing.id, payload);
@@ -290,7 +315,7 @@ export default function AdminCrudPage({ config }) {
     });
 
   const fetchAllForExport = async () => {
-    const full = await resource.list({ q: q || undefined, page: 1, pageSize: 1000 });
+    const full = await resource.list({ q: q || undefined, page: 1, pageSize: 1000, ...labParams });
     return full.items;
   };
 
@@ -390,7 +415,10 @@ export default function AdminCrudPage({ config }) {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-ink">{config.title}</h1>
+        <h1 className="text-2xl font-bold text-ink">
+          {config.title}
+          {labScope && <span className="ml-2 text-base font-medium text-slate-500">— {labScope.name}</span>}
+        </h1>
         <div className="flex items-center gap-2">
           {config.exportable && (
             <>
@@ -501,7 +529,7 @@ export default function AdminCrudPage({ config }) {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Tahrirlash' : "Qo'shish"} size="lg">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {config.fields.map((f) => (
+          {fields.map((f) => (
             <div key={f.name} className={f.fullWidth ? 'sm:col-span-2' : ''}>
               <label className="block text-sm font-medium text-ink mb-1.5">{f.label}</label>
               {f.type === 'textarea' ? (

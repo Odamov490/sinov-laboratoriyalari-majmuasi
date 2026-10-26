@@ -256,6 +256,7 @@ router.delete('/products/:id/indicators/:assignmentId', requireModule('testProgr
 // generatsiya qilinadi (Application.applicationNumber kabi), shuning uchun
 // admin formasida tahrirlanmaydi — faqat ro'yxatda ko'rinadi.
 mountCrud('smk/nonconformances', 'smk_nonconformances', 'nonConformance', {
+  labScoped: true,
   include: { responsibleUser: true },
   searchFields: ['code', 'description'],
   orderBy: { createdAt: 'desc' },
@@ -265,6 +266,7 @@ mountCrud('smk/nonconformances', 'smk_nonconformances', 'nonConformance', {
   },
 });
 mountCrud('smk/complaints', 'smk_complaints', 'complaint', {
+  labScoped: true,
   include: { responsibleUser: true, relatedApplication: true },
   searchFields: ['code', 'fullName', 'phone', 'description'],
   orderBy: { createdAt: 'desc' },
@@ -276,11 +278,13 @@ mountCrud('smk/complaints', 'smk_complaints', 'complaint', {
 
 // SMK — FAZA 2: Hujjat boshqaruvi
 mountCrud('smk/documents', 'smk_documents', 'sMKDocument', {
+  labScoped: true,
   include: { ownerUser: true },
   searchFields: ['code', 'titleUz', 'titleRu', 'titleEn'],
   orderBy: { createdAt: 'desc' },
 });
 mountCrud('smk/document-versions', 'smk_documents', 'sMKDocumentVersion', {
+  labScoped: true,
   include: { document: true, approvedByUser: true },
   searchFields: ['versionNumber', 'changeDescription'],
   orderBy: { createdAt: 'desc' },
@@ -288,10 +292,12 @@ mountCrud('smk/document-versions', 'smk_documents', 'sMKDocumentVersion', {
 
 // SMK — FAZA 3: Auditlar
 mountCrud('smk/audits', 'smk_audits', 'internalAudit', {
+  labScoped: true,
   include: { laboratory: true, auditorUser: true },
   orderBy: { plannedDate: 'desc' },
 });
 mountCrud('smk/audit-findings', 'smk_audits', 'auditFinding', {
+  labScoped: true,
   include: { audit: true, linkedNonConformance: true },
   searchFields: ['description'],
   orderBy: { createdAt: 'desc' },
@@ -299,61 +305,74 @@ mountCrud('smk/audit-findings', 'smk_audits', 'auditFinding', {
 
 // SMK — FAZA 4: Texnik yadro
 mountCrud('smk/calibration', 'smk_calibration', 'calibrationRecord', {
+  labScoped: true,
   include: { equipment: true },
   orderBy: { nextDueDate: 'asc' },
 });
 mountCrud('smk/training', 'smk_training', 'trainingRecord', {
+  labScoped: true,
   include: { user: true },
   searchFields: ['trainingTitle', 'provider'],
   orderBy: { trainingDate: 'desc' },
 });
 mountCrud('smk/qc', 'smk_qc', 'qualityControlRecord', {
+  labScoped: true,
   include: { laboratory: true },
   searchFields: ['testType'],
   orderBy: { controlDate: 'desc' },
 });
 mountCrud('smk/proficiency-tests', 'smk_pt', 'proficiencyTest', {
+  labScoped: true,
   include: { laboratory: true },
   searchFields: ['testProgram', 'providerName'],
   orderBy: { testDate: 'desc' },
 });
 mountCrud('smk/uncertainty', 'smk_uncertainty', 'measurementUncertainty', {
+  labScoped: true,
   include: { service: true },
   searchFields: ['testMethodName', 'unit'],
   orderBy: { updatedAt: 'desc' },
 });
 mountCrud('smk/methods', 'smk_methods', 'methodValidation', {
+  labScoped: true,
   searchFields: ['methodName', 'standardReference'],
   orderBy: { validationDate: 'desc' },
 });
 
 // SMK — FAZA 5: Tashkiliy
 mountCrud('smk/impartiality', 'smk_impartiality', 'impartialityDeclaration', {
+  labScoped: true,
   include: { user: true },
   orderBy: { declarationYear: 'desc' },
 });
 mountCrud('smk/suppliers', 'smk_suppliers', 'supplierEvaluation', {
+  labScoped: true,
   searchFields: ['supplierName', 'category'],
   orderBy: { evaluationDate: 'desc' },
 });
 mountCrud('smk/subcontractors', 'smk_subcontractors', 'subcontractor', {
+  labScoped: true,
   searchFields: ['name'],
   orderBy: { createdAt: 'desc' },
 });
 mountCrud('smk/environment', 'smk_environment', 'environmentLog', {
+  labScoped: true,
   include: { laboratory: true },
   orderBy: { recordedAt: 'desc' },
 });
 mountCrud('smk/acknowledgments', 'smk_acknowledgments', 'documentAcknowledgment', {
+  labScoped: true,
   include: { documentVersion: { include: { document: true } }, user: true },
   orderBy: { acknowledgedAt: 'desc' },
 });
 
 // SMK — FAZA 6: Strategik
 mountCrud('smk/reviews', 'smk_reviews', 'managementReview', {
+  labScoped: true,
   orderBy: { reviewDate: 'desc' },
 });
 mountCrud('smk/risks', 'smk_risks', 'riskItem', {
+  labScoped: true,
   include: { ownerUser: true },
   searchFields: ['description', 'category'],
   orderBy: { riskScore: 'desc' },
@@ -367,15 +386,18 @@ mountCrud('smk/risks', 'smk_risks', 'riskItem', {
   },
 });
 mountCrud('smk/objectives', 'smk_objectives', 'qualityObjective', {
+  labScoped: true,
   searchFields: ['objectiveText'],
   orderBy: { year: 'desc' },
 });
 mountCrud('smk/improvements', 'smk_improvements', 'improvementSuggestion', {
+  labScoped: true,
   include: { submittedByUser: true },
   searchFields: ['description'],
   orderBy: { submittedDate: 'desc' },
 });
 mountCrud('smk/retention', 'smk_retention', 'retentionPolicy', {
+  labScoped: true,
   searchFields: ['documentType'],
   orderBy: { documentType: 'asc' },
 });

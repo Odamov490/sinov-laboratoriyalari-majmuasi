@@ -58,9 +58,44 @@ import { Loading } from '../components/StateViews.jsx';
 import { adminResource } from '../services/adminApi';
 import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
+import { SMK_UNASSIGNED_SLUG, smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
 
 // Always shown at the very top, outside any collapsible group.
 const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] };
+
+// SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) modules. Each laboratory
+// keeps its own SMK, so these are rendered inside the Sifat group once per
+// lab, with `to` rewritten to /admin/smk/<lab-slug>/<module>. New SMK modules
+// go here.
+const SMK_MODULES = [
+      { to: '/admin/smk/nomuvofiqliklar', label: 'Nomuvofiqliklar (CAPA)', icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/shikoyatlar', label: 'Sifat shikoyatlari', icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/hujjatlar', label: 'SMK Hujjatlar', icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/hujjat-versiyalari', label: 'Hujjat versiyalari', icon: History, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/auditlar', label: 'Ichki auditlar', icon: ClipboardCheck, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/audit-topilmalari', label: 'Audit topilmalari', icon: Search, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/kalibrlash', label: 'Uskunalar kalibrlash', icon: Gauge, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/treninglar', label: 'Xodimlar treningi', icon: GraduationCap, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/qc', label: 'Ichki sifat nazorati', icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/malakaviy-sinovlar', label: 'Malakaviy sinovlar', icon: Target, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/olchov-noaniqligi', label: "O'lchov noaniqligi", icon: Calculator, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/metodika', label: 'Metodikani tasdiqlash', icon: FileSearch, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/xolislik', label: 'Xolislik deklaratsiyasi', icon: Scale, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/taminotchilar', label: "Ta'minotchilarni baholash", icon: Truck, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/subpudratchilar', label: 'Subpudratchilar', icon: Handshake, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/muhit-monitoring', label: 'Muhit sharoitlari', icon: Thermometer, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/tanishtirish', label: 'Hujjat bilan tanishtirish', icon: UserCheck, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/boshqaruv-sharhi', label: 'Boshqaruv sharhi', icon: Presentation, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/risklar', label: 'Risklar reestri', icon: AlertOctagon, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/maqsadlar', label: 'Sifat maqsadlari (KPI)', icon: Flag, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/takliflar', label: 'Yaxshilash takliflari', icon: Lightbulb, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/arxiv-siyosati', label: 'Arxiv/saqlash siyosati', icon: Archive, roles: ['SUPER_ADMIN'] },
+];
+
+const SMK_PREFIX = '/admin/smk/';
+const smkGroupKey = (labSlug) => `smk:${labSlug}`;
+const smkItemsForLab = (labSlug, items) =>
+  items.map((item) => ({ ...item, to: item.to.replace(SMK_PREFIX, `${SMK_PREFIX}${labSlug}/`) }));
 
 // Sidebar groups. Each item keeps its own to/label/icon/roles/badgeKey; a
 // group whose items are all hidden for the current role is not rendered.
@@ -108,34 +143,13 @@ const MENU_GROUPS = [
     ],
   },
   {
-    // Akkreditatsiya + SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) modullari.
+    // Akkreditatsiya + per-laboratory SMK subgroups (see SMK_MODULES).
     key: 'sifat',
     label: 'Sifat',
     icon: Award,
+    smk: true,
     items: [
       { to: '/admin/akkreditatsiya', label: 'Akkreditatsiya', icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/nomuvofiqliklar', label: 'Nomuvofiqliklar (CAPA)', icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/shikoyatlar', label: 'Sifat shikoyatlari', icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/hujjatlar', label: 'SMK Hujjatlar', icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/hujjat-versiyalari', label: 'Hujjat versiyalari', icon: History, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/auditlar', label: 'Ichki auditlar', icon: ClipboardCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/audit-topilmalari', label: 'Audit topilmalari', icon: Search, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/kalibrlash', label: 'Uskunalar kalibrlash', icon: Gauge, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/treninglar', label: 'Xodimlar treningi', icon: GraduationCap, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/qc', label: 'Ichki sifat nazorati', icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/malakaviy-sinovlar', label: 'Malakaviy sinovlar', icon: Target, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/olchov-noaniqligi', label: "O'lchov noaniqligi", icon: Calculator, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/metodika', label: 'Metodikani tasdiqlash', icon: FileSearch, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/xolislik', label: 'Xolislik deklaratsiyasi', icon: Scale, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/taminotchilar', label: "Ta'minotchilarni baholash", icon: Truck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/subpudratchilar', label: 'Subpudratchilar', icon: Handshake, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/muhit-monitoring', label: 'Muhit sharoitlari', icon: Thermometer, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/tanishtirish', label: 'Hujjat bilan tanishtirish', icon: UserCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/boshqaruv-sharhi', label: 'Boshqaruv sharhi', icon: Presentation, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/risklar', label: 'Risklar reestri', icon: AlertOctagon, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/maqsadlar', label: 'Sifat maqsadlari (KPI)', icon: Flag, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/takliflar', label: 'Yaxshilash takliflari', icon: Lightbulb, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/arxiv-siyosati', label: 'Arxiv/saqlash siyosati', icon: Archive, roles: ['SUPER_ADMIN'] },
     ],
   },
   {
@@ -160,8 +174,18 @@ const DEFAULT_OPEN_GROUP = 'operatsiyalar';
 
 const isItemActive = (item, pathname) => pathname === item.to || pathname.startsWith(`${item.to}/`);
 
-const findActiveGroupKey = (pathname) =>
-  MENU_GROUPS.find((group) => group.items.some((item) => isItemActive(item, pathname)))?.key;
+// Keys of the groups that hold the current page: a top-level group, plus the
+// lab subgroup for SMK pages (/admin/smk/<lab-slug>/...).
+function findActiveGroupKeys(pathname) {
+  if (pathname.startsWith(SMK_PREFIX)) {
+    const labSlug = pathname.slice(SMK_PREFIX.length).split('/')[0];
+    return labSlug ? ['sifat', smkGroupKey(labSlug)] : ['sifat'];
+  }
+  const group = MENU_GROUPS.find((g) => g.items.some((item) => isItemActive(item, pathname)));
+  return group ? [group.key] : [];
+}
+
+const withOpen = (state, keys) => (keys.every((k) => state[k]) ? state : { ...state, ...Object.fromEntries(keys.map((k) => [k, true])) });
 
 function loadOpenGroups(pathname) {
   try {
@@ -170,8 +194,7 @@ function loadOpenGroups(pathname) {
   } catch {
     // unreadable/blocked storage -> fall through to defaults
   }
-  const active = findActiveGroupKey(pathname);
-  return { [DEFAULT_OPEN_GROUP]: true, ...(active ? { [active]: true } : {}) };
+  return withOpen({ [DEFAULT_OPEN_GROUP]: true }, findActiveGroupKeys(pathname));
 }
 
 export default function AdminLayout() {
@@ -183,8 +206,7 @@ export default function AdminLayout() {
 
   // The group holding the current page is always expanded on navigation.
   useEffect(() => {
-    const active = findActiveGroupKey(location.pathname);
-    if (active) setOpenGroups((prev) => (prev[active] ? prev : { ...prev, [active]: true }));
+    setOpenGroups((prev) => withOpen(prev, findActiveGroupKeys(location.pathname)));
   }, [location.pathname]);
 
   useEffect(() => {
@@ -196,6 +218,16 @@ export default function AdminLayout() {
   }, [openGroups]);
 
   const toggleGroup = (key) => setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  // Laboratories for the per-lab SMK subgroups (only roles that see SMK).
+  const [labs, setLabs] = useState([]);
+  useEffect(() => {
+    if (!user || !SMK_MODULES.some((m) => m.roles.includes(user.role))) return;
+    adminResource('laboratories')
+      .list({ pageSize: 200 })
+      .then((d) => setLabs(d.items || []))
+      .catch(() => setLabs([]));
+  }, [user]);
 
   useEffect(() => {
     if (!user || !['SUPER_ADMIN', 'MANAGER'].includes(user.role)) return;
@@ -220,9 +252,27 @@ export default function AdminLayout() {
 
   const badgeValues = { unreadMessages };
   const canSee = (item) => item.roles.includes(user.role);
-  const groups = MENU_GROUPS.map((group) => ({ ...group, items: group.items.filter(canSee) })).filter(
-    (group) => group.items.length > 0
-  );
+  // A lab-bound user only gets their own lab; others also get "Biriktirilmagan"
+  // for SMK records created before the per-lab split.
+  const smkModules = SMK_MODULES.filter(canSee);
+  const confinedLabId = smkConfinedLabId(user);
+  const smkLabs = !smkModules.length
+    ? []
+    : confinedLabId
+      ? labs.filter((l) => l.id === confinedLabId)
+      : [...labs, { slug: SMK_UNASSIGNED_SLUG, nameUz: 'Biriktirilmagan' }];
+  const groups = MENU_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter(canSee),
+    labGroups: group.smk
+      ? smkLabs.map((lab) => ({
+          key: smkGroupKey(lab.slug),
+          label: lab.nameUz,
+          icon: FlaskConical,
+          items: smkItemsForLab(lab.slug, smkModules),
+        }))
+      : [],
+  })).filter((group) => group.items.length > 0 || group.labGroups.length > 0);
 
   const renderLink = (item) => {
     const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
@@ -274,6 +324,17 @@ export default function AdminLayout() {
               badgeCount={group.items.reduce((sum, item) => sum + (item.badgeKey ? badgeValues[item.badgeKey] || 0 : 0), 0)}
             >
               {group.items.map((item) => renderLink(item))}
+              {group.labGroups.map((lab) => (
+                <AdminMenuGroup
+                  key={lab.key}
+                  group={lab}
+                  nested
+                  isOpen={Boolean(openGroups[lab.key])}
+                  onToggle={() => toggleGroup(lab.key)}
+                >
+                  {lab.items.map((item) => renderLink(item))}
+                </AdminMenuGroup>
+              ))}
             </AdminMenuGroup>
           ))}
           <button

@@ -80,6 +80,25 @@ model Laboratory {
   qualityControlRecords   QualityControlRecord[]
   proficiencyTests        ProficiencyTest[]
   environmentLogs         EnvironmentLog[]
+  // SMK har bir laboratoriya uchun alohida yuritiladi.
+  smkNonConformances          NonConformance[]
+  smkComplaints               Complaint[]
+  smkDocuments                SMKDocument[]
+  smkDocumentVersions         SMKDocumentVersion[]
+  smkAuditFindings            AuditFinding[]
+  smkCalibrationRecords       CalibrationRecord[]
+  smkTrainingRecords          TrainingRecord[]
+  smkMeasurementUncertainties MeasurementUncertainty[]
+  smkMethodValidations        MethodValidation[]
+  smkImpartialityDeclarations ImpartialityDeclaration[]
+  smkSupplierEvaluations      SupplierEvaluation[]
+  smkSubcontractors           Subcontractor[]
+  smkDocumentAcknowledgments  DocumentAcknowledgment[]
+  smkManagementReviews        ManagementReview[]
+  smkRiskItems                RiskItem[]
+  smkQualityObjectives        QualityObjective[]
+  smkImprovementSuggestions   ImprovementSuggestion[]
+  smkRetentionPolicies        RetentionPolicy[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -624,6 +643,8 @@ enum NonConformanceStatus {
 // crudFactory buildData orqali, adminRoutes.js'da).
 model NonConformance {
   id                String               @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   code              String               @unique
   source            NonConformanceSource
   description       String
@@ -638,6 +659,8 @@ model NonConformance {
   auditFindings     AuditFinding[]
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
+
+  @@index([laboratoryId])
 }
 
 enum ComplaintStatus {
@@ -652,6 +675,8 @@ enum ComplaintStatus {
 // "SHK-<yil>-<tartib>" shaklida generatsiya qilinadi.
 model Complaint {
   id                    String          @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   code                  String          @unique
   fullName              String
   phone                 String?
@@ -667,6 +692,8 @@ model Complaint {
   status                ComplaintStatus @default(QABUL_QILINDI)
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
+
+  @@index([laboratoryId])
 }
 
 // ===== SMK — FAZA 2: Hujjat boshqaruvi =====
@@ -686,6 +713,8 @@ enum SMKDocumentStatus {
 
 model SMKDocument {
   id          String              @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   code        String              @unique
   titleUz     String
   titleRu     String
@@ -697,10 +726,14 @@ model SMKDocument {
   versions    SMKDocumentVersion[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
+
+  @@index([laboratoryId])
 }
 
 model SMKDocumentVersion {
   id                String    @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   documentId        String
   document          SMKDocument @relation(fields: [documentId], references: [id])
   versionNumber     String
@@ -711,6 +744,8 @@ model SMKDocumentVersion {
   approvedAt        DateTime?
   acknowledgments   DocumentAcknowledgment[]
   createdAt         DateTime  @default(now())
+
+  @@index([laboratoryId])
 }
 
 // ===== SMK — FAZA 3: Auditlar =====
@@ -734,6 +769,8 @@ model InternalAudit {
   findings      AuditFinding[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+
+  @@index([laboratoryId])
 }
 
 enum AuditFindingSeverity {
@@ -744,6 +781,8 @@ enum AuditFindingSeverity {
 
 model AuditFinding {
   id                     String               @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   auditId                String
   audit                  InternalAudit        @relation(fields: [auditId], references: [id])
   description            String
@@ -751,6 +790,8 @@ model AuditFinding {
   linkedNonConformanceId String?
   linkedNonConformance   NonConformance?      @relation(fields: [linkedNonConformanceId], references: [id])
   createdAt              DateTime             @default(now())
+
+  @@index([laboratoryId])
 }
 
 // ===== SMK — FAZA 4: Texnik yadro =====
@@ -761,6 +802,8 @@ model AuditFinding {
 // vazifasini (cron) talab qilardi, bu esa hozircha loyihada yo'q.
 model CalibrationRecord {
   id              String    @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   equipmentId     String
   equipment       Equipment @relation(fields: [equipmentId], references: [id])
   calibrationDate DateTime
@@ -769,10 +812,14 @@ model CalibrationRecord {
   performedBy     String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  @@index([laboratoryId])
 }
 
 model TrainingRecord {
   id              String    @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   userId          String
   user            User      @relation(fields: [userId], references: [id])
   trainingTitle   String
@@ -781,6 +828,8 @@ model TrainingRecord {
   certificateUrl  String?
   expiryDate      DateTime?
   createdAt       DateTime  @default(now())
+
+  @@index([laboratoryId])
 }
 
 model QualityControlRecord {
@@ -795,6 +844,8 @@ model QualityControlRecord {
   withinLimits  Boolean     @default(true)
   notes         String?
   createdAt     DateTime    @default(now())
+
+  @@index([laboratoryId])
 }
 
 enum ProficiencyResultStatus {
@@ -813,10 +864,14 @@ model ProficiencyTest {
   resultStatus ProficiencyResultStatus
   reportUrl    String?
   createdAt    DateTime                 @default(now())
+
+  @@index([laboratoryId])
 }
 
 model MeasurementUncertainty {
   id                String   @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   serviceId         String?
   service           Service? @relation(fields: [serviceId], references: [id])
   testMethodName    String?
@@ -826,6 +881,8 @@ model MeasurementUncertainty {
   documentUrl       String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([laboratoryId])
 }
 
 enum MethodValidationStatus {
@@ -835,6 +892,8 @@ enum MethodValidationStatus {
 
 model MethodValidation {
   id                String                  @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   methodName        String
   standardReference String?
   validationDate    DateTime
@@ -842,22 +901,30 @@ model MethodValidation {
   reportUrl         String?
   status            MethodValidationStatus  @default(JARAYONDA)
   createdAt         DateTime                @default(now())
+
+  @@index([laboratoryId])
 }
 
 // ===== SMK — FAZA 5: Tashkiliy =====
 
 model ImpartialityDeclaration {
   id              String   @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   userId          String
   user            User     @relation(fields: [userId], references: [id])
   declarationYear Int
   signedDate      DateTime
   fileUrl         String?
   createdAt       DateTime @default(now())
+
+  @@index([laboratoryId])
 }
 
 model SupplierEvaluation {
   id                 String    @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   supplierName       String
   category           String?
   evaluationDate     DateTime
@@ -865,16 +932,22 @@ model SupplierEvaluation {
   notes              String?
   nextEvaluationDate DateTime?
   createdAt          DateTime  @default(now())
+
+  @@index([laboratoryId])
 }
 
 model Subcontractor {
   id                String    @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   name              String
   accreditationInfo String?
   servicesProvided  String?
   contractUrl       String?
   validUntil        DateTime?
   createdAt         DateTime  @default(now())
+
+  @@index([laboratoryId])
 }
 
 model EnvironmentLog {
@@ -886,27 +959,37 @@ model EnvironmentLog {
   humidity     Float?
   withinLimits Boolean     @default(true)
   createdAt    DateTime    @default(now())
+
+  @@index([laboratoryId])
 }
 
 model DocumentAcknowledgment {
   id                String             @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   documentVersionId String
   documentVersion   SMKDocumentVersion @relation(fields: [documentVersionId], references: [id])
   userId            String
   user              User               @relation(fields: [userId], references: [id])
   acknowledgedAt    DateTime           @default(now())
+
+  @@index([laboratoryId])
 }
 
 // ===== SMK — FAZA 6: Strategik =====
 
 model ManagementReview {
   id             String    @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   reviewDate     DateTime
   participants   String?
   agendaItems    String?
   decisions      String?
   nextReviewDate DateTime?
   createdAt      DateTime  @default(now())
+
+  @@index([laboratoryId])
 }
 
 enum RiskStatus {
@@ -919,6 +1002,8 @@ enum RiskStatus {
 // (adminRoutes.js'dagi buildData orqali) — admin qo'lda kiritmaydi.
 model RiskItem {
   id             String     @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   description    String
   category       String?
   likelihood     Int
@@ -930,6 +1015,8 @@ model RiskItem {
   status         RiskStatus @default(FAOL)
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
+
+  @@index([laboratoryId])
 }
 
 enum QualityObjectiveStatus {
@@ -940,6 +1027,8 @@ enum QualityObjectiveStatus {
 
 model QualityObjective {
   id            String                  @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   year          Int
   objectiveText String
   targetValue   String?
@@ -947,6 +1036,8 @@ model QualityObjective {
   status        QualityObjectiveStatus  @default(BAJARILMOQDA)
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
+
+  @@index([laboratoryId])
 }
 
 enum ImprovementSuggestionStatus {
@@ -957,6 +1048,8 @@ enum ImprovementSuggestionStatus {
 
 model ImprovementSuggestion {
   id                  String                       @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   submittedByUserId   String?
   submittedByUser     User?                        @relation(fields: [submittedByUserId], references: [id])
   description         String
@@ -964,12 +1057,18 @@ model ImprovementSuggestion {
   status              ImprovementSuggestionStatus  @default(KORIB_CHIQILMOQDA)
   implementationNotes String?
   createdAt           DateTime                     @default(now())
+
+  @@index([laboratoryId])
 }
 
 model RetentionPolicy {
   id             String   @id @default(uuid())
+  laboratoryId String?
+  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
   documentType   String
   retentionYears Int
   notes          String?
   createdAt      DateTime @default(now())
+
+  @@index([laboratoryId])
 }
