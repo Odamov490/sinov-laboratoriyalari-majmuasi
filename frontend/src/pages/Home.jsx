@@ -272,6 +272,12 @@ export default function Home() {
                 {t('hero.cta2')}
               </Link>
               <Link
+                to="/arizani-tekshirish"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                {t('applyCta.trackButton')}
+              </Link>
+              <Link
                 to="/tnved-tekshirish"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
@@ -282,12 +288,6 @@ export default function Home() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
                 {t('nav.mxikCheck')}
-              </Link>
-              <Link
-                to="/arizani-tekshirish"
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/30 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-              >
-                {t('applyCta.trackButton')}
               </Link>
             </div>
           </div>
