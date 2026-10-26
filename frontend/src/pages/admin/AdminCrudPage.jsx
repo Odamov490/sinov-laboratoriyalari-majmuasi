@@ -13,29 +13,13 @@ const MONTH_NAMES_UZ = [
 
 const PAGE_SIZE_OPTIONS = [15, 25, 50, 100, 200, 500];
 
-const LAB_FIELD = {
-  name: 'laboratoryId',
-  label: 'Laboratoriya',
-  type: 'async-select',
-  optionsResource: 'laboratories',
-  optionsLabel: (item) => item.nameUz,
-};
-
 // labScope ({ id, name }) — set for SMK pages, which are kept per laboratory:
 // the list shows only that lab's records and new records are created in it,
-// so the form's laboratoryId field is dropped. id === null is the
-// "unassigned" view, where the field is kept (added if the config lacks it)
-// so old records can be assigned to a lab.
+// so the form's laboratoryId field is dropped.
 export default function AdminCrudPage({ config, labScope }) {
   const resource = adminResource(config.path);
-  const labParams = labScope ? { laboratoryId: labScope.id ?? 'none' } : {};
-  const fields = !labScope
-    ? config.fields
-    : labScope.id
-      ? config.fields.filter((f) => f.name !== 'laboratoryId')
-      : config.fields.some((f) => f.name === 'laboratoryId')
-        ? config.fields
-        : [LAB_FIELD, ...config.fields];
+  const labParams = labScope ? { laboratoryId: labScope.id } : {};
+  const fields = labScope ? config.fields.filter((f) => f.name !== 'laboratoryId') : config.fields;
   const { showToast } = useToast();
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
@@ -209,7 +193,7 @@ export default function AdminCrudPage({ config, labScope }) {
         });
       }
 
-      if (labScope?.id && !editing) payload.laboratoryId = labScope.id;
+      if (labScope && !editing) payload.laboratoryId = labScope.id;
 
       if (editing) {
         await resource.update(editing.id, payload);

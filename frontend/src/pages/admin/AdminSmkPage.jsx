@@ -5,10 +5,6 @@ import { adminResource } from '../../services/adminApi';
 import { Loading, EmptyState } from '../../components/StateViews.jsx';
 import AdminCrudPage from './AdminCrudPage.jsx';
 
-// URL slug for SMK records not yet assigned to any laboratory (rows created
-// before SMK was split per lab). Only users who aren't bound to a lab see it.
-export const SMK_UNASSIGNED_SLUG = 'biriktirilmagan';
-
 // The lab a user is confined to (mirrors backend crudFactory: a
 // non-SUPER_ADMIN user with a labId only works with that lab's SMK).
 export const smkConfinedLabId = (user) => (user && user.role !== 'SUPER_ADMIN' ? user.labId || null : null);
@@ -41,17 +37,11 @@ export default function AdminSmkPage({ config }) {
     }
   }
 
-  let labScope;
-  if (labSlug === SMK_UNASSIGNED_SLUG && !confinedId) {
-    labScope = { id: null, name: 'Biriktirilmagan' };
-  } else {
-    const lab = labs.find((l) => l.slug === labSlug);
-    if (!lab) return <EmptyState message="Laboratoriya topilmadi." />;
-    labScope = { id: lab.id, name: lab.nameUz };
-  }
+  const lab = labs.find((l) => l.slug === labSlug);
+  if (!lab) return <EmptyState message="Laboratoriya topilmadi." />;
 
   // Keyed by lab so switching labs starts from a clean list/form state.
-  return <AdminCrudPage key={labSlug} config={config} labScope={labScope} />;
+  return <AdminCrudPage key={labSlug} config={config} labScope={{ id: lab.id, name: lab.nameUz }} />;
 }
 
 // Old /admin/smk/<module> links (before the per-lab split) land on the same
@@ -64,6 +54,6 @@ export function AdminSmkLegacyRedirect() {
   if (labs === null) return <Loading />;
   const confinedId = smkConfinedLabId(user);
   const lab = (confinedId && labs.find((l) => l.id === confinedId)) || labs[0];
-  const labSlug = lab ? lab.slug : SMK_UNASSIGNED_SLUG;
-  return <Navigate to={`/admin/smk/${labSlug}/${module}`} replace />;
+  if (!lab) return <EmptyState message="Laboratoriya topilmadi." />;
+  return <Navigate to={`/admin/smk/${lab.slug}/${module}`} replace />;
 }

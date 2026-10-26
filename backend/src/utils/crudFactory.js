@@ -15,13 +15,10 @@ const { asyncHandler } = require('../middleware/errorHandler');
  *    creation needs a server-computed value (e.g. a sequential document
  *    code) that requires its own DB query. May return a Promise.
  *  - labScoped: boolean - records belong to a laboratory (`laboratoryId`).
- *    The list is filtered by `?laboratoryId=<id>` (or `none` for records
- *    not yet assigned to any lab). A non-SUPER_ADMIN user bound to a lab
+ *    The list is filtered by `?laboratoryId=<id>`. A non-SUPER_ADMIN user bound to a lab
  *    (User.labId) is confined to that lab: they only see, create and edit
  *    its records, whatever laboratoryId the request carries.
  */
-
-const UNASSIGNED_LAB = 'none';
 
 // The lab a user is confined to, or null if they may see every lab. Read
 // from the DB rather than the JWT, which doesn't carry labId and would go
@@ -72,7 +69,6 @@ function crudFactory(modelName, opts = {}) {
       const confined = await confinedLabId(req);
       const requested = req.query.laboratoryId;
       if (confined) where.laboratoryId = confined;
-      else if (requested === UNASSIGNED_LAB) where.laboratoryId = null;
       else if (requested) where.laboratoryId = String(requested);
     }
     if (q && searchFields.length) {

@@ -58,7 +58,7 @@ import { Loading } from '../components/StateViews.jsx';
 import { adminResource } from '../services/adminApi';
 import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
-import { SMK_UNASSIGNED_SLUG, smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
+import { smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
 
 // Always shown at the very top, outside any collapsible group.
 const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] };
@@ -252,15 +252,14 @@ export default function AdminLayout() {
 
   const badgeValues = { unreadMessages };
   const canSee = (item) => item.roles.includes(user.role);
-  // A lab-bound user only gets their own lab; others also get "Biriktirilmagan"
-  // for SMK records created before the per-lab split.
+  // A lab-bound user only gets their own lab's SMK.
   const smkModules = SMK_MODULES.filter(canSee);
   const confinedLabId = smkConfinedLabId(user);
   const smkLabs = !smkModules.length
     ? []
     : confinedLabId
       ? labs.filter((l) => l.id === confinedLabId)
-      : [...labs, { slug: SMK_UNASSIGNED_SLUG, nameUz: 'Biriktirilmagan' }];
+      : labs;
   const groups = MENU_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter(canSee),
