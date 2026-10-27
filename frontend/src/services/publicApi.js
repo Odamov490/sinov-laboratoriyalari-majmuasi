@@ -25,6 +25,9 @@ export const getInfoPage = (slug) => apiClient.get(`/info-pages/${slug}`).then((
 export const getSettings = () => apiClient.get('/settings').then((r) => r.data);
 export const globalSearch = (q) => apiClient.get('/search', { params: { q } }).then((r) => r.data);
 
+// Fire-and-forget page-view beacon for the admin "most viewed pages" stats.
+export const trackPageView = (path) => apiClient.post('/page-view', { path }).catch(() => {});
+
 export const submitApplication = (formData) =>
   apiClient
     .post('/applications', formData, { headers: { 'Content-Type': 'multipart/form-data' } })

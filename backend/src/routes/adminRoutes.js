@@ -11,6 +11,7 @@ const { getInfoPage, updateInfoPage } = require('../controllers/infoPageAdminCon
 const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');
 const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
 const { getAnalyticsOverview } = require('../controllers/analyticsController');
+const { getTopPages } = require('../controllers/pageViewController');
 const { updateProfile } = require('../controllers/authController');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const {
@@ -207,6 +208,7 @@ router.put('/settings', requireModule('settings'), updateSettings);
 
 // Site usage analytics (Cloudflare, Super Admin only)
 router.get('/analytics/overview', requireModule('analytics'), getAnalyticsOverview);
+router.get('/analytics/top-pages', requireModule('analytics'), getTopPages);
 
 // Own admin-panel profile (any authenticated admin user, self only)
 router.put('/profile', updateProfile);

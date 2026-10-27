@@ -7,6 +7,7 @@ import {
 import { getAnalyticsOverview } from '../../services/adminApi';
 import { Loading, ErrorState } from '../StateViews.jsx';
 import { formatDate } from '../../utils/localize';
+import TopPagesCard from './TopPagesCard.jsx';
 
 const NAVY = '#0B3A63';
 const GOLD = '#D9A441';
@@ -51,6 +52,7 @@ export default function AnalyticsPanel() {
   const [range, setRange] = useState(presetRange('30d'));
   const [data, setData] = useState(null);
   const [status, setStatus] = useState('loading'); // loading | ready | not-configured | error
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const load = (r) => {
     setStatus('loading');
@@ -95,7 +97,10 @@ export default function AnalyticsPanel() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-bold text-ink">Saytdan foydalanish statistikasi</h2>
         <button
-          onClick={() => load(range)}
+          onClick={() => {
+            load(range);
+            setRefreshKey((k) => k + 1);
+          }}
           disabled={status === 'loading'}
           className="btn-secondary !py-1.5 !px-3 text-xs"
         >
@@ -243,6 +248,10 @@ export default function AnalyticsPanel() {
           )}
         </>
       )}
+
+      <div className="mt-5">
+        <TopPagesCard key={refreshKey} range={range} />
+      </div>
     </div>
   );
 }

@@ -5,7 +5,8 @@ const { createContactMessage } = require('../controllers/contactController');
 const { checkTnVedRegulation, suggestTnVedCodes } = require('../controllers/tnvedController');
 const { getProducts, getProductBySlug, generateTestProgram, downloadTestProgramDocx } = require('../controllers/productController');
 const { upload } = require('../middleware/upload');
-const { applicationLimiter } = require('../middleware/rateLimit');
+const { applicationLimiter, pageViewLimiter } = require('../middleware/rateLimit');
+const { recordPageView } = require('../controllers/pageViewController');
 
 const router = express.Router();
 
@@ -39,6 +40,8 @@ router.get('/applications/track/:applicationNumber', trackApplication);
 router.get('/applications/track-by-phone', trackByPhone);
 
 router.post('/contact', createContactMessage);
+
+router.post('/page-view', pageViewLimiter, recordPageView);
 
 router.get('/tnved-check', checkTnVedRegulation);
 router.get('/tnved-suggest', suggestTnVedCodes);

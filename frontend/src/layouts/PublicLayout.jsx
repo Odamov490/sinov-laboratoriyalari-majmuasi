@@ -1,11 +1,19 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import TestModeBanner from '../components/TestModeBanner.jsx';
 import SEO from '../components/SEO.jsx';
+import { trackPageView } from '../services/publicApi';
 
 export default function PublicLayout() {
+  const { pathname } = useLocation();
+
+  // Counts every public page view, including in-app (SPA) navigation.
+  useEffect(() => {
+    trackPageView(pathname);
+  }, [pathname]);
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Sitewide fallback meta tags — each page's own <SEO> (rendered

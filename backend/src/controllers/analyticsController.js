@@ -141,4 +141,4 @@ const getAnalyticsOverview = asyncHandler(async (req, res) => {
   res.json(data);
 });
 
-module.exports = { getAnalyticsOverview };
+module.exports = { getAnalyticsOverview, parseRange };

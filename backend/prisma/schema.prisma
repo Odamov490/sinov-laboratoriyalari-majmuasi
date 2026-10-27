@@ -1072,3 +1072,15 @@ model RetentionPolicy {
 
   @@index([laboratoryId])
 }
+// Sayt sahifalarining kunlik ko'rishlar soni — frontend har bir sahifa
+// o'tishida (SPA ichida ham) yuboradi. Admin dashboarddagi "Eng ko'p
+// ko'rilgan sahifalar" shundan olinadi (Cloudflare SPA ichidagi o'tishlarni
+// ko'rmaydi).
+model PageViewDaily {
+  date  DateTime @db.Date
+  path  String
+  views Int      @default(0)
+
+  @@id([date, path])
+  @@index([date])
+}

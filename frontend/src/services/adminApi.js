@@ -44,6 +44,9 @@ export const adminInfoPage = {
   update: (slug, payload) => apiClient.put(`/admin/info-pages/${slug}`, payload).then((r) => r.data),
 };
 
+export const getTopPages = (params) =>
+  apiClient.get('/admin/analytics/top-pages', { params }).then((r) => r.data);
+
 export const getAnalyticsOverview = (params) =>
   apiClient.get('/admin/analytics/overview', { params }).then((r) => r.data);
 

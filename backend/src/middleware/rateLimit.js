@@ -23,4 +23,13 @@ const applicationLimiter = rateLimit({
   message: { error: "Juda ko'p ariza yuborildi. Birozdan so'ng qayta urinib ko'ring." },
 });
 
-module.exports = { generalLimiter, authLimiter, applicationLimiter };
+// Page-view beacons: a real visitor sends one per page navigation, so this
+// only caps scripted inflation of the "most viewed pages" stats.
+const pageViewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+module.exports = { generalLimiter, authLimiter, applicationLimiter, pageViewLimiter };
