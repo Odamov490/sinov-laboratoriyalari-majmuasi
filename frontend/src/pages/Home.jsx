@@ -52,6 +52,8 @@ export default function Home() {
     '@type': 'Organization',
     name: settings.org_name || 'Sinov Laboratoriyalari Majmuasi',
     url: typeof window !== 'undefined' ? window.location.origin : undefined,
+    // Google uses this as the organization logo in search results.
+    ...(typeof window !== 'undefined' ? { logo: `${window.location.origin}/logo.png` } : {}),
     ...(settings.address ? { address: { '@type': 'PostalAddress', streetAddress: settings.address } } : {}),
     ...(settings.phone ? { telephone: settings.phone } : {}),
     ...(settings.email ? { email: settings.email } : {}),

@@ -16,6 +16,8 @@ export default function SEO({ title, description, image, type = 'website', jsonL
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
   const desc = description || (title ? `${title} — ${t('hero.tagline')}` : t('hero.tagline'));
   const url = typeof window !== 'undefined' ? window.location.href : undefined;
+  // Pages without their own image are shared with the site logo.
+  const shareImage = image || (typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : undefined);
 
   return (
     <Helmet>
@@ -26,12 +28,12 @@ export default function SEO({ title, description, image, type = 'website', jsonL
       <meta property="og:site_name" content={SITE_NAME} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={desc} />
-      {image && <meta property="og:image" content={image} />}
+      {shareImage && <meta property="og:image" content={shareImage} />}
       {url && <meta property="og:url" content={url} />}
       <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={desc} />
-      {image && <meta name="twitter:image" content={image} />}
+      {shareImage && <meta name="twitter:image" content={shareImage} />}
       {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
     </Helmet>
   );
