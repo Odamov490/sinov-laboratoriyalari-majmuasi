@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FlaskConical, Phone, Mail, MapPin, Send, Instagram } from 'lucide-react';
+import { Phone, Mail, MapPin, Send, Instagram } from 'lucide-react';
+import Logo from './Logo.jsx';
 import { getSettings } from '../services/publicApi';
 
 export default function Footer() {
@@ -27,12 +28,7 @@ export default function Footer() {
     <footer className="bg-primary text-white mt-20">
       <div className="container-page py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10">
-              <FlaskConical className="h-5 w-5 text-accent" />
-            </span>
-            <span className="font-bold">SLM</span>
-          </div>
+          <Logo variant="dark" showTagline className="mb-4" />
           <p className="text-sm text-white/70 leading-relaxed">
             {t('hero.title')}
           </p>

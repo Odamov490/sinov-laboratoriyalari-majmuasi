@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { FlaskConical, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
+import Logo from '../../components/Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 
@@ -33,9 +34,7 @@ export default function AdminLogin() {
     <div className="min-h-screen bg-bg-light flex items-center justify-center p-4">
       <div className="w-full max-w-sm card p-8">
         <div className="flex flex-col items-center mb-6">
-          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white mb-3">
-            <FlaskConical className="h-6 w-6" />
-          </span>
+          <Logo showTagline className="mb-4" />
           <h1 className="font-bold text-lg text-ink">{t('admin.login')}</h1>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">

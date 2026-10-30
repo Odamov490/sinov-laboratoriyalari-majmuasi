@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   FlaskConical,
@@ -58,6 +58,7 @@ import { Loading } from '../components/StateViews.jsx';
 import { adminResource } from '../services/adminApi';
 import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
+import Logo from '../components/Logo.jsx';
 import { smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
 
 // Always shown at the very top, outside any collapsible group.
@@ -307,7 +308,10 @@ export default function AdminLayout() {
         }`}
       >
         <div className="flex items-center justify-between px-5 h-16 border-b border-white/10">
-          <span className="font-bold">SLM Admin</span>
+          <Link to="/admin/dashboard" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+            <Logo variant="dark" />
+            <span className="mt-2 text-xs font-semibold uppercase tracking-wider text-white/60">Admin</span>
+          </Link>
           <button className="lg:hidden" onClick={() => setOpen(false)}>
             <X className="h-5 w-5" />
           </button>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, FlaskConical, ChevronDown, Search, ShieldCheck } from 'lucide-react';
+import { Menu, X, ChevronDown, Search, ShieldCheck } from 'lucide-react';
+import Logo from './Logo.jsx';
 import SearchOverlay from './SearchOverlay.jsx';
 
 const LANGS = [
@@ -52,13 +53,8 @@ export default function Navbar() {
       }`}
     >
       <div className="container-page flex h-16 items-center justify-between gap-3">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-white">
-            <FlaskConical className="h-5 w-5" />
-          </span>
-          <span className="font-bold text-primary leading-tight text-sm sm:text-base">
-            SLM
-          </span>
+        <Link to="/" className="shrink-0" aria-label="SLM — Sinov laboratoriyalari majmuasi">
+          <Logo />
         </Link>
 
         <nav className="hidden xl:flex items-center gap-0.5">
