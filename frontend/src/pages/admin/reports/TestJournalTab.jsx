@@ -7,6 +7,7 @@ import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
 import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journalConstants';
 import { COLUMNS, DEFAULT_COLUMN_KEYS, ROW_COLORS, loadColumnKeys, saveColumnKeys } from './journalColumns.jsx';
+import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
 
 const PAGE_SIZES = [25, 50, 100, 200];
 const EXPORT_PAGE_SIZE = 500;
@@ -194,26 +195,33 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
       const rank = (n) => (order.indexOf(n) === -1 ? 99 : order.indexOf(n));
       const names = [...groups.keys()].sort((a, b) => rank(a) - rank(b));
 
-      const XLSX = await import('xlsx');
-      const wb = XLSX.utils.book_new();
+      const wb = await newWorkbook();
       names.forEach((name) => {
         const records = groups.get(name).sort(byJournalOrder);
         const product = dictionaries.productTypes.find((p) => p.nameUz === name);
         const sheetCtx = { brandLabel: name === 'Shovqin' ? 'Muzlatkich markasi' : product ? `${name} markasi` : 'Marka' };
-        const header = ['№', ...columns.map((c) => c.label(sheetCtx))];
-        const rows = records.map((r, i) => [i + 1, ...columns.map((c) => c.text(r))]);
-        rows.push([
-          'JAMI',
-          ...columns.map((c, i) => {
-            if (c.sum) return records.reduce((acc, r) => acc + Number(c.text(r) || 0), 0);
-            return i === 0 ? `${records.length} ta yozuv` : '';
-          }),
-        ]);
-        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
-        ws['!cols'] = [{ wch: 5 }, ...columns.map((c) => ({ wch: c.wide ? 28 : 15 }))];
-        XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
+        addTableSheet(wb, name, {
+          columns: [
+            { header: '№', width: 6, align: 'center' },
+            ...columns.map((c) => ({
+              header: c.label(sheetCtx),
+              width: c.wide ? 30 : 15,
+              align: c.right ? 'right' : c.center ? 'center' : 'left',
+              money: c.key === 'amount',
+            })),
+          ],
+          // Same row colors as the table on screen (by result).
+          rows: records.map((r, i) => ({ values: [i + 1, ...columns.map((c) => c.text(r))], fill: RESULT_FILLS[r.result] })),
+          total: [
+            'JAMI',
+            ...columns.map((c, i) => {
+              if (c.sum) return records.reduce((acc, r) => acc + Number(c.text(r) || 0), 0);
+              return i === 0 ? `${records.length} ta yozuv` : '';
+            }),
+          ],
+        });
       });
-      XLSX.writeFile(wb, `sinovlar-jurnali_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      await downloadWorkbook(wb, `sinovlar-jurnali_${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch {
       showToast('Excel eksportda xatolik yuz berdi.', 'error');
     } finally {

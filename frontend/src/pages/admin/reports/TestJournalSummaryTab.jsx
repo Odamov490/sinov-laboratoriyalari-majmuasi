@@ -5,6 +5,7 @@ import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { RESULT_LABELS, RESULT_STYLES, formatMoney } from './journalConstants';
+import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
 
 const NAVY = '#0B3A63';
 const GRID = '#E2E8F0';
@@ -139,31 +140,27 @@ export default function TestJournalSummaryTab({ showFinance }) {
     if (!data) return;
     setExporting(true);
     try {
-      const XLSX = await import('xlsx');
-      const sheet = (rows, nameKey, nameLabel, nameFn) => {
-        const out = rows.map((r) => ({
-          [nameLabel]: nameFn ? nameFn(r) : r[nameKey],
-          Yozuvlar: r.records,
-          Namunalar: r.samples,
-          ...(showFinance && { "Summa (so'm)": r.amount }),
-        }));
-        out.push({
-          [nameLabel]: 'JAMI',
-          Yozuvlar: data.totals.records,
-          Namunalar: data.totals.samples,
-          ...(showFinance && { "Summa (so'm)": data.totals.amount }),
+      const wb = await newWorkbook();
+      const sheet = (sheetName, rows, nameLabel, nameOf, fillOf) =>
+        addTableSheet(wb, sheetName, {
+          columns: [
+            { header: nameLabel, width: 36 },
+            { header: 'Yozuvlar', width: 12, align: 'right' },
+            { header: 'Namunalar', width: 12, align: 'right' },
+            ...(showFinance ? [{ header: "Summa (so'm)", width: 20, align: 'right', money: true }] : []),
+          ],
+          rows: rows.map((r) => ({
+            values: [nameOf(r), r.records, r.samples, ...(showFinance ? [r.amount] : [])],
+            fill: fillOf ? fillOf(r) : undefined,
+          })),
+          total: ['JAMI', data.totals.records, data.totals.samples, ...(showFinance ? [data.totals.amount] : [])],
         });
-        const ws = XLSX.utils.json_to_sheet(out);
-        ws['!cols'] = [{ wch: 34 }, { wch: 12 }, { wch: 12 }, { wch: 18 }];
-        return ws;
-      };
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, sheet(data.byMonth, 'month', 'Oy', (r) => monthLabel(r.month)), 'Oylar');
-      XLSX.utils.book_append_sheet(wb, sheet(data.byProductType, 'name', 'Mahsulot turi'), 'Mahsulot turlari');
-      XLSX.utils.book_append_sheet(wb, sheet(data.byCertificationBody, 'name', 'Buyurtmachi'), 'Buyurtmachilar');
-      XLSX.utils.book_append_sheet(wb, sheet(data.byResult, 'result', 'Natija', (r) => RESULT_LABELS[r.result] || r.result), 'Natijalar');
+      sheet('Oylar', data.byMonth, 'Oy', (r) => monthLabel(r.month));
+      sheet('Mahsulot turlari', data.byProductType, 'Mahsulot turi', (r) => r.name);
+      sheet('Buyurtmachilar', data.byCertificationBody, 'Buyurtmachi', (r) => r.name);
+      sheet('Natijalar', data.byResult, 'Natija', (r) => RESULT_LABELS[r.result] || r.result, (r) => RESULT_FILLS[r.result]);
       const period = `${from || 'boshidan'}_${to || 'hozirgacha'}`;
-      XLSX.writeFile(wb, `umumiy-hisobot_${period}.xlsx`);
+      await downloadWorkbook(wb, `umumiy-hisobot_${period}.xlsx`);
     } catch {
       showToast('Excel eksportda xatolik yuz berdi.', 'error');
     } finally {
