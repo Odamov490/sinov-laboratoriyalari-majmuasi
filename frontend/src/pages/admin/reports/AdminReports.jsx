@@ -6,6 +6,7 @@ import { adminResource } from '../../../services/adminApi';
 import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import AdminCrudPage from '../AdminCrudPage.jsx';
 import TestJournalTab from './TestJournalTab.jsx';
+import TestJournalSummaryTab from './TestJournalSummaryTab.jsx';
 
 const activeColumn = { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") };
 
@@ -121,7 +122,7 @@ export default function AdminReports() {
       ) : !dictionaries ? (
         <Loading />
       ) : tab === 'hisobot' ? (
-        <div className="card p-6 text-center text-sm text-slate-500">Umumiy hisobot keyingi bosqichda qo'shiladi.</div>
+        <TestJournalSummaryTab showFinance={isSuperAdmin} />
       ) : (
         <TestJournalTab dictionaries={dictionaries} showFinance={isSuperAdmin} />
       )}

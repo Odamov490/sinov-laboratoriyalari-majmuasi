@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, AlertTriangle, X as XIcon, ArrowUp, ArrowDown, RotateCcw } from 'lucide-react';
+import { Plus, AlertTriangle, X as XIcon, ArrowUp, ArrowDown, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { SearchBar, Pagination } from '../../../components/UI.jsx';
+import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
 import {
   RESULT_LABELS,
   RESULT_STYLES,
+  CANCELLED_BY_LABELS,
   DIRECTIONS,
   DIRECTION_SHORT,
   PAYMENT_LABELS,
@@ -15,6 +17,39 @@ import {
 } from './journalConstants';
 
 const PAGE_SIZES = [25, 50, 100, 200];
+const EXPORT_PAGE_SIZE = 500;
+
+// One Excel row per journal record, columns in the source journal's order.
+function exportRow(r, idx, showFinance) {
+  return {
+    '№': idx + 1,
+    'Mahsulot turi': r.productType?.nameUz || '',
+    'Akt ID': r.actNo || '',
+    Buyurtmachi: r.certificationBody?.name || '',
+    'Akt sanasi': formatDate(r.actDate).replace('—', ''),
+    Ijrochi: r.executorName || '',
+    'Namuna kelgan sana': formatDate(r.sampleReceivedDate).replace('—', ''),
+    'Kelgan vaqt': r.sampleReceivedTime || '',
+    'Namunalar soni': r.sampleCount ?? '',
+    'Bekor qilingan': r.cancelledSampleCount || '',
+    "Og'irlik": r.weightNote || '',
+    'Bayonnoma sanasi': formatDate(r.protocolDate).replace('—', ''),
+    "Yo'nalish": (r.directions || []).map((d) => DIRECTION_SHORT[d] || d).join('+'),
+    Natija: (RESULT_LABELS[r.result] || r.result) + (r.cancelledBy ? `, ${CANCELLED_BY_LABELS[r.cancelledBy].toLowerCase()}` : ''),
+    'Mos emas soni': r.nonconformingCount ?? '',
+    Marka: r.brand || '',
+    Joy: r.location?.nameUz || '',
+    Takroriy: r.isRepeat ? 'ha' : '',
+    ...(showFinance && {
+      Shartnoma: r.contractNo || '',
+      'Shartnoma sanasi': formatDate(r.contractDate).replace('—', ''),
+      "Summa (so'm)": r.amount ?? '',
+      "To'lov": r.paymentStatus ? PAYMENT_LABELS[r.paymentStatus] : '',
+    }),
+    Izoh: (r.notes || []).join('; '),
+    'Tekshirish kerak': r.needsReview ? (r.reviewReasons || []).join('; ') || 'ha' : '',
+  };
+}
 
 const EMPTY_FILTERS = {
   q: '',
@@ -54,6 +89,8 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
   const [modal, setModal] = useState({ open: false, record: null });
+  const [exporting, setExporting] = useState(false);
+  const { showToast } = useToast();
 
   const params = useMemo(() => {
     const p = { page, pageSize, sortBy: sort.by, sortDir: sort.dir };
@@ -79,6 +116,38 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
+
+  // Exports every row matching the current filters/sort (all pages).
+  const exportExcel = async () => {
+    setExporting(true);
+    try {
+      const all = [];
+      for (let p = 1; ; p += 1) {
+        const res = await adminTestJournal.list({ ...params, page: p, pageSize: EXPORT_PAGE_SIZE });
+        all.push(...res.items);
+        if (all.length >= res.total || res.items.length === 0) break;
+      }
+      const rows = all.map((r, i) => exportRow(r, i, showFinance));
+      const sum = (key) => all.reduce((acc, r) => acc + Number(r[key] || 0), 0);
+      rows.push({
+        '№': 'JAMI',
+        'Akt ID': `${all.length} ta yozuv`,
+        'Namunalar soni': sum('sampleCount'),
+        'Bekor qilingan': sum('cancelledSampleCount'),
+        ...(showFinance && { "Summa (so'm)": sum('amount') }),
+      });
+      const XLSX = await import('xlsx');
+      const ws = XLSX.utils.json_to_sheet(rows);
+      ws['!cols'] = Object.keys(rows[0] || {}).map((k) => ({ wch: ['Buyurtmachi', 'Marka', 'Izoh', 'Tekshirish kerak'].includes(k) ? 30 : 14 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Jurnal');
+      XLSX.writeFile(wb, `sinovlar-jurnali_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    } catch {
+      showToast('Excel eksportda xatolik yuz berdi.', 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const setFilter = (name, value) => {
     setFilters((f) => ({ ...f, [name]: value }));
@@ -145,7 +214,10 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
               <RotateCcw className="h-3.5 w-3.5" /> Filtrlarni tozalash
             </button>
           )}
-          <button onClick={() => setModal({ open: true, record: null })} className="btn-primary !py-2 ml-auto">
+          <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2 ml-auto">
+            <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
+          </button>
+          <button onClick={() => setModal({ open: true, record: null })} className="btn-primary !py-2">
             <Plus className="h-4 w-4" /> Yangi yozuv
           </button>
         </div>
