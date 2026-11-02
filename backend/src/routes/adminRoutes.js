@@ -12,6 +12,7 @@ const { listSamples, createSample, getSampleByCode, getSampleHistory, performAct
 const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminController');
 const { getAnalyticsOverview } = require('../controllers/analyticsController');
 const { getTopPages } = require('../controllers/pageViewController');
+const testJournal = require('../controllers/testJournalController');
 const { updateProfile } = require('../controllers/authController');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const {
@@ -403,6 +404,31 @@ mountCrud('smk/retention', 'smk_retention', 'retentionPolicy', {
   searchFields: ['documentType'],
   orderBy: { documentType: 'asc' },
 });
+
+// Hisobot: sinovlar jurnali. /summary /:id dan oldin turishi kerak.
+router.get('/test-journal/summary', requireModule('reports'), testJournal.getSummary);
+router.get('/test-journal', requireModule('reports'), testJournal.listRecords);
+router.get('/test-journal/:id', requireModule('reports'), testJournal.getRecord);
+router.post('/test-journal', requireModule('reports'), testJournal.createRecord);
+router.put('/test-journal/:id', requireModule('reports'), testJournal.updateRecord);
+router.delete('/test-journal/:id', requireModule('reports'), testJournal.deleteRecord);
+
+// Hisobot spravochniklari: o'qish — jurnal filtrlari uchun hamma 'reports'
+// rollariga, o'zgartirish — faqat SUPER_ADMIN.
+function mountDictionary(path, modelName, opts) {
+  const handlers = crudFactory(modelName, opts);
+  const read = requireModule('reports');
+  const write = requireModule('reports_admin');
+  router.get(`/${path}`, read, handlers.list);
+  router.get(`/${path}/:id`, read, handlers.getOne);
+  router.post(`/${path}`, write, handlers.create);
+  router.put(`/${path}/:id`, write, handlers.update);
+  router.patch(`/${path}/:id`, write, handlers.update);
+  router.delete(`/${path}/:id`, write, handlers.remove);
+}
+mountDictionary('test-product-types', 'testProductType', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
+mountDictionary('test-locations', 'testLocation', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
+mountDictionary('certification-bodies', 'certificationBody', { searchFields: ['name'], orderBy: { name: 'asc' } });
 
 // Sample tracking (QR-based check-in/check-out between laboratories)
 router.get('/samples/stats', requireModule('samples'), getStats);

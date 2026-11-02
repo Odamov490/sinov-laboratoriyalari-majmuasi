@@ -8,3 +8,7 @@ build/
 backend/uploads/*
 !backend/uploads/.gitkeep
 frontend/.vite/
+
+# Maxfiy import fayllari (summalar, shartnomalar, xodimlar) — commit qilinmaydi
+*.private.json
+backend/prisma/seed-data/private/

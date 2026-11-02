@@ -1084,3 +1084,118 @@ model PageViewDaily {
   @@id([date, path])
   @@index([date])
 }
+
+// ===== Hisobot: Sinovlar jurnali =====
+// Excel'dagi "Журнал регистрации" ning tizimdagi ko'rinishi: bitta jurnal
+// qatori = bitta TestJournalRecord. Dastlabki ma'lumot
+// prisma/seed/importTestJournal.js orqali import qilinadi (importKey bo'yicha).
+
+enum TestDirection {
+  XAVFSIZLIK
+  EMC
+  ENERGIYA
+  SHOVQIN
+}
+
+enum JournalResult {
+  MOS
+  MOS_EMAS
+  QISMAN_MOS_EMAS
+  NAMUNA_TAQDIM_ETILMADI
+  BEKOR_QILINDI
+  KUTILMOQDA
+  KORIB_CHIQISH
+}
+
+enum JournalPayment {
+  TOLANGAN
+  TOLANMAGAN
+}
+
+enum JournalCancelledBy {
+  ARIZACHI
+  ORGAN
+}
+
+model TestProductType {
+  id        String              @id @default(uuid())
+  code      String              @unique
+  nameUz    String
+  isActive  Boolean             @default(true)
+  records   TestJournalRecord[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+model TestLocation {
+  id        String              @id @default(uuid())
+  code      String              @unique
+  nameUz    String
+  isActive  Boolean             @default(true)
+  records   TestJournalRecord[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+// Buyurtmachi (sertifikatlashtirish idorasi). aliases — Excel'da uchragan
+// boshqa yozilishlar (tirnoqli va h.k.), keyingi importlarda moslash uchun.
+model CertificationBody {
+  id        String              @id @default(uuid())
+  name      String              @unique
+  aliases   String[]            @default([])
+  isActive  Boolean             @default(true)
+  records   TestJournalRecord[]
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+}
+
+// actNo takrorlanadi (bir akt bir necha qatorda), shuning uchun u UNIQUE
+// emas — takrorlanmas kalit importKey ("<productType>:<varaq>:<qator>").
+model TestJournalRecord {
+  id                   String              @id @default(uuid())
+  importKey            String?             @unique
+  sourceSheet          String?
+  sourceRow            Int?
+  sheetNo              Int?
+  journalYear          Int
+  productTypeId        String
+  productType          TestProductType     @relation(fields: [productTypeId], references: [id])
+  certificationBodyId  String?
+  certificationBody    CertificationBody?  @relation(fields: [certificationBodyId], references: [id])
+  actNo                String?
+  actDate              DateTime?           @db.Date
+  executorName         String?
+  sampleReceivedDate   DateTime?           @db.Date
+  sampleReceivedTime   String?
+  sampleCount          Int?
+  cancelledSampleCount Int                 @default(0)
+  weightNote           String?
+  protocolDate         DateTime?           @db.Date
+  directions           TestDirection[]
+  result               JournalResult
+  nonconformingCount   Int?
+  cancelledBy          JournalCancelledBy?
+  brand                String?
+  locationId           String?
+  location             TestLocation?       @relation(fields: [locationId], references: [id])
+  isRepeat             Boolean             @default(false)
+  contractNo           String?
+  contractDate         DateTime?           @db.Date
+  amount               Decimal?            @db.Decimal(14, 2)
+  paymentStatus        JournalPayment?
+  notes                String[]            @default([])
+  raw                  Json?
+  needsReview          Boolean             @default(false)
+  reviewReasons        String[]            @default([])
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  deletedAt            DateTime?
+
+  @@index([actNo])
+  @@index([sampleReceivedDate])
+  @@index([productTypeId])
+  @@index([certificationBodyId])
+  @@index([result])
+  @@index([needsReview])
+  @@index([journalYear])
+}

@@ -20,6 +20,11 @@ const MODULE_ACCESS = {
   testPrograms: ['SUPER_ADMIN', 'MANAGER'],
   settings: ['SUPER_ADMIN'],
   analytics: ['SUPER_ADMIN'],
+  // Hisobot (sinovlar jurnali). Summa/shartnoma/to'lov maydonlarini faqat
+  // SUPER_ADMIN ko'radi — bu controller ichida cheklanadi.
+  reports: ['SUPER_ADMIN', 'MANAGER'],
+  // Hisobot spravochniklarini (mahsulot turi, joy, buyurtmachi) o'zgartirish.
+  reports_admin: ['SUPER_ADMIN'],
 
   // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — 20 quyi-modul, 6
   // fazada quriladi (hozir faqat smk_nonconformances va smk_complaints
