@@ -59,8 +59,14 @@ function buildSummary(records, includeCancelled = false) {
     totals.amount += a;
     const month = reportMonth(r);
     add(byMonth, month || '—', { month }, s, a);
-    const pt = r.productType || {};
-    add(byProductType, pt.id || 'none', { id: pt.id || null, name: pt.nameUz || '—' }, s, a);
+    // Grouped like the journal's sheets: noise tests (of refrigerators) are
+    // their own "Shovqin" line rather than part of their product type.
+    if ((r.directions || []).includes('SHOVQIN')) {
+      add(byProductType, 'shovqin', { id: 'shovqin', name: 'Shovqin' }, s, a);
+    } else {
+      const pt = r.productType || {};
+      add(byProductType, pt.id || 'none', { id: pt.id || null, name: pt.nameUz || '—' }, s, a);
+    }
     const body = r.certificationBody;
     add(byBody, body ? body.id : 'none', { id: body?.id || null, name: body?.name || '—' }, s, a);
     add(byResult, r.result, { result: r.result }, s, a);

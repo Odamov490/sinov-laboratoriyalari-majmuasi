@@ -365,6 +365,7 @@ const getSummary = asyncHandler(async (req, res) => {
       amount: true,
       sampleReceivedDate: true,
       actDate: true,
+      directions: true,
       productType: { select: { id: true, nameUz: true } },
       certificationBody: { select: { id: true, name: true } },
     },
