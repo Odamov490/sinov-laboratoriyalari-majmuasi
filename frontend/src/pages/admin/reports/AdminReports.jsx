@@ -7,6 +7,7 @@ import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import AdminCrudPage from '../AdminCrudPage.jsx';
 import TestJournalTab from './TestJournalTab.jsx';
 import TestJournalSummaryTab from './TestJournalSummaryTab.jsx';
+import JournalImportCard from './JournalImportCard.jsx';
 import { FINANCE_ROLES, formatMoney, formatDate } from './journalConstants';
 
 const activeColumn = { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") };
@@ -161,6 +162,7 @@ export default function AdminReports() {
 
       {tab === 'spravochniklar' ? (
         <div className="space-y-10">
+          <JournalImportCard />
           {[PRICE_CONFIG, ...DICTIONARY_CONFIGS].map((config) => (
             <AdminCrudPage key={config.path} config={config} />
           ))}

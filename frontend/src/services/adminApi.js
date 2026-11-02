@@ -43,6 +43,8 @@ export const adminTestJournal = {
   summary: (params) => apiClient.get('/admin/test-journal/summary', { params }).then((r) => r.data),
   history: (id) => apiClient.get(`/admin/test-journal/${id}/history`).then((r) => r.data),
   suggestions: () => apiClient.get('/admin/test-journal/suggestions').then((r) => r.data),
+  importJournal: (data, { dryRun } = {}) =>
+    apiClient.post('/admin/test-journal/import', data, { params: dryRun ? { dryRun: 1 } : {} }).then((r) => r.data),
 };
 
 export const updateSettings = (payload) => apiClient.put('/admin/settings', payload).then((r) => r.data);
