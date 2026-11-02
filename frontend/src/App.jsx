@@ -40,6 +40,7 @@ import AdminSettings from './pages/admin/AdminSettings.jsx';
 import AdminDeclarationInfo from './pages/admin/AdminDeclarationInfo.jsx';
 import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
 import AdminSmkPage, { AdminSmkLegacyRedirect } from './pages/admin/AdminSmkPage.jsx';
+import AdminReports from './pages/admin/reports/AdminReports.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
@@ -162,6 +163,7 @@ export default function App() {
         <Route path="smk/:module" element={<AdminSmkLegacyRedirect />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
+        <Route path="hisobot" element={<AdminReports />} />
         <Route path="skanerlash" element={<AdminScanner />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
         <Route path="mening-profilim" element={<AdminProfile />} />

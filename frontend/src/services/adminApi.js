@@ -37,6 +37,12 @@ export const adminPrices = {
 
 export const adminUsers = adminResource('users');
 
+// Hisobot: sinovlar jurnali (CRUD + umumiy hisobot).
+export const adminTestJournal = {
+  ...adminResource('test-journal'),
+  summary: (params) => apiClient.get('/admin/test-journal/summary', { params }).then((r) => r.data),
+};
+
 export const updateSettings = (payload) => apiClient.put('/admin/settings', payload).then((r) => r.data);
 
 export const adminInfoPage = {
