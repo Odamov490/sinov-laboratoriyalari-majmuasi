@@ -1,12 +1,12 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, AlertTriangle, ArrowUp, ArrowDown, RotateCcw, FileSpreadsheet, Columns3, X as XIcon } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon } from 'lucide-react';
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { SearchBar, Pagination } from '../../../components/UI.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
 import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journalConstants';
-import { COLUMNS, DEFAULT_COLUMN_KEYS, ROW_COLORS, loadColumnKeys, saveColumnKeys } from './journalColumns.jsx';
+import { COLUMNS, ROW_COLORS } from './journalColumns.jsx';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
 
 const PAGE_SIZES = [25, 50, 100, 200];
@@ -48,57 +48,6 @@ function FilterSelect({ value, onChange, placeholder, options }) {
   );
 }
 
-// "Ustunlar" dropdown: show/hide any journal column; remembered per browser.
-function ColumnPicker({ columns, visibleKeys, onChange, ctx }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!open) return undefined;
-    const close = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', close);
-    return () => document.removeEventListener('mousedown', close);
-  }, [open]);
-
-  const toggle = (key) => {
-    const next = visibleKeys.includes(key) ? visibleKeys.filter((k) => k !== key) : [...visibleKeys, key];
-    onChange(columns.filter((c) => next.includes(c.key)).map((c) => c.key));
-  };
-
-  return (
-    <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen((v) => !v)} className="btn-secondary !py-2" aria-expanded={open}>
-        <Columns3 className="h-4 w-4" /> Ustunlar
-      </button>
-      {open && (
-        <div className="absolute right-0 z-30 mt-2 w-80 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-white p-3 shadow-xl">
-          <p className="mb-2 text-xs text-slate-500">Jadvalda ko'rinadigan ustunlar (Excel eksportiga ham shu ustunlar tushadi):</p>
-          {columns.map((c) => (
-            <label key={c.key} className="flex items-start gap-2 rounded px-1 py-1 text-sm text-ink hover:bg-bg-light cursor-pointer">
-              <input
-                type="checkbox"
-                checked={visibleKeys.includes(c.key)}
-                onChange={() => toggle(c.key)}
-                className="mt-0.5 h-4 w-4 rounded border-border text-primary"
-              />
-              {c.label(ctx)}
-            </label>
-          ))}
-          <button
-            type="button"
-            onClick={() => onChange(DEFAULT_COLUMN_KEYS)}
-            className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
-          >
-            <RotateCcw className="h-3 w-3" /> Excel jurnalidagi ustunlarga qaytarish
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // "Jurnal" tab of /admin/hisobot — laid out like the Excel journal: one tab
 // per sheet (product type + Shovqin), the journal's columns and row colors.
 // Result and protocol date are edited right in the table; a row click opens
@@ -115,14 +64,13 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
   const [modal, setModal] = useState({ open: false, record: null, copyFrom: null });
   const [exporting, setExporting] = useState(false);
   const [savingCell, setSavingCell] = useState(null);
-  const [columnKeys, setColumnKeys] = useState(loadColumnKeys);
 
   const sheetProduct = dictionaries.productTypes.find((p) => p.id === sheet);
   const brandLabel = sheet === SHOVQIN_SHEET ? 'Muzlatkich markasi' : sheetProduct ? `${sheetProduct.nameUz} markasi` : 'Marka';
   const ctx = { brandLabel, saveCell: null, savingCell };
 
-  const availableColumns = COLUMNS.filter((c) => !c.finance || showFinance);
-  const columns = availableColumns.filter((c) => columnKeys.includes(c.key));
+  // Every journal column is always shown (money columns only to finance roles).
+  const columns = COLUMNS.filter((c) => !c.finance || showFinance);
 
   const params = useMemo(() => {
     const p = { page, pageSize, sortBy: sort.by, sortDir: sort.dir };
@@ -154,11 +102,6 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  const changeColumns = (keys) => {
-    setColumnKeys(keys);
-    saveColumnKeys(keys);
-  };
-
   // In-table edit of result / protocol date: saves at once and patches the row.
   ctx.saveCell = async (record, field, value) => {
     setSavingCell(`${record.id}:${field}`);
@@ -172,8 +115,8 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
     }
   };
 
-  // Exports every row of the current sheet/filters (all pages) with the
-  // visible columns: one Excel sheet per journal sheet, № restarting on each
+  // Exports every row of the current sheet/filters (all pages) with all
+  // journal columns: one Excel sheet per journal sheet, № restarting on each
   // and a JAMI row at the bottom.
   const exportExcel = async () => {
     setExporting(true);
@@ -307,7 +250,6 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
             </button>
           )}
           <div className="ml-auto flex flex-wrap gap-2">
-            <ColumnPicker columns={availableColumns} visibleKeys={columnKeys} onChange={changeColumns} ctx={ctx} />
             <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2">
               <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
             </button>
