@@ -408,6 +408,10 @@ mountCrud('smk/retention', 'smk_retention', 'retentionPolicy', {
 // Hisobot: sinovlar jurnali. /summary va /suggestions /:id dan oldin turishi kerak.
 router.get('/test-journal/summary', requireModule('reports'), testJournal.getSummary);
 router.get('/test-journal/suggestions', requireModule('reports'), testJournal.getSuggestions);
+// Jadval ustunlari (tartib, ko'rinish, qo'shimcha ustunlar): o'qish — hamma,
+// o'zgartirish — faqat SUPER_ADMIN.
+router.get('/test-journal/layout', requireModule('reports'), testJournal.getLayout);
+router.put('/test-journal/layout', requireModule('reports_admin'), testJournal.updateLayout);
 router.get('/test-journal', requireModule('reports'), testJournal.listRecords);
 router.get('/test-journal/:id', requireModule('reports'), testJournal.getRecord);
 router.get('/test-journal/:id/history', requireModule('reports'), testJournal.getHistory);

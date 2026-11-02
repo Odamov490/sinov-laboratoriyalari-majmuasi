@@ -1189,6 +1189,8 @@ model TestJournalRecord {
   raw                  Json?
   needsReview          Boolean             @default(false)
   reviewReasons        String[]            @default([])
+  // SUPER_ADMIN qo'shgan qo'shimcha ustunlar qiymatlari: { ustunKaliti: qiymat }.
+  customFields         Json?
   changes              TestJournalChange[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
@@ -1240,4 +1242,13 @@ model TestJournalPrice {
   updatedAt     DateTime        @updatedAt
 
   @@index([productTypeId, validFrom])
+}
+
+// Jurnal jadvalining ustunlari: tartibi, ko'rinishi va SUPER_ADMIN qo'shgan
+// qo'shimcha ustunlar. Hamma uchun bitta umumiy sozlama (id = "default").
+// columns = [{ key, hidden?, custom?, label?, type? }]
+model TestJournalLayout {
+  id        String   @id
+  columns   Json
+  updatedAt DateTime @updatedAt
 }

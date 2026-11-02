@@ -117,9 +117,10 @@ export default function AdminReports() {
       listAll('certification-bodies'),
       listAll('test-journal-prices'),
       adminTestJournal.suggestions(),
+      adminTestJournal.layout(),
     ])
-      .then(([productTypes, locations, bodies, prices, suggestions]) =>
-        setDictionaries({ productTypes, locations, bodies, prices, suggestions })
+      .then(([productTypes, locations, bodies, prices, suggestions, layout]) =>
+        setDictionaries({ productTypes, locations, bodies, prices, suggestions, layout: layout.columns })
       )
       .catch(() => setDictError(true));
   };
@@ -176,7 +177,13 @@ export default function AdminReports() {
       ) : tab === 'hisobot' ? (
         <TestJournalSummaryTab showFinance={showFinance} />
       ) : (
-        <TestJournalTab dictionaries={dictionaries} showFinance={showFinance} onRecordsChanged={reloadSuggestions} />
+        <TestJournalTab
+          dictionaries={dictionaries}
+          showFinance={showFinance}
+          canEditLayout={isSuperAdmin}
+          onLayoutChange={(columns) => setDictionaries((d) => ({ ...d, layout: columns }))}
+          onRecordsChanged={reloadSuggestions}
+        />
       )}
     </div>
   );

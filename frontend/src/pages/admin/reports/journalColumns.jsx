@@ -127,3 +127,44 @@ export const COLUMNS = [
   { key: 'reviewReasons', label: () => 'Tekshirish sabablari', text: (r) => (r.needsReview ? (r.reviewReasons || []).join('; ') : ''), wide: true },
   { key: 'journalYear', label: () => 'Jurnal yili', text: (r) => r.journalYear ?? '', center: true },
 ];
+
+export const CUSTOM_TYPES = { text: 'Matn', number: 'Son', date: 'Sana' };
+
+const customText = (type, value) => {
+  if (value === null || value === undefined || value === '') return '';
+  return type === 'date' ? formatDate(value) : value;
+};
+
+// Column definition for a SUPER_ADMIN-defined extra column; its values live
+// in record.customFields[key].
+export function customColumn(entry) {
+  return {
+    key: entry.key,
+    custom: true,
+    type: entry.type || 'text',
+    label: () => entry.label,
+    text: (r) => customText(entry.type, r.customFields?.[entry.key]),
+    center: entry.type === 'date',
+    right: entry.type === 'number',
+  };
+}
+
+// The shared table layout (order, hidden flags, extra columns) resolved into
+// column definitions. Without a saved layout: every built-in column in code
+// order. Built-in columns added to the code later are appended visible.
+export function resolveColumns(layout, showFinance = true) {
+  const builtin = new Map(COLUMNS.map((c) => [c.key, c]));
+  const entries = layout?.length ? layout : COLUMNS.map((c) => ({ key: c.key }));
+  const seen = new Set();
+  const out = [];
+  entries.forEach((e) => {
+    const col = e.custom ? customColumn(e) : builtin.get(e.key);
+    if (!col || seen.has(e.key)) return;
+    seen.add(e.key);
+    out.push({ ...col, hidden: Boolean(e.hidden) });
+  });
+  COLUMNS.forEach((c) => {
+    if (!seen.has(c.key)) out.push({ ...c, hidden: false });
+  });
+  return out.filter((c) => !c.finance || showFinance);
+}

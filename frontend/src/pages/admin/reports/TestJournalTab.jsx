@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon } from 'lucide-react';
+import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon, Columns3 } from 'lucide-react';
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { SearchBar, Pagination } from '../../../components/UI.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
 import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journalConstants';
-import { COLUMNS, ROW_COLORS } from './journalColumns.jsx';
+import { ROW_COLORS, resolveColumns } from './journalColumns.jsx';
+import ColumnSettingsModal from './ColumnSettingsModal.jsx';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
 
 const PAGE_SIZES = [25, 50, 100, 200];
@@ -52,7 +53,7 @@ function FilterSelect({ value, onChange, placeholder, options }) {
 // per sheet (product type + Shovqin), the journal's columns and row colors.
 // Result and protocol date are edited right in the table; a row click opens
 // the full record dialog.
-export default function TestJournalTab({ dictionaries, showFinance, onRecordsChanged }) {
+export default function TestJournalTab({ dictionaries, showFinance, canEditLayout, onLayoutChange, onRecordsChanged }) {
   const { showToast } = useToast();
   const [sheet, setSheet] = useState(ALL_SHEET);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -69,8 +70,10 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
   const brandLabel = sheet === SHOVQIN_SHEET ? 'Muzlatkich markasi' : sheetProduct ? `${sheetProduct.nameUz} markasi` : 'Marka';
   const ctx = { brandLabel, saveCell: null, savingCell };
 
-  // Every journal column is always shown (money columns only to finance roles).
-  const columns = COLUMNS.filter((c) => !c.finance || showFinance);
+  // Shared layout (order, hidden, extra columns) set by SUPER_ADMIN; money
+  // columns only to finance roles.
+  const columns = resolveColumns(dictionaries.layout, showFinance).filter((c) => !c.hidden);
+  const [layoutOpen, setLayoutOpen] = useState(false);
 
   const params = useMemo(() => {
     const p = { page, pageSize, sortBy: sort.by, sortDir: sort.dir };
@@ -250,6 +253,11 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
             </button>
           )}
           <div className="ml-auto flex flex-wrap gap-2">
+            {canEditLayout && (
+              <button onClick={() => setLayoutOpen(true)} className="btn-secondary !py-2">
+                <Columns3 className="h-4 w-4" /> Ustunlar
+              </button>
+            )}
             <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2">
               <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
             </button>
@@ -392,12 +400,25 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
         showFinance={showFinance}
         onClose={() => setModal({ open: false, record: null, copyFrom: null })}
         onCopy={(record) => setModal({ open: true, record: null, copyFrom: record })}
+        customColumns={resolveColumns(dictionaries.layout).filter((c) => c.custom)}
         onSaved={() => {
           setModal({ open: false, record: null, copyFrom: null });
           load();
           onRecordsChanged?.();
         }}
       />
+
+      {canEditLayout && (
+        <ColumnSettingsModal
+          open={layoutOpen}
+          layout={dictionaries.layout}
+          onClose={() => setLayoutOpen(false)}
+          onSaved={(columns) => {
+            setLayoutOpen(false);
+            onLayoutChange(columns);
+          }}
+        />
+      )}
     </div>
   );
 }

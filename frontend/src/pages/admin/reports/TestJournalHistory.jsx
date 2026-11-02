@@ -10,6 +10,7 @@ import {
   formatDate,
   formatMoney,
 } from './journalConstants';
+import { resolveColumns } from './journalColumns.jsx';
 
 const ACTION_LABELS = { CREATE: "qo'shdi", UPDATE: "o'zgartirdi", DELETE: "o'chirdi" };
 const DATE_FIELDS = ['actDate', 'sampleReceivedDate', 'protocolDate', 'contractDate'];
@@ -52,6 +53,14 @@ function formatValue(field, value, dictionaries) {
 // "O'zgarishlar tarixi" block of the record dialog: who added/changed/deleted
 // the record and when, with before → after for each changed field.
 export default function TestJournalHistory({ recordId, dictionaries }) {
+  // Extra columns are logged as "customFields.<key>"; label them by the layout.
+  const customLabels = Object.fromEntries(
+    resolveColumns(dictionaries.layout)
+      .filter((c) => c.custom)
+      .map((c) => [`customFields.${c.key}`, c.label()])
+  );
+  const fieldLabel = (field) =>
+    FIELD_LABELS[field] || customLabels[field] || (field.startsWith('customFields.') ? "O'chirilgan qo'shimcha ustun" : field);
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
 
@@ -83,7 +92,7 @@ export default function TestJournalHistory({ recordId, dictionaries }) {
                 <ul className="mt-0.5 pl-4 list-disc">
                   {Object.entries(e.changes).map(([field, { from, to }]) => (
                     <li key={field}>
-                      {FIELD_LABELS[field] || field}: {formatValue(field, from, dictionaries)} →{' '}
+                      {fieldLabel(field)}: {formatValue(field, from, dictionaries)} →{' '}
                       <span className="text-ink">{formatValue(field, to, dictionaries)}</span>
                     </li>
                   ))}

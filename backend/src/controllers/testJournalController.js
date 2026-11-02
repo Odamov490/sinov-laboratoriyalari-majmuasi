@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { Prisma } = require('@prisma/client');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { buildSummary } = require('../utils/testJournalReport');
@@ -195,6 +196,8 @@ const recordSchema = z.object({
   notes: z.array(z.string()).optional(),
   needsReview: z.boolean().optional(),
   reviewReasons: z.array(z.string()).optional(),
+  // Values of SUPER_ADMIN-defined extra columns, keyed by column key.
+  customFields: z.record(z.string(), z.union([z.string(), z.number(), z.null()])).nullable().optional(),
 });
 
 function toData(body, finance, { partial }) {
@@ -206,6 +209,12 @@ function toData(body, finance, { partial }) {
   });
   // A reviewed record clears its reasons along with the flag.
   if (data.needsReview === false && !('reviewReasons' in data)) data.reviewReasons = [];
+  // Empty extra-column values are dropped; nothing left = SQL NULL (Prisma
+  // needs DbNull for a nullable Json column, plain null is rejected).
+  if ('customFields' in data) {
+    const kept = Object.fromEntries(Object.entries(data.customFields || {}).filter(([, v]) => v !== null && v !== ''));
+    data.customFields = Object.keys(kept).length ? kept : Prisma.DbNull;
+  }
   return data;
 }
 
@@ -218,9 +227,21 @@ function comparable(value) {
 }
 
 // { field: { from, to } } for every field in `data` whose value changes.
+// Extra columns are logged one by one as "customFields.<key>".
 function diff(before, data) {
   const changes = {};
   Object.keys(data).forEach((key) => {
+    if (key === 'customFields') {
+      const plain = (v) => (v && v.constructor === Object ? v : {}); // Prisma.DbNull -> {}
+      const prev = plain(before.customFields);
+      const next = plain(data.customFields);
+      new Set([...Object.keys(prev), ...Object.keys(next)]).forEach((k) => {
+        const from = prev[k] ?? null;
+        const to = next[k] ?? null;
+        if (JSON.stringify(from) !== JSON.stringify(to)) changes[`customFields.${k}`] = { from, to };
+      });
+      return;
+    }
     const from = comparable(before[key]);
     const to = comparable(data[key]);
     if (JSON.stringify(from) !== JSON.stringify(to)) changes[key] = { from, to };
@@ -367,6 +388,45 @@ const getSummary = asyncHandler(async (req, res) => {
   });
 });
 
+// Journal table layout — one shared row. columns = [{ key, hidden?, custom?,
+// label?, type? }]; null until a SUPER_ADMIN first saves it (the frontend
+// then shows its built-in default order).
+const LAYOUT_ID = 'default';
+const layoutSchema = z
+  .array(
+    z.object({
+      key: z.string().regex(/^[A-Za-z0-9_]{1,60}$/, "Ustun kaliti noto'g'ri."),
+      hidden: z.boolean().optional(),
+      custom: z.boolean().optional(),
+      label: z.string().trim().max(120).optional(),
+      type: z.enum(['text', 'number', 'date']).optional(),
+    })
+  )
+  .max(200)
+  .superRefine((cols, ctx) => {
+    const seen = new Set();
+    cols.forEach((c, i) => {
+      if (seen.has(c.key)) ctx.addIssue({ code: 'custom', path: [i, 'key'], message: `Ustun takrorlangan: ${c.key}` });
+      seen.add(c.key);
+      if (c.custom && !c.label) ctx.addIssue({ code: 'custom', path: [i, 'label'], message: "Qo'shimcha ustun nomi kerak." });
+    });
+  });
+
+const getLayout = asyncHandler(async (req, res) => {
+  const layout = await prisma.testJournalLayout.findUnique({ where: { id: LAYOUT_ID } });
+  res.json({ columns: layout?.columns || null, updatedAt: layout?.updatedAt || null });
+});
+
+const updateLayout = asyncHandler(async (req, res) => {
+  const columns = layoutSchema.parse(req.body?.columns);
+  const layout = await prisma.testJournalLayout.upsert({
+    where: { id: LAYOUT_ID },
+    create: { id: LAYOUT_ID, columns },
+    update: { columns },
+  });
+  res.json({ columns: layout.columns, updatedAt: layout.updatedAt });
+});
+
 // POST /admin/test-journal/import[?dryRun=1] — body: the journal JSON file.
 // Same checks as the CLI import (prisma/seed/importTestJournal.js); dryRun
 // only validates and returns the totals, nothing is written.
@@ -393,6 +453,8 @@ const importJournal = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  getLayout,
+  updateLayout,
   importJournal,
   listRecords,
   getRecord,

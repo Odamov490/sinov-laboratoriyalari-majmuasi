@@ -32,6 +32,7 @@ const EMPTY = {
   paymentStatus: '',
   notes: '',
   needsReview: false,
+  customFields: {},
 };
 
 // Fields reset when a row is copied into a new one: the copy shares the act,
@@ -57,10 +58,11 @@ function toForm(record) {
   form.certificationBodyId = record.certificationBodyId || '';
   form.locationId = record.locationId || '';
   form.notes = (record.notes || []).join('\n');
+  form.customFields = { ...(record.customFields || {}) };
   return form;
 }
 
-function toPayload(form, showFinance) {
+function toPayload(form, showFinance, customColumns) {
   const num = (v) => (v === '' || v === null || v === undefined ? null : Number(v));
   const str = (v) => (v === '' || v === undefined ? null : String(v).trim() || null);
   const payload = {
@@ -88,6 +90,18 @@ function toPayload(form, showFinance) {
       .map((s) => s.trim())
       .filter(Boolean),
     needsReview: Boolean(form.needsReview),
+    // Extra columns: numbers stored as numbers, empty values dropped
+    // server-side. Values of columns no longer in the layout are kept as is.
+    customFields: {
+      ...(form.customFields || {}),
+      ...Object.fromEntries(
+        customColumns.map((c) => {
+          const v = form.customFields?.[c.key];
+          if (v === '' || v === undefined || v === null) return [c.key, null];
+          return [c.key, c.type === 'number' ? Number(v) : String(v)];
+        })
+      ),
+    },
   };
   if (showFinance) {
     payload.contractNo = str(form.contractNo);
@@ -109,7 +123,17 @@ function Field({ label, children, full }) {
 
 // Create/edit dialog for one journal row. `record` null = new row;
 // `copyFrom` prefills a new row from an existing one ("Nusxa olish").
-export default function TestJournalRecordModal({ open, record, copyFrom, dictionaries, showFinance, onClose, onSaved, onCopy }) {
+export default function TestJournalRecordModal({
+  open,
+  record,
+  copyFrom,
+  dictionaries,
+  showFinance,
+  customColumns = [],
+  onClose,
+  onSaved,
+  onCopy,
+}) {
   const { showToast } = useToast();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -150,7 +174,7 @@ export default function TestJournalRecordModal({ open, record, copyFrom, diction
     }
     setSaving(true);
     try {
-      const payload = toPayload(form, showFinance);
+      const payload = toPayload(form, showFinance, customColumns);
       if (record) await adminTestJournal.update(record.id, payload);
       else await adminTestJournal.create(payload);
       showToast(record ? 'Yangilandi.' : "Qo'shildi.", 'success');
@@ -323,6 +347,22 @@ export default function TestJournalRecordModal({ open, record, copyFrom, diction
                   'Kuzatilmagan'
                 )}
               </Field>
+            </>
+          )}
+
+          {customColumns.length > 0 && (
+            <>
+              <p className="sm:col-span-2 mt-2 border-t border-border pt-3 text-sm font-semibold text-ink">Qo'shimcha ustunlar</p>
+              {customColumns.map((c) => (
+                <Field key={c.key} label={c.label()}>
+                  <input
+                    type={c.type === 'number' ? 'number' : c.type === 'date' ? 'date' : 'text'}
+                    className="input-field"
+                    value={form.customFields?.[c.key] ?? ''}
+                    onChange={(e) => setForm((f) => ({ ...f, customFields: { ...f.customFields, [c.key]: e.target.value } }))}
+                  />
+                </Field>
+              ))}
             </>
           )}
 
