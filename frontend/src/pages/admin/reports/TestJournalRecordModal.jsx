@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Trash2 } from 'lucide-react';
+import { AlertTriangle, Trash2, Copy } from 'lucide-react';
 import { Modal, ConfirmDialog } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
-import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, CANCELLED_BY_LABELS } from './journalConstants';
+import TestJournalHistory from './TestJournalHistory.jsx';
+import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
 
 const EMPTY = {
   journalYear: new Date().getFullYear(),
@@ -33,6 +34,19 @@ const EMPTY = {
   needsReview: false,
 };
 
+// Fields reset when a row is copied into a new one: the copy shares the act,
+// customer, product and dates, but its outcome is still to come.
+const COPY_RESET = {
+  protocolDate: '',
+  result: 'KUTILMOQDA',
+  nonconformingCount: '',
+  cancelledBy: '',
+  cancelledSampleCount: 0,
+  amount: '',
+  paymentStatus: '',
+  notes: '',
+  needsReview: false,
+};
 
 function toForm(record) {
   const form = { ...EMPTY };
@@ -93,16 +107,34 @@ function Field({ label, children, full }) {
   );
 }
 
-// Create/edit dialog for one journal row. `record` null = new row.
-export default function TestJournalRecordModal({ open, record, dictionaries, showFinance, onClose, onSaved }) {
+// Create/edit dialog for one journal row. `record` null = new row;
+// `copyFrom` prefills a new row from an existing one ("Nusxa olish").
+export default function TestJournalRecordModal({ open, record, copyFrom, dictionaries, showFinance, onClose, onSaved, onCopy }) {
   const { showToast } = useToast();
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Existing amounts are never overwritten automatically; a new row follows
+  // the price list until the user types an amount by hand.
+  const [amountTouched, setAmountTouched] = useState(false);
 
   useEffect(() => {
-    if (open) setForm(record ? toForm(record) : { ...EMPTY });
-  }, [open, record]);
+    if (!open) return;
+    if (record) setForm(toForm(record));
+    else if (copyFrom) setForm({ ...toForm(copyFrom), ...COPY_RESET });
+    else setForm({ ...EMPTY });
+    setAmountTouched(Boolean(record));
+  }, [open, record, copyFrom]);
+
+  const unitPrice = findUnitPrice(dictionaries.prices, form);
+  const sampleCount = Number(form.sampleCount) || 0;
+  const suggestedAmount = unitPrice !== null && sampleCount > 0 ? unitPrice * sampleCount : null;
+
+  useEffect(() => {
+    if (showFinance && !amountTouched && suggestedAmount !== null) {
+      setForm((f) => (Number(f.amount) === suggestedAmount ? f : { ...f, amount: suggestedAmount }));
+    }
+  }, [suggestedAmount, amountTouched, showFinance]);
 
   const set = (name, value) => setForm((f) => ({ ...f, [name]: value }));
   const toggleDirection = (value) =>
@@ -158,7 +190,22 @@ export default function TestJournalRecordModal({ open, record, dictionaries, sho
 
   return (
     <>
-      <Modal open={open} onClose={onClose} title={record ? `Yozuvni tahrirlash${record.actNo ? ` — ${record.actNo}` : ''}` : 'Yangi yozuv'} size="xl">
+      <datalist id="journal-executors">
+        {(dictionaries.suggestions?.executors || []).map((v) => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
+      <datalist id="journal-brands">
+        {(dictionaries.suggestions?.brands || []).map((v) => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
+      <Modal
+        open={open}
+        onClose={onClose}
+        title={record ? `Yozuvni tahrirlash${record.actNo ? ` — ${record.actNo}` : ''}` : copyFrom ? 'Yangi yozuv (nusxa)' : 'Yangi yozuv'}
+        size="xl"
+      >
         {record?.needsReview && (
           <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
@@ -178,7 +225,7 @@ export default function TestJournalRecordModal({ open, record, dictionaries, sho
           <Field label="Buyurtmachi">{select('certificationBodyId', toOptions(dictionaries.bodies, 'name'))}</Field>
           <Field label="Akt ID">{input('actNo')}</Field>
           <Field label="Akt sanasi">{input('actDate', 'date')}</Field>
-          <Field label="Ijrochi">{input('executorName')}</Field>
+          <Field label="Ijrochi">{input('executorName', 'text', { list: 'journal-executors', autoComplete: 'off' })}</Field>
           <Field label="Jurnal yili">{input('journalYear', 'number', { min: 2000, max: 2100 })}</Field>
           <Field label="Namuna kelgan sana">{input('sampleReceivedDate', 'date')}</Field>
           <Field label="Namuna kelgan vaqt">{input('sampleReceivedTime', 'text', { placeholder: 'masalan 14:30' })}</Field>
@@ -217,7 +264,7 @@ export default function TestJournalRecordModal({ open, record, dictionaries, sho
               Object.entries(CANCELLED_BY_LABELS).map(([value, label]) => ({ value, label }))
             )}
           </Field>
-          <Field label="Marka">{input('brand')}</Field>
+          <Field label="Marka">{input('brand', 'text', { list: 'journal-brands', autoComplete: 'off' })}</Field>
           <Field label="Joy">{select('locationId', toOptions(dictionaries.locations, 'nameUz'))}</Field>
           <Field label="Takroriy sinov">
             <label className="flex items-center gap-2 text-sm text-ink cursor-pointer h-10">
@@ -235,7 +282,40 @@ export default function TestJournalRecordModal({ open, record, dictionaries, sho
             <>
               <Field label="Shartnoma raqami">{input('contractNo')}</Field>
               <Field label="Shartnoma sanasi">{input('contractDate', 'date')}</Field>
-              <Field label="Summa (so'm)">{input('amount', 'number', { min: 0, step: '0.01' })}</Field>
+              <Field label="Summa (so'm)">
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  className="input-field"
+                  value={form.amount ?? ''}
+                  onChange={(e) => {
+                    setAmountTouched(true);
+                    set('amount', e.target.value);
+                  }}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  {unitPrice === null ? (
+                    "Bu mahsulot/sinov turi uchun narx spravochnikda yo'q — summani qo'lda kiriting."
+                  ) : (
+                    <>
+                      Narx: {formatMoney(unitPrice)} × {sampleCount} = {formatMoney(suggestedAmount ?? 0)}
+                      {suggestedAmount !== null && Number(form.amount) !== suggestedAmount && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAmountTouched(false);
+                            set('amount', suggestedAmount);
+                          }}
+                          className="ml-2 text-primary hover:underline"
+                        >
+                          Qo'llash
+                        </button>
+                      )}
+                    </>
+                  )}
+                </p>
+              </Field>
               <Field label="To'lov">
                 {select(
                   'paymentStatus',
@@ -262,11 +342,22 @@ export default function TestJournalRecordModal({ open, record, dictionaries, sho
           </Field>
         </div>
 
+        {record && <TestJournalHistory recordId={record.id} dictionaries={dictionaries} />}
+
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div>
+          <div className="flex flex-wrap items-center gap-4">
             {record && (
               <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 text-sm text-red-600 hover:underline">
                 <Trash2 className="h-4 w-4" /> O'chirish
+              </button>
+            )}
+            {record && onCopy && (
+              <button
+                onClick={() => onCopy(record)}
+                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                title="Shu akt bo'yicha yangi qator ochish (masalan, shovqin sinovi uchun)"
+              >
+                <Copy className="h-4 w-4" /> Nusxa olib yangi yozuv
               </button>
             )}
           </div>

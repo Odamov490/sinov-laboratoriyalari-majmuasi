@@ -46,6 +46,7 @@ model User {
   documentAcknowledgments         DocumentAcknowledgment[]
   riskItemsOwned                  RiskItem[]
   improvementSuggestions           ImprovementSuggestion[]
+  testJournalChanges               TestJournalChange[]
 }
 
 model Laboratory {
@@ -1123,6 +1124,7 @@ model TestProductType {
   nameUz    String
   isActive  Boolean             @default(true)
   records   TestJournalRecord[]
+  prices    TestJournalPrice[]
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
 }
@@ -1187,6 +1189,7 @@ model TestJournalRecord {
   raw                  Json?
   needsReview          Boolean             @default(false)
   reviewReasons        String[]            @default([])
+  changes              TestJournalChange[]
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
   deletedAt            DateTime?
@@ -1198,4 +1201,43 @@ model TestJournalRecord {
   @@index([result])
   @@index([needsReview])
   @@index([journalYear])
+}
+
+enum JournalChangeAction {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+// Jurnal yozuvining o'zgarishlar tarixi: kim, qachon, nima qildi.
+// changes = { maydon: { from, to } } (UPDATE uchun); Excel'dan import
+// qilingan yozuvlarda CREATE yozuvi bo'lmaydi (importKey buni bildiradi).
+model TestJournalChange {
+  id        String              @id @default(uuid())
+  recordId  String
+  record    TestJournalRecord   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    JournalChangeAction
+  changes   Json?
+  createdAt DateTime            @default(now())
+
+  @@index([recordId])
+}
+
+// Bir namuna sinovi narxi — summani avtomatik hisoblash uchun.
+// direction: null = asosiy sinovlar (BZ/EMM/EE), SHOVQIN = shovqin sinovi.
+// Yozuv uchun akt sanasidan oldingi eng so'nggi validFrom narxi olinadi.
+model TestJournalPrice {
+  id            String          @id @default(uuid())
+  productTypeId String
+  productType   TestProductType @relation(fields: [productTypeId], references: [id])
+  direction     TestDirection?
+  unitPrice     Decimal         @db.Decimal(14, 2)
+  validFrom     DateTime        @db.Date
+  note          String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([productTypeId, validFrom])
 }

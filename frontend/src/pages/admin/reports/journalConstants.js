@@ -43,3 +43,51 @@ export const formatDate = (value) => {
   const [y, m, d] = String(value).slice(0, 10).split('-');
   return `${d}.${m}.${y}`;
 };
+
+// Roles that see and enter amount/contract/payment (mirrors backend
+// FINANCE_ROLES in testJournalController).
+export const FINANCE_ROLES = ['SUPER_ADMIN', 'MANAGER'];
+
+// Unit price for a record: same product type and test kind (SHOVQIN or the
+// main BZ/EMM/EE tests), latest price whose validFrom is on/before the act
+// date (or today). Returns null when the price list has no match.
+export function findUnitPrice(prices, { productTypeId, directions, actDate }) {
+  if (!productTypeId) return null;
+  const kind = (directions || []).includes('SHOVQIN') ? 'SHOVQIN' : null;
+  const onDate = actDate || new Date().toISOString().slice(0, 10);
+  const match = prices
+    .filter((p) => p.productTypeId === productTypeId && (p.direction || null) === kind)
+    .filter((p) => String(p.validFrom).slice(0, 10) <= onDate)
+    .sort((a, b) => String(b.validFrom).localeCompare(String(a.validFrom)))[0];
+  return match ? Number(match.unitPrice) : null;
+}
+
+// Field names shown in the change history.
+export const FIELD_LABELS = {
+  journalYear: 'Jurnal yili',
+  productTypeId: 'Mahsulot turi',
+  certificationBodyId: 'Buyurtmachi',
+  actNo: 'Akt ID',
+  actDate: 'Akt sanasi',
+  executorName: 'Ijrochi',
+  sampleReceivedDate: 'Namuna kelgan sana',
+  sampleReceivedTime: 'Namuna kelgan vaqt',
+  sampleCount: 'Namunalar soni',
+  cancelledSampleCount: 'Bekor qilingan namunalar',
+  weightNote: "Og'irlik",
+  protocolDate: 'Bayonnoma sanasi',
+  directions: "Yo'nalishlar",
+  result: 'Natija',
+  nonconformingCount: 'Mos emas namunalar',
+  cancelledBy: 'Bekor qilgan tomon',
+  brand: 'Marka',
+  locationId: 'Joy',
+  isRepeat: 'Takroriy',
+  contractNo: 'Shartnoma',
+  contractDate: 'Shartnoma sanasi',
+  amount: 'Summa',
+  paymentStatus: "To'lov",
+  notes: 'Izohlar',
+  needsReview: 'Tekshirish kerak',
+  reviewReasons: 'Tekshirish sabablari',
+};

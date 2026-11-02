@@ -4,9 +4,10 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { buildSummary } = require('../utils/testJournalReport');
 
 // Sinovlar jurnali (Hisobot bo'limi). Moliyaviy maydonlar — summa, shartnoma,
-// to'lov — faqat SUPER_ADMIN uchun: boshqalarga javobdan olib tashlanadi,
+// to'lov — faqat FINANCE_ROLES uchun: boshqalarga javobdan olib tashlanadi,
 // ular bo'yicha filtr/qidiruv/saralash ham ishlamaydi va yozishda e'tiborsiz
-// qoldiriladi (frontendda yashirish yetarli emas).
+// qoldiriladi (frontendda yashirish yetarli emas). Har bir qo'shish/o'zgartirish/
+// o'chirish TestJournalChange'ga yoziladi (kim, qachon, nima).
 
 const RESULTS = ['MOS', 'MOS_EMAS', 'QISMAN_MOS_EMAS', 'NAMUNA_TAQDIM_ETILMADI', 'BEKOR_QILINDI', 'KUTILMOQDA', 'KORIB_CHIQISH'];
 const DIRECTIONS = ['XAVFSIZLIK', 'EMC', 'ENERGIYA', 'SHOVQIN'];
@@ -28,7 +29,10 @@ const SORT_FIELDS = {
 const MAX_PAGE_SIZE = 500;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-const canSeeFinance = (req) => req.user?.role === 'SUPER_ADMIN';
+// Jurnalni yurituvchilar summani ham kiritadi, shuning uchun MANAGER ham
+// moliyaviy maydonlarni ko'radi. Cheklangan rol kerak bo'lsa — shu ro'yxatdan.
+const FINANCE_ROLES = ['SUPER_ADMIN', 'MANAGER'];
+const canSeeFinance = (req) => FINANCE_ROLES.includes(req.user?.role);
 
 const INCLUDE = {
   productType: { select: { id: true, code: true, nameUz: true } },
@@ -199,29 +203,115 @@ function toData(body, finance, { partial }) {
   return data;
 }
 
+// Comparable form of a field value (dates/decimals), for the change log.
+function comparable(value) {
+  if (value === undefined || value === null) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === 'object' && typeof value.toNumber === 'function') return value.toNumber();
+  return value;
+}
+
+// { field: { from, to } } for every field in `data` whose value changes.
+function diff(before, data) {
+  const changes = {};
+  Object.keys(data).forEach((key) => {
+    const from = comparable(before[key]);
+    const to = comparable(data[key]);
+    if (JSON.stringify(from) !== JSON.stringify(to)) changes[key] = { from, to };
+  });
+  return changes;
+}
+
+const logChange = (tx, recordId, req, action, changes = null) =>
+  tx.testJournalChange.create({
+    data: { recordId, userId: req.user?.sub || null, action, ...(changes && { changes }) },
+  });
+
 const createRecord = asyncHandler(async (req, res) => {
   const finance = canSeeFinance(req);
   const data = toData(req.body, finance, { partial: false });
-  const record = await prisma.testJournalRecord.create({ data, include: INCLUDE });
+  const record = await prisma.$transaction(async (tx) => {
+    const created = await tx.testJournalRecord.create({ data, include: INCLUDE });
+    await logChange(tx, created.id, req, 'CREATE');
+    return created;
+  });
   res.status(201).json(serialize(record, finance));
 });
 
 const updateRecord = asyncHandler(async (req, res) => {
   const finance = canSeeFinance(req);
-  const exists = await prisma.testJournalRecord.findFirst({ where: { id: req.params.id, deletedAt: null }, select: { id: true } });
-  if (!exists) return res.status(404).json({ error: 'Yozuv topilmadi.' });
+  const before = await prisma.testJournalRecord.findFirst({ where: { id: req.params.id, deletedAt: null } });
+  if (!before) return res.status(404).json({ error: 'Yozuv topilmadi.' });
   const data = toData(req.body, finance, { partial: true });
-  const record = await prisma.testJournalRecord.update({ where: { id: req.params.id }, data, include: INCLUDE });
+  const changes = diff(before, data);
+  const record = await prisma.$transaction(async (tx) => {
+    const updated = await tx.testJournalRecord.update({ where: { id: req.params.id }, data, include: INCLUDE });
+    if (Object.keys(changes).length) await logChange(tx, updated.id, req, 'UPDATE', changes);
+    return updated;
+  });
   res.json(serialize(record, finance));
 });
 
 const deleteRecord = asyncHandler(async (req, res) => {
-  const { count } = await prisma.testJournalRecord.updateMany({
-    where: { id: req.params.id, deletedAt: null },
-    data: { deletedAt: new Date() },
+  const deleted = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.testJournalRecord.updateMany({
+      where: { id: req.params.id, deletedAt: null },
+      data: { deletedAt: new Date() },
+    });
+    if (count) await logChange(tx, req.params.id, req, 'DELETE');
+    return count;
   });
-  if (!count) return res.status(404).json({ error: 'Yozuv topilmadi.' });
+  if (!deleted) return res.status(404).json({ error: 'Yozuv topilmadi.' });
   res.status(204).send();
+});
+
+// GET /admin/test-journal/:id/history — newest first, with who made each change.
+const getHistory = asyncHandler(async (req, res) => {
+  const finance = canSeeFinance(req);
+  const record = await prisma.testJournalRecord.findUnique({
+    where: { id: req.params.id },
+    select: { importKey: true, createdAt: true },
+  });
+  if (!record) return res.status(404).json({ error: 'Yozuv topilmadi.' });
+  const entries = await prisma.testJournalChange.findMany({
+    where: { recordId: req.params.id },
+    include: { user: { select: { fullName: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+  res.json({
+    importedFromExcel: Boolean(record.importKey),
+    importedAt: record.importKey ? record.createdAt : null,
+    items: entries.map((e) => {
+      let { changes } = e;
+      if (changes && !finance) {
+        changes = { ...changes };
+        FINANCE_FIELDS.forEach((f) => delete changes[f]);
+      }
+      return { id: e.id, action: e.action, userName: e.user?.fullName || null, createdAt: e.createdAt, changes };
+    }),
+  });
+});
+
+// GET /admin/test-journal/suggestions — earlier executor names and brands,
+// for autocomplete in the entry form.
+const getSuggestions = asyncHandler(async (req, res) => {
+  const [executors, brands] = await Promise.all([
+    prisma.testJournalRecord.findMany({
+      where: { deletedAt: null, executorName: { not: null } },
+      distinct: ['executorName'],
+      select: { executorName: true },
+      orderBy: { executorName: 'asc' },
+      take: 1000,
+    }),
+    prisma.testJournalRecord.findMany({
+      where: { deletedAt: null, brand: { not: null } },
+      distinct: ['brand'],
+      select: { brand: true },
+      orderBy: { brand: 'asc' },
+      take: 1000,
+    }),
+  ]);
+  res.json({ executors: executors.map((e) => e.executorName), brands: brands.map((b) => b.brand) });
 });
 
 // GET /admin/test-journal/summary?from=&to=&includeCancelled=0|1
@@ -271,4 +361,13 @@ const getSummary = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { listRecords, getRecord, createRecord, updateRecord, deleteRecord, getSummary };
+module.exports = {
+  listRecords,
+  getRecord,
+  createRecord,
+  updateRecord,
+  deleteRecord,
+  getSummary,
+  getHistory,
+  getSuggestions,
+};

@@ -2,13 +2,46 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BookOpen, PieChart, ListTree } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext.jsx';
-import { adminResource } from '../../../services/adminApi';
+import { adminResource, adminTestJournal } from '../../../services/adminApi';
 import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import AdminCrudPage from '../AdminCrudPage.jsx';
 import TestJournalTab from './TestJournalTab.jsx';
 import TestJournalSummaryTab from './TestJournalSummaryTab.jsx';
+import { FINANCE_ROLES, formatMoney, formatDate } from './journalConstants';
 
 const activeColumn = { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") };
+
+const PRICE_CONFIG = {
+  path: 'test-journal-prices',
+  title: 'Narxlar (bir namuna uchun)',
+  searchable: false,
+  columns: [
+    { key: 'productType', label: 'Mahsulot turi', render: (i) => i.productType?.nameUz || '—' },
+    { key: 'direction', label: 'Sinov turi', render: (i) => (i.direction === 'SHOVQIN' ? 'Shovqin' : 'Asosiy (BZ/EMM/EE)') },
+    { key: 'unitPrice', label: "Narx, so'm", render: (i) => formatMoney(i.unitPrice) },
+    { key: 'validFrom', label: 'Amal qiladi', render: (i) => `${formatDate(i.validFrom)} dan` },
+    { key: 'note', label: 'Izoh', render: (i) => i.note || '—' },
+  ],
+  fields: [
+    {
+      name: 'productTypeId',
+      label: 'Mahsulot turi',
+      type: 'async-select',
+      optionsResource: 'test-product-types',
+      optionsLabel: (item) => item.nameUz,
+      required: true,
+    },
+    {
+      name: 'direction',
+      label: "Sinov turi (bo'sh = asosiy BZ/EMM/EE)",
+      type: 'select',
+      options: [{ value: 'SHOVQIN', label: 'Shovqin' }],
+    },
+    { name: 'unitPrice', label: "Bir namuna narxi, so'm", type: 'number', required: true },
+    { name: 'validFrom', label: 'Qaysi sanadan amal qiladi', type: 'date', required: true },
+    { name: 'note', label: 'Izoh (masalan: 8 kg gacha)', fullWidth: true },
+  ],
+};
 
 const DICTIONARY_CONFIGS = [
   {
@@ -60,11 +93,12 @@ const listAll = (path) =>
     .then((d) => d.items || []);
 
 // /admin/hisobot — test journal (sinovlar jurnali), its summary report and
-// reference lists. Money fields are SUPER_ADMIN-only (the API strips them for
-// other roles; the UI just doesn't render the columns).
+// reference lists. Money fields are shown to FINANCE_ROLES only (the API
+// strips them for other roles; the UI just doesn't render them).
 export default function AdminReports() {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const showFinance = FINANCE_ROLES.includes(user?.role);
   const [searchParams, setSearchParams] = useSearchParams();
   const tabs = TABS.filter((t) => !t.superAdminOnly || isSuperAdmin);
   const tab = tabs.some((t) => t.key === searchParams.get('tab')) ? searchParams.get('tab') : 'jurnal';
@@ -76,9 +110,25 @@ export default function AdminReports() {
   // Spravochniklar tab show up in the filters right away.
   const loadDictionaries = () => {
     setDictError(false);
-    Promise.all([listAll('test-product-types'), listAll('test-locations'), listAll('certification-bodies')])
-      .then(([productTypes, locations, bodies]) => setDictionaries({ productTypes, locations, bodies }))
+    Promise.all([
+      listAll('test-product-types'),
+      listAll('test-locations'),
+      listAll('certification-bodies'),
+      listAll('test-journal-prices'),
+      adminTestJournal.suggestions(),
+    ])
+      .then(([productTypes, locations, bodies, prices, suggestions]) =>
+        setDictionaries({ productTypes, locations, bodies, prices, suggestions })
+      )
       .catch(() => setDictError(true));
+  };
+
+  // New executor names/brands typed into a record become suggestions at once.
+  const reloadSuggestions = () => {
+    adminTestJournal
+      .suggestions()
+      .then((suggestions) => setDictionaries((d) => (d ? { ...d, suggestions } : d)))
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -111,7 +161,7 @@ export default function AdminReports() {
 
       {tab === 'spravochniklar' ? (
         <div className="space-y-10">
-          {DICTIONARY_CONFIGS.map((config) => (
+          {[PRICE_CONFIG, ...DICTIONARY_CONFIGS].map((config) => (
             <AdminCrudPage key={config.path} config={config} />
           ))}
         </div>
@@ -122,9 +172,9 @@ export default function AdminReports() {
       ) : !dictionaries ? (
         <Loading />
       ) : tab === 'hisobot' ? (
-        <TestJournalSummaryTab showFinance={isSuperAdmin} />
+        <TestJournalSummaryTab showFinance={showFinance} />
       ) : (
-        <TestJournalTab dictionaries={dictionaries} showFinance={isSuperAdmin} />
+        <TestJournalTab dictionaries={dictionaries} showFinance={showFinance} onRecordsChanged={reloadSuggestions} />
       )}
     </div>
   );

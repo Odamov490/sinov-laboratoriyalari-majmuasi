@@ -405,10 +405,12 @@ mountCrud('smk/retention', 'smk_retention', 'retentionPolicy', {
   orderBy: { documentType: 'asc' },
 });
 
-// Hisobot: sinovlar jurnali. /summary /:id dan oldin turishi kerak.
+// Hisobot: sinovlar jurnali. /summary va /suggestions /:id dan oldin turishi kerak.
 router.get('/test-journal/summary', requireModule('reports'), testJournal.getSummary);
+router.get('/test-journal/suggestions', requireModule('reports'), testJournal.getSuggestions);
 router.get('/test-journal', requireModule('reports'), testJournal.listRecords);
 router.get('/test-journal/:id', requireModule('reports'), testJournal.getRecord);
+router.get('/test-journal/:id/history', requireModule('reports'), testJournal.getHistory);
 router.post('/test-journal', requireModule('reports'), testJournal.createRecord);
 router.put('/test-journal/:id', requireModule('reports'), testJournal.updateRecord);
 router.delete('/test-journal/:id', requireModule('reports'), testJournal.deleteRecord);
@@ -429,6 +431,20 @@ function mountDictionary(path, modelName, opts) {
 mountDictionary('test-product-types', 'testProductType', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
 mountDictionary('test-locations', 'testLocation', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
 mountDictionary('certification-bodies', 'certificationBody', { searchFields: ['name'], orderBy: { name: 'asc' } });
+// Bir namuna narxi (summani avtomatik hisoblash uchun). Formadan kelgan bo'sh
+// qiymatlar Prisma turlariga keltiriladi.
+mountDictionary('test-journal-prices', 'testJournalPrice', {
+  include: { productType: { select: { id: true, nameUz: true } } },
+  orderBy: [{ productTypeId: 'asc' }, { validFrom: 'desc' }],
+  buildData: (body) => {
+    const data = { ...body };
+    delete data.productType;
+    if ('direction' in data) data.direction = data.direction || null;
+    if ('unitPrice' in data) data.unitPrice = Number(data.unitPrice) || 0;
+    if ('note' in data) data.note = data.note || null;
+    return data;
+  },
+});
 
 // Sample tracking (QR-based check-in/check-out between laboratories)
 router.get('/samples/stats', requireModule('samples'), getStats);

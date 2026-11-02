@@ -19,37 +19,46 @@ import {
 const PAGE_SIZES = [25, 50, 100, 200];
 const EXPORT_PAGE_SIZE = 500;
 
-// One Excel row per journal record, columns in the source journal's order.
-function exportRow(r, idx, showFinance) {
+const SHOVQIN_SHEET = 'Shovqin';
+const dateCell = (v) => (v ? formatDate(v) : '');
+
+// Sheet a record belongs to in the journal-style export: like the paper/Excel
+// journal, noise tests get their own sheet; everything else goes by product.
+const sheetOf = (r) => ((r.directions || []).includes('SHOVQIN') ? SHOVQIN_SHEET : r.productType?.nameUz || 'Boshqa');
+
+// One Excel row in the source journal's column order (№ restarts per sheet).
+function exportRow(r, idx, { showFinance, withWeight }) {
+  const result =
+    (RESULT_LABELS[r.result] || r.result) +
+    (r.result === 'QISMAN_MOS_EMAS' && r.nonconformingCount ? ` (${r.nonconformingCount})` : '') +
+    (r.cancelledBy ? `, ${CANCELLED_BY_LABELS[r.cancelledBy].toLowerCase()}` : '');
   return {
     '№': idx + 1,
-    'Mahsulot turi': r.productType?.nameUz || '',
     'Akt ID': r.actNo || '',
-    Buyurtmachi: r.certificationBody?.name || '',
-    'Akt sanasi': formatDate(r.actDate).replace('—', ''),
+    Tashkilot: r.certificationBody?.name || '',
+    'Akt sanasi': dateCell(r.actDate),
     Ijrochi: r.executorName || '',
-    'Namuna kelgan sana': formatDate(r.sampleReceivedDate).replace('—', ''),
-    'Kelgan vaqt': r.sampleReceivedTime || '',
+    'Namuna qabul qilingan sana': dateCell(r.sampleReceivedDate) + (r.sampleReceivedTime ? ` ${r.sampleReceivedTime}` : ''),
     'Namunalar soni': r.sampleCount ?? '',
     'Bekor qilingan': r.cancelledSampleCount || '',
-    "Og'irlik": r.weightNote || '',
-    'Bayonnoma sanasi': formatDate(r.protocolDate).replace('—', ''),
+    ...(withWeight && { "Og'irlik": r.weightNote || '' }),
+    'Bayonnoma sanasi': dateCell(r.protocolDate),
     "Yo'nalish": (r.directions || []).map((d) => DIRECTION_SHORT[d] || d).join('+'),
-    Natija: (RESULT_LABELS[r.result] || r.result) + (r.cancelledBy ? `, ${CANCELLED_BY_LABELS[r.cancelledBy].toLowerCase()}` : ''),
-    'Mos emas soni': r.nonconformingCount ?? '',
+    Natija: result,
     Marka: r.brand || '',
-    Joy: r.location?.nameUz || '',
-    Takroriy: r.isRepeat ? 'ha' : '',
+    Joy: (r.location?.nameUz || '') + (r.isRepeat ? ' (takroriy)' : ''),
     ...(showFinance && {
-      Shartnoma: r.contractNo || '',
-      'Shartnoma sanasi': formatDate(r.contractDate).replace('—', ''),
+      Shartnoma: [r.contractNo, r.contractDate && `от ${dateCell(r.contractDate)}`].filter(Boolean).join(' '),
       "Summa (so'm)": r.amount ?? '',
       "To'lov": r.paymentStatus ? PAYMENT_LABELS[r.paymentStatus] : '',
     }),
-    Izoh: (r.notes || []).join('; '),
-    'Tekshirish kerak': r.needsReview ? (r.reviewReasons || []).join('; ') || 'ha' : '',
+    Izoh: [...(r.notes || []), ...(r.needsReview ? (r.reviewReasons || []).map((x) => `Tekshirish: ${x}`) : [])].join('; '),
   };
 }
+
+// Chronological like the paper journal: act date, then original row.
+const byJournalOrder = (a, b) =>
+  String(a.actDate || '9999').localeCompare(String(b.actDate || '9999')) || (a.sourceRow || 0) - (b.sourceRow || 0);
 
 const EMPTY_FILTERS = {
   q: '',
@@ -80,16 +89,18 @@ function FilterSelect({ value, onChange, placeholder, options }) {
 }
 
 // "Jurnal" tab of /admin/hisobot: filterable, sortable journal table with a
-// per-filter total row; clicking a row opens the edit dialog.
-export default function TestJournalTab({ dictionaries, showFinance }) {
+// per-filter total row; clicking a row opens the edit dialog, and result /
+// protocol date can be changed right in the table.
+export default function TestJournalTab({ dictionaries, showFinance, onRecordsChanged }) {
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[1]);
   const [sort, setSort] = useState({ by: 'sampleReceivedDate', dir: 'desc' });
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
-  const [modal, setModal] = useState({ open: false, record: null });
+  const [modal, setModal] = useState({ open: false, record: null, copyFrom: null });
   const [exporting, setExporting] = useState(false);
+  const [savingCell, setSavingCell] = useState(null);
   const { showToast } = useToast();
 
   const params = useMemo(() => {
@@ -117,7 +128,9 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  // Exports every row matching the current filters/sort (all pages).
+  // Exports every row matching the current filters (all pages) in the shape
+  // of the paper/Excel journal: one sheet per product type plus "Shovqin",
+  // № restarting per sheet and a JAMI row at the bottom of each.
   const exportExcel = async () => {
     setExporting(true);
     try {
@@ -127,25 +140,59 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
         all.push(...res.items);
         if (all.length >= res.total || res.items.length === 0) break;
       }
-      const rows = all.map((r, i) => exportRow(r, i, showFinance));
-      const sum = (key) => all.reduce((acc, r) => acc + Number(r[key] || 0), 0);
-      rows.push({
-        '№': 'JAMI',
-        'Akt ID': `${all.length} ta yozuv`,
-        'Namunalar soni': sum('sampleCount'),
-        'Bekor qilingan': sum('cancelledSampleCount'),
-        ...(showFinance && { "Summa (so'm)": sum('amount') }),
+
+      const groups = new Map();
+      all.forEach((r) => {
+        const sheet = sheetOf(r);
+        if (!groups.has(sheet)) groups.set(sheet, []);
+        groups.get(sheet).push(r);
       });
+      // Product types in dictionary order, then Shovqin, then anything else.
+      const order = [...dictionaries.productTypes.map((p) => p.nameUz), SHOVQIN_SHEET];
+      const sheetNames = [...groups.keys()].sort((a, b) => {
+        const ia = order.indexOf(a);
+        const ib = order.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+
       const XLSX = await import('xlsx');
-      const ws = XLSX.utils.json_to_sheet(rows);
-      ws['!cols'] = Object.keys(rows[0] || {}).map((k) => ({ wch: ['Buyurtmachi', 'Marka', 'Izoh', 'Tekshirish kerak'].includes(k) ? 30 : 14 }));
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Jurnal');
+      sheetNames.forEach((name) => {
+        const records = groups.get(name).sort(byJournalOrder);
+        const withWeight = records.some((r) => r.weightNote);
+        const rows = records.map((r, i) => exportRow(r, i, { showFinance, withWeight }));
+        const sum = (key) => records.reduce((acc, r) => acc + Number(r[key] || 0), 0);
+        rows.push({
+          '№': 'JAMI',
+          'Akt ID': `${records.length} ta yozuv`,
+          'Namunalar soni': sum('sampleCount'),
+          'Bekor qilingan': sum('cancelledSampleCount'),
+          ...(showFinance && { "Summa (so'm)": sum('amount') }),
+        });
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = Object.keys(rows[0]).map((k) => ({
+          wch: ['Tashkilot', 'Marka', 'Izoh', 'Shartnoma'].includes(k) ? 28 : k === '№' ? 6 : 14,
+        }));
+        XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
+      });
       XLSX.writeFile(wb, `sinovlar-jurnali_${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch {
       showToast('Excel eksportda xatolik yuz berdi.', 'error');
     } finally {
       setExporting(false);
+    }
+  };
+
+  // In-table edit of result / protocol date: saves at once and patches the row.
+  const saveCell = async (record, field, value) => {
+    setSavingCell(`${record.id}:${field}`);
+    try {
+      const updated = await adminTestJournal.update(record.id, { [field]: value || null });
+      setData((d) => ({ ...d, items: d.items.map((i) => (i.id === record.id ? { ...i, ...updated } : i)) }));
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Saqlashda xatolik yuz berdi.', 'error');
+    } finally {
+      setSavingCell(null);
     }
   };
 
@@ -217,7 +264,7 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
           <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2 ml-auto">
             <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
           </button>
-          <button onClick={() => setModal({ open: true, record: null })} className="btn-primary !py-2">
+          <button onClick={() => setModal({ open: true, record: null, copyFrom: null })} className="btn-primary !py-2">
             <Plus className="h-4 w-4" /> Yangi yozuv
           </button>
         </div>
@@ -284,7 +331,7 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
               {data.items.map((r, idx) => (
                 <tr
                   key={r.id}
-                  onClick={() => setModal({ open: true, record: r })}
+                  onClick={() => setModal({ open: true, record: r, copyFrom: null })}
                   className={`cursor-pointer hover:bg-bg-light/60 ${r.needsReview ? 'bg-amber-50/60' : ''}`}
                 >
                   <td className="px-3 py-2.5 text-slate-400 tabular-nums">{(data.page - 1) * data.pageSize + idx + 1}</td>
@@ -322,13 +369,33 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
                     {r.sampleCount ?? '—'}
                     {r.cancelledSampleCount > 0 && <span className="ml-1 text-xs text-slate-400">(−{r.cancelledSampleCount})</span>}
                   </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">{formatDate(r.protocolDate)}</td>
+                  {/* Editable in place: clicks here don't open the dialog. */}
+                  <td className="px-3 py-1.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="date"
+                      value={r.protocolDate || ''}
+                      disabled={savingCell === `${r.id}:protocolDate`}
+                      onChange={(e) => saveCell(r, 'protocolDate', e.target.value)}
+                      className="w-[8.5rem] rounded-md border border-transparent bg-transparent px-1 py-1 text-sm hover:border-border focus:border-primary focus:outline-none"
+                      aria-label="Bayonnoma sanasi"
+                    />
+                  </td>
                   <td className="px-3 py-2.5 whitespace-nowrap text-xs">{(r.directions || []).map((d) => DIRECTION_SHORT[d] || d).join(' + ') || '—'}</td>
-                  <td className="px-3 py-2.5">
-                    <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${RESULT_STYLES[r.result] || ''}`}>
-                      {RESULT_LABELS[r.result] || r.result}
-                      {r.result === 'QISMAN_MOS_EMAS' && r.nonconformingCount ? ` (${r.nonconformingCount})` : ''}
-                    </span>
+                  <td className="px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
+                    <select
+                      value={r.result}
+                      disabled={savingCell === `${r.id}:result`}
+                      onChange={(e) => saveCell(r, 'result', e.target.value)}
+                      className={`cursor-pointer whitespace-nowrap rounded-full border-0 py-0.5 pl-2 pr-6 text-xs font-medium focus:ring-2 focus:ring-primary/40 ${RESULT_STYLES[r.result] || ''}`}
+                      aria-label="Natija"
+                    >
+                      {Object.entries(RESULT_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                          {value === 'QISMAN_MOS_EMAS' && r.result === value && r.nonconformingCount ? ` (${r.nonconformingCount})` : ''}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="px-3 py-2.5 max-w-[160px] truncate" title={r.brand || ''}>
                     {r.brand || '—'}
@@ -385,12 +452,15 @@ export default function TestJournalTab({ dictionaries, showFinance }) {
       <TestJournalRecordModal
         open={modal.open}
         record={modal.record}
+        copyFrom={modal.copyFrom}
         dictionaries={dictionaries}
         showFinance={showFinance}
-        onClose={() => setModal({ open: false, record: null })}
+        onClose={() => setModal({ open: false, record: null, copyFrom: null })}
+        onCopy={(record) => setModal({ open: true, record: null, copyFrom: record })}
         onSaved={() => {
-          setModal({ open: false, record: null });
+          setModal({ open: false, record: null, copyFrom: null });
           load();
+          onRecordsChanged?.();
         }}
       />
     </div>
