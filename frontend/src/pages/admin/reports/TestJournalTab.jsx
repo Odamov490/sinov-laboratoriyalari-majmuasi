@@ -1,79 +1,38 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, AlertTriangle, X as XIcon, ArrowUp, ArrowDown, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, AlertTriangle, ArrowUp, ArrowDown, RotateCcw, FileSpreadsheet, Columns3, X as XIcon } from 'lucide-react';
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { SearchBar, Pagination } from '../../../components/UI.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
-import {
-  RESULT_LABELS,
-  RESULT_STYLES,
-  CANCELLED_BY_LABELS,
-  DIRECTIONS,
-  DIRECTION_SHORT,
-  PAYMENT_LABELS,
-  formatMoney,
-  formatDate,
-} from './journalConstants';
+import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journalConstants';
+import { COLUMNS, DEFAULT_COLUMN_KEYS, ROW_COLORS, loadColumnKeys, saveColumnKeys } from './journalColumns.jsx';
 
 const PAGE_SIZES = [25, 50, 100, 200];
 const EXPORT_PAGE_SIZE = 500;
-
-const SHOVQIN_SHEET = 'Shovqin';
-const dateCell = (v) => (v ? formatDate(v) : '');
-
-// Sheet a record belongs to in the journal-style export: like the paper/Excel
-// journal, noise tests get their own sheet; everything else goes by product.
-const sheetOf = (r) => ((r.directions || []).includes('SHOVQIN') ? SHOVQIN_SHEET : r.productType?.nameUz || 'Boshqa');
-
-// One Excel row in the source journal's column order (№ restarts per sheet).
-function exportRow(r, idx, { showFinance, withWeight }) {
-  const result =
-    (RESULT_LABELS[r.result] || r.result) +
-    (r.result === 'QISMAN_MOS_EMAS' && r.nonconformingCount ? ` (${r.nonconformingCount})` : '') +
-    (r.cancelledBy ? `, ${CANCELLED_BY_LABELS[r.cancelledBy].toLowerCase()}` : '');
-  return {
-    '№': idx + 1,
-    'Akt ID': r.actNo || '',
-    Tashkilot: r.certificationBody?.name || '',
-    'Akt sanasi': dateCell(r.actDate),
-    Ijrochi: r.executorName || '',
-    'Namuna qabul qilingan sana': dateCell(r.sampleReceivedDate) + (r.sampleReceivedTime ? ` ${r.sampleReceivedTime}` : ''),
-    'Namunalar soni': r.sampleCount ?? '',
-    'Bekor qilingan': r.cancelledSampleCount || '',
-    ...(withWeight && { "Og'irlik": r.weightNote || '' }),
-    'Bayonnoma sanasi': dateCell(r.protocolDate),
-    "Yo'nalish": (r.directions || []).map((d) => DIRECTION_SHORT[d] || d).join('+'),
-    Natija: result,
-    Marka: r.brand || '',
-    Joy: (r.location?.nameUz || '') + (r.isRepeat ? ' (takroriy)' : ''),
-    ...(showFinance && {
-      Shartnoma: [r.contractNo, r.contractDate && `от ${dateCell(r.contractDate)}`].filter(Boolean).join(' '),
-      "Summa (so'm)": r.amount ?? '',
-      "To'lov": r.paymentStatus ? PAYMENT_LABELS[r.paymentStatus] : '',
-    }),
-    Izoh: [...(r.notes || []), ...(r.needsReview ? (r.reviewReasons || []).map((x) => `Tekshirish: ${x}`) : [])].join('; '),
-  };
-}
-
-// Chronological like the paper journal: act date, then original row.
-const byJournalOrder = (a, b) =>
-  String(a.actDate || '9999').localeCompare(String(b.actDate || '9999')) || (a.sourceRow || 0) - (b.sourceRow || 0);
+const ALL_SHEET = 'all';
+const SHOVQIN_SHEET = 'shovqin';
 
 const EMPTY_FILTERS = {
   q: '',
   year: '',
   from: '',
   to: '',
-  productTypeId: '',
   certificationBodyId: '',
   result: '',
   direction: '',
   locationId: '',
   paymentStatus: '',
   needsReview: false,
-  actNo: '',
 };
+
+// Sheet a record belongs to in the Excel export: like the paper journal,
+// noise tests get their own sheet; everything else goes by product type.
+const sheetNameOf = (r) => ((r.directions || []).includes('SHOVQIN') ? 'Shovqin' : r.productType?.nameUz || 'Boshqa');
+
+// Chronological like the paper journal: act date, then original row.
+const byJournalOrder = (a, b) =>
+  String(a.actDate || '9999').localeCompare(String(b.actDate || '9999')) || (a.sourceRow || 0) - (b.sourceRow || 0);
 
 function FilterSelect({ value, onChange, placeholder, options }) {
   return (
@@ -88,30 +47,96 @@ function FilterSelect({ value, onChange, placeholder, options }) {
   );
 }
 
-// "Jurnal" tab of /admin/hisobot: filterable, sortable journal table with a
-// per-filter total row; clicking a row opens the edit dialog, and result /
-// protocol date can be changed right in the table.
+// "Ustunlar" dropdown: show/hide any journal column; remembered per browser.
+function ColumnPicker({ columns, visibleKeys, onChange, ctx }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  const toggle = (key) => {
+    const next = visibleKeys.includes(key) ? visibleKeys.filter((k) => k !== key) : [...visibleKeys, key];
+    onChange(columns.filter((c) => next.includes(c.key)).map((c) => c.key));
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button type="button" onClick={() => setOpen((v) => !v)} className="btn-secondary !py-2" aria-expanded={open}>
+        <Columns3 className="h-4 w-4" /> Ustunlar
+      </button>
+      {open && (
+        <div className="absolute right-0 z-30 mt-2 w-80 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-white p-3 shadow-xl">
+          <p className="mb-2 text-xs text-slate-500">Jadvalda ko'rinadigan ustunlar (Excel eksportiga ham shu ustunlar tushadi):</p>
+          {columns.map((c) => (
+            <label key={c.key} className="flex items-start gap-2 rounded px-1 py-1 text-sm text-ink hover:bg-bg-light cursor-pointer">
+              <input
+                type="checkbox"
+                checked={visibleKeys.includes(c.key)}
+                onChange={() => toggle(c.key)}
+                className="mt-0.5 h-4 w-4 rounded border-border text-primary"
+              />
+              {c.label(ctx)}
+            </label>
+          ))}
+          <button
+            type="button"
+            onClick={() => onChange(DEFAULT_COLUMN_KEYS)}
+            className="mt-2 inline-flex items-center gap-1 text-xs text-primary hover:underline"
+          >
+            <RotateCcw className="h-3 w-3" /> Excel jurnalidagi ustunlarga qaytarish
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// "Jurnal" tab of /admin/hisobot — laid out like the Excel journal: one tab
+// per sheet (product type + Shovqin), the journal's columns and row colors.
+// Result and protocol date are edited right in the table; a row click opens
+// the full record dialog.
 export default function TestJournalTab({ dictionaries, showFinance, onRecordsChanged }) {
+  const { showToast } = useToast();
+  const [sheet, setSheet] = useState(ALL_SHEET);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[1]);
-  const [sort, setSort] = useState({ by: 'sampleReceivedDate', dir: 'desc' });
+  const [sort, setSort] = useState({ by: 'actDate', dir: 'desc' });
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
   const [modal, setModal] = useState({ open: false, record: null, copyFrom: null });
   const [exporting, setExporting] = useState(false);
   const [savingCell, setSavingCell] = useState(null);
-  const { showToast } = useToast();
+  const [columnKeys, setColumnKeys] = useState(loadColumnKeys);
+
+  const sheetProduct = dictionaries.productTypes.find((p) => p.id === sheet);
+  const brandLabel = sheet === SHOVQIN_SHEET ? 'Muzlatkich markasi' : sheetProduct ? `${sheetProduct.nameUz} markasi` : 'Marka';
+  const ctx = { brandLabel, saveCell: null, savingCell };
+
+  const availableColumns = COLUMNS.filter((c) => !c.finance || showFinance);
+  const columns = availableColumns.filter((c) => columnKeys.includes(c.key));
 
   const params = useMemo(() => {
     const p = { page, pageSize, sortBy: sort.by, sortDir: sort.dir };
+    if (sheet === SHOVQIN_SHEET) p.direction = 'SHOVQIN';
+    else if (sheet !== ALL_SHEET) {
+      p.productTypeId = sheet;
+      p.excludeDirection = 'SHOVQIN';
+    }
     Object.entries(filters).forEach(([k, v]) => {
       if (k === 'needsReview') {
         if (v) p.needsReview = 1;
       } else if (v !== '') p[k] = v;
     });
     return p;
-  }, [filters, page, pageSize, sort]);
+  }, [sheet, filters, page, pageSize, sort]);
 
   const load = () => {
     setError(false);
@@ -128,9 +153,27 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  // Exports every row matching the current filters (all pages) in the shape
-  // of the paper/Excel journal: one sheet per product type plus "Shovqin",
-  // № restarting per sheet and a JAMI row at the bottom of each.
+  const changeColumns = (keys) => {
+    setColumnKeys(keys);
+    saveColumnKeys(keys);
+  };
+
+  // In-table edit of result / protocol date: saves at once and patches the row.
+  ctx.saveCell = async (record, field, value) => {
+    setSavingCell(`${record.id}:${field}`);
+    try {
+      const updated = await adminTestJournal.update(record.id, { [field]: value || null });
+      setData((d) => ({ ...d, items: d.items.map((i) => (i.id === record.id ? { ...i, ...updated } : i)) }));
+    } catch (err) {
+      showToast(err?.response?.data?.error || 'Saqlashda xatolik yuz berdi.', 'error');
+    } finally {
+      setSavingCell(null);
+    }
+  };
+
+  // Exports every row of the current sheet/filters (all pages) with the
+  // visible columns: one Excel sheet per journal sheet, № restarting on each
+  // and a JAMI row at the bottom.
   const exportExcel = async () => {
     setExporting(true);
     try {
@@ -143,36 +186,31 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
 
       const groups = new Map();
       all.forEach((r) => {
-        const sheet = sheetOf(r);
-        if (!groups.has(sheet)) groups.set(sheet, []);
-        groups.get(sheet).push(r);
+        const name = sheetNameOf(r);
+        if (!groups.has(name)) groups.set(name, []);
+        groups.get(name).push(r);
       });
-      // Product types in dictionary order, then Shovqin, then anything else.
-      const order = [...dictionaries.productTypes.map((p) => p.nameUz), SHOVQIN_SHEET];
-      const sheetNames = [...groups.keys()].sort((a, b) => {
-        const ia = order.indexOf(a);
-        const ib = order.indexOf(b);
-        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-      });
+      const order = [...dictionaries.productTypes.map((p) => p.nameUz), 'Shovqin'];
+      const rank = (n) => (order.indexOf(n) === -1 ? 99 : order.indexOf(n));
+      const names = [...groups.keys()].sort((a, b) => rank(a) - rank(b));
 
       const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
-      sheetNames.forEach((name) => {
+      names.forEach((name) => {
         const records = groups.get(name).sort(byJournalOrder);
-        const withWeight = records.some((r) => r.weightNote);
-        const rows = records.map((r, i) => exportRow(r, i, { showFinance, withWeight }));
-        const sum = (key) => records.reduce((acc, r) => acc + Number(r[key] || 0), 0);
-        rows.push({
-          '№': 'JAMI',
-          'Akt ID': `${records.length} ta yozuv`,
-          'Namunalar soni': sum('sampleCount'),
-          'Bekor qilingan': sum('cancelledSampleCount'),
-          ...(showFinance && { "Summa (so'm)": sum('amount') }),
-        });
-        const ws = XLSX.utils.json_to_sheet(rows);
-        ws['!cols'] = Object.keys(rows[0]).map((k) => ({
-          wch: ['Tashkilot', 'Marka', 'Izoh', 'Shartnoma'].includes(k) ? 28 : k === '№' ? 6 : 14,
-        }));
+        const product = dictionaries.productTypes.find((p) => p.nameUz === name);
+        const sheetCtx = { brandLabel: name === 'Shovqin' ? 'Muzlatkich markasi' : product ? `${name} markasi` : 'Marka' };
+        const header = ['№', ...columns.map((c) => c.label(sheetCtx))];
+        const rows = records.map((r, i) => [i + 1, ...columns.map((c) => c.text(r))]);
+        rows.push([
+          'JAMI',
+          ...columns.map((c, i) => {
+            if (c.sum) return records.reduce((acc, r) => acc + Number(c.text(r) || 0), 0);
+            return i === 0 ? `${records.length} ta yozuv` : '';
+          }),
+        ]);
+        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+        ws['!cols'] = [{ wch: 5 }, ...columns.map((c) => ({ wch: c.wide ? 28 : 15 }))];
         XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31));
       });
       XLSX.writeFile(wb, `sinovlar-jurnali_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -180,19 +218,6 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
       showToast('Excel eksportda xatolik yuz berdi.', 'error');
     } finally {
       setExporting(false);
-    }
-  };
-
-  // In-table edit of result / protocol date: saves at once and patches the row.
-  const saveCell = async (record, field, value) => {
-    setSavingCell(`${record.id}:${field}`);
-    try {
-      const updated = await adminTestJournal.update(record.id, { [field]: value || null });
-      setData((d) => ({ ...d, items: d.items.map((i) => (i.id === record.id ? { ...i, ...updated } : i)) }));
-    } catch (err) {
-      showToast(err?.response?.data?.error || 'Saqlashda xatolik yuz berdi.', 'error');
-    } finally {
-      setSavingCell(null);
     }
   };
 
@@ -207,7 +232,6 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
   };
 
   const options = {
-    productTypes: dictionaries.productTypes.map((p) => ({ value: p.id, label: p.nameUz })),
     bodies: dictionaries.bodies.map((b) => ({ value: b.id, label: b.name })),
     locations: dictionaries.locations.map((l) => ({ value: l.id, label: l.nameUz })),
     results: Object.entries(RESULT_LABELS).map(([value, label]) => ({ value, label })),
@@ -216,29 +240,42 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
   };
   const thisYear = new Date().getFullYear();
   const years = [thisYear - 1, thisYear, thisYear + 1].map((y) => ({ value: String(y), label: String(y) }));
-
-  const SortHeader = ({ by, children, className = '' }) => (
-    <th className={`px-3 py-3 ${className}`}>
-      <button type="button" onClick={() => toggleSort(by)} className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-ink">
-        {children}
-        {sort.by === by && (sort.dir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />)}
-      </button>
-    </th>
-  );
-
   const hasFilters = Object.entries(filters).some(([k, v]) => (k === 'needsReview' ? v : v !== ''));
+
+  const sheets = [
+    { key: ALL_SHEET, label: 'Hammasi' },
+    ...dictionaries.productTypes.filter((p) => p.isActive !== false).map((p) => ({ key: p.id, label: p.nameUz })),
+    { key: SHOVQIN_SHEET, label: 'Shovqin' },
+  ];
+
+  const cell = 'border border-slate-300 px-2 py-1 align-middle';
 
   return (
     <div>
+      {/* Sheets, like the Excel workbook's tabs */}
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {sheets.map((s) => (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => {
+              setSheet(s.key);
+              setPage(1);
+            }}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              sheet === s.key ? 'border-primary bg-primary text-white' : 'border-border bg-white text-slate-600 hover:bg-bg-light'
+            }`}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+
       {/* Filters */}
       <div className="card p-4 mb-4 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[220px] max-w-md">
-            <SearchBar
-              value={filters.q}
-              onChange={(v) => setFilter('q', v)}
-              placeholder={showFinance ? 'Akt ID, marka yoki shartnoma...' : 'Akt ID yoki marka...'}
-            />
+            <SearchBar value={filters.q} onChange={(v) => setFilter('q', v)} placeholder="Akt ID, marka yoki shartnoma..." />
           </div>
           <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
             <input
@@ -258,48 +295,43 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
               }}
               className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-ink"
             >
-              <RotateCcw className="h-3.5 w-3.5" /> Filtrlarni tozalash
+              <XIcon className="h-3.5 w-3.5" /> Filtrlarni tozalash
             </button>
           )}
-          <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2 ml-auto">
-            <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
-          </button>
-          <button onClick={() => setModal({ open: true, record: null, copyFrom: null })} className="btn-primary !py-2">
-            <Plus className="h-4 w-4" /> Yangi yozuv
-          </button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <ColumnPicker columns={availableColumns} visibleKeys={columnKeys} onChange={changeColumns} ctx={ctx} />
+            <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2">
+              <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
+            </button>
+            <button onClick={() => setModal({ open: true, record: null, copyFrom: null })} className="btn-primary !py-2">
+              <Plus className="h-4 w-4" /> Yangi yozuv
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
           <FilterSelect value={filters.year} onChange={(v) => setFilter('year', v)} placeholder="Yil: hammasi" options={years} />
           <label className="flex items-center gap-1.5 text-xs text-slate-500">
-            Qabul:
+            Kelgan:
             <input type="date" value={filters.from} max={filters.to || undefined} onChange={(e) => setFilter('from', e.target.value)} className="input-field !py-2 text-sm" />
           </label>
           <label className="flex items-center gap-1.5 text-xs text-slate-500">
             —
             <input type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter('to', e.target.value)} className="input-field !py-2 text-sm" />
           </label>
-          <FilterSelect value={filters.productTypeId} onChange={(v) => setFilter('productTypeId', v)} placeholder="Mahsulot turi" options={options.productTypes} />
-          <FilterSelect value={filters.certificationBodyId} onChange={(v) => setFilter('certificationBodyId', v)} placeholder="Buyurtmachi" options={options.bodies} />
+          <FilterSelect value={filters.certificationBodyId} onChange={(v) => setFilter('certificationBodyId', v)} placeholder="Idora" options={options.bodies} />
           <FilterSelect value={filters.result} onChange={(v) => setFilter('result', v)} placeholder="Natija" options={options.results} />
-          <FilterSelect value={filters.direction} onChange={(v) => setFilter('direction', v)} placeholder="Yo'nalish" options={options.directions} />
-          <FilterSelect value={filters.locationId} onChange={(v) => setFilter('locationId', v)} placeholder="Joy" options={options.locations} />
+          {sheet !== SHOVQIN_SHEET && (
+            <FilterSelect value={filters.direction} onChange={(v) => setFilter('direction', v)} placeholder="Yo'nalish" options={options.directions} />
+          )}
+          <FilterSelect value={filters.locationId} onChange={(v) => setFilter('locationId', v)} placeholder="Manzil" options={options.locations} />
           {showFinance && (
             <FilterSelect value={filters.paymentStatus} onChange={(v) => setFilter('paymentStatus', v)} placeholder="To'lov" options={options.payments} />
           )}
         </div>
-
-        {filters.actNo && (
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-sm text-primary">
-            Akt: <span className="font-semibold">{filters.actNo}</span>
-            <button type="button" onClick={() => setFilter('actNo', '')} className="hover:text-ink" aria-label="Akt filtrini olib tashlash">
-              <XIcon className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* Table */}
+      {/* Journal table */}
       <div className="card overflow-x-auto">
         {error ? (
           <div className="p-6">
@@ -308,118 +340,71 @@ export default function TestJournalTab({ dictionaries, showFinance, onRecordsCha
         ) : data === null ? (
           <Loading />
         ) : data.items.length === 0 ? (
-          <EmptyState message="Filtr bo'yicha yozuv topilmadi." />
+          <EmptyState message="Bu varaqda filtr bo'yicha yozuv topilmadi." />
         ) : (
-          <table className="w-full text-sm min-w-[1100px]">
+          <table className="w-full border-collapse text-[13px] text-ink">
             <thead>
-              <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-3 py-3">№</th>
-                <SortHeader by="actNo">Akt ID</SortHeader>
-                <th className="px-3 py-3">Buyurtmachi</th>
-                <SortHeader by="sampleReceivedDate">Qabul sanasi</SortHeader>
-                <SortHeader by="sampleCount" className="text-right">Soni</SortHeader>
-                <SortHeader by="protocolDate">Bayonnoma</SortHeader>
-                <th className="px-3 py-3">Yo'nalish</th>
-                <th className="px-3 py-3">Natija</th>
-                <th className="px-3 py-3">Marka</th>
-                <th className="px-3 py-3">Joy</th>
-                {showFinance && <SortHeader by="amount" className="text-right">Summa</SortHeader>}
-                {showFinance && <th className="px-3 py-3">To'lov</th>}
+              <tr className="bg-[#dbe5f1] text-[12px] font-medium text-slate-700">
+                <th className={`${cell} w-10 text-center`}>№</th>
+                {columns.map((c) => (
+                  <th key={c.key} className={`${cell} text-center leading-tight ${c.wide ? 'min-w-[180px]' : 'min-w-[90px]'}`}>
+                    {c.sortBy ? (
+                      <button type="button" onClick={() => toggleSort(c.sortBy)} className="inline-flex items-center gap-1 hover:text-ink">
+                        {c.label(ctx)}
+                        {sort.by === c.sortBy && (sort.dir === 'asc' ? <ArrowUp className="h-3 w-3 shrink-0" /> : <ArrowDown className="h-3 w-3 shrink-0" />)}
+                      </button>
+                    ) : (
+                      c.label(ctx)
+                    )}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {data.items.map((r, idx) => (
                 <tr
                   key={r.id}
                   onClick={() => setModal({ open: true, record: r, copyFrom: null })}
-                  className={`cursor-pointer hover:bg-bg-light/60 ${r.needsReview ? 'bg-amber-50/60' : ''}`}
+                  className={`cursor-pointer hover:brightness-95 ${ROW_COLORS[r.result] || ''}`}
                 >
-                  <td className="px-3 py-2.5 text-slate-400 tabular-nums">{(data.page - 1) * data.pageSize + idx + 1}</td>
-                  <td className="px-3 py-2.5 max-w-[220px]">
-                    <div className="flex items-center gap-1.5">
+                  <td className={`${cell} text-center tabular-nums`}>
+                    <span className="inline-flex items-center gap-1">
+                      {(data.page - 1) * data.pageSize + idx + 1}
                       {r.needsReview && (
-                        <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" title={(r.reviewReasons || []).join('; ')} />
+                        <span title={`Tekshirish kerak: ${(r.reviewReasons || []).join('; ')}`}>
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                        </span>
                       )}
-                      <span className="font-medium text-ink truncate">{r.actNo || '—'}</span>
-                    </div>
-                    <p className="text-xs text-slate-400">{r.productType?.nameUz}</p>
-                    {r.actRecordsCount > 1 && filters.actNo !== r.actNo && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFilter('actNo', r.actNo);
-                        }}
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Bu akt yana {r.actRecordsCount - 1} ta qatorda bor
-                      </button>
-                    )}
-                    {r.needsReview && (r.reviewReasons || []).length > 0 && (
-                      <p className="text-xs text-amber-700 truncate" title={r.reviewReasons.join('; ')}>
-                        {r.reviewReasons.join('; ')}
-                      </p>
-                    )}
+                    </span>
                   </td>
-                  <td className="px-3 py-2.5 text-ink max-w-[180px] truncate" title={r.certificationBody?.name}>
-                    {r.certificationBody?.name || '—'}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">{formatDate(r.sampleReceivedDate)}</td>
-                  <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">
-                    {r.sampleCount ?? '—'}
-                    {r.cancelledSampleCount > 0 && <span className="ml-1 text-xs text-slate-400">(−{r.cancelledSampleCount})</span>}
-                  </td>
-                  {/* Editable in place: clicks here don't open the dialog. */}
-                  <td className="px-3 py-1.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="date"
-                      value={r.protocolDate || ''}
-                      disabled={savingCell === `${r.id}:protocolDate`}
-                      onChange={(e) => saveCell(r, 'protocolDate', e.target.value)}
-                      className="w-[8.5rem] rounded-md border border-transparent bg-transparent px-1 py-1 text-sm hover:border-border focus:border-primary focus:outline-none"
-                      aria-label="Bayonnoma sanasi"
-                    />
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap text-xs">{(r.directions || []).map((d) => DIRECTION_SHORT[d] || d).join(' + ') || '—'}</td>
-                  <td className="px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
-                    <select
-                      value={r.result}
-                      disabled={savingCell === `${r.id}:result`}
-                      onChange={(e) => saveCell(r, 'result', e.target.value)}
-                      className={`cursor-pointer whitespace-nowrap rounded-full border-0 py-0.5 pl-2 pr-6 text-xs font-medium focus:ring-2 focus:ring-primary/40 ${RESULT_STYLES[r.result] || ''}`}
-                      aria-label="Natija"
+                  {columns.map((c) => (
+                    <td
+                      key={c.key}
+                      onClick={c.render ? (e) => e.stopPropagation() : undefined}
+                      className={`${cell} ${c.center ? 'text-center' : ''} ${c.right ? 'text-right tabular-nums whitespace-nowrap' : ''} ${
+                        c.wide ? 'max-w-[260px]' : ''
+                      }`}
                     >
-                      {Object.entries(RESULT_LABELS).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                          {value === 'QISMAN_MOS_EMAS' && r.result === value && r.nonconformingCount ? ` (${r.nonconformingCount})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2.5 max-w-[160px] truncate" title={r.brand || ''}>
-                    {r.brand || '—'}
-                  </td>
-                  <td className="px-3 py-2.5 whitespace-nowrap">
-                    {r.location?.nameUz || '—'}
-                    {r.isRepeat && <span className="ml-1 text-xs text-slate-400">(takroriy)</span>}
-                  </td>
-                  {showFinance && <td className="px-3 py-2.5 text-right tabular-nums whitespace-nowrap">{formatMoney(r.amount)}</td>}
-                  {showFinance && (
-                    <td className="px-3 py-2.5 whitespace-nowrap text-xs">{r.paymentStatus ? PAYMENT_LABELS[r.paymentStatus] : '—'}</td>
-                  )}
+                      {c.render ? c.render(r, ctx) : c.display ? c.display(r) : c.text(r)}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr className="bg-bg-light font-semibold text-ink">
-                <td className="px-3 py-3" colSpan={4}>
-                  Jami (filtr bo'yicha): {data.totals.records} ta yozuv
-                </td>
-                <td className="px-3 py-3 text-right tabular-nums">{data.totals.sampleCount}</td>
-                <td colSpan={5} />
-                {showFinance && <td className="px-3 py-3 text-right tabular-nums whitespace-nowrap">{formatMoney(data.totals.amount)}</td>}
-                {showFinance && <td />}
+              <tr className="bg-[#dbe5f1] font-semibold">
+                <td className={`${cell} text-center`}>Jami</td>
+                {columns.map((c, i) => (
+                  <td key={c.key} className={`${cell} ${c.right ? 'text-right tabular-nums whitespace-nowrap' : c.center ? 'text-center' : ''}`}>
+                    {c.key === 'sampleCount'
+                      ? data.totals.sampleCount
+                      : c.key === 'amount'
+                        ? formatMoney(data.totals.amount)
+                        : i === 0
+                          ? `${data.totals.records} ta yozuv`
+                          : ''}
+                  </td>
+                ))}
               </tr>
             </tfoot>
           </table>

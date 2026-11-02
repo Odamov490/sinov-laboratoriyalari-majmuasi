@@ -86,6 +86,11 @@ function buildWhere(query, finance) {
   if (query.locationId) where.locationId = String(query.locationId);
   if (query.result && RESULTS.includes(query.result)) where.result = query.result;
   if (query.direction && DIRECTIONS.includes(query.direction)) where.directions = { has: query.direction };
+  // Journal "sheets": e.g. the Muzlatkich sheet excludes its noise-test rows,
+  // which live on the separate Shovqin sheet.
+  if (query.excludeDirection && DIRECTIONS.includes(query.excludeDirection)) {
+    and.push({ NOT: { directions: { has: query.excludeDirection } } });
+  }
   if (query.needsReview === '1' || query.needsReview === 'true') where.needsReview = true;
   if (query.actNo) where.actNo = String(query.actNo);
   if (finance && query.paymentStatus) {
