@@ -289,10 +289,11 @@ export default function TaskModal({ open, taskId, onClose, onChanged }) {
 
   return (
     <Modal open={open} onClose={onClose} title={isNew ? 'Yangi vazifa' : 'Vazifa'} size="xl">
-      {loading && !task ? (
-        <Loading />
-      ) : error ? (
+      {error ? (
         <ErrorState message={error} onRetry={() => load()} retryLabel="Qayta urinish" />
+      ) : (loading || currentId) && !task ? (
+        // Mavjud vazifa hali yuklanmagan — forma faqat ma'lumot kelgach chiziladi.
+        <Loading />
       ) : (
         <div className="space-y-5">
           <form onSubmit={save} className="space-y-4">
