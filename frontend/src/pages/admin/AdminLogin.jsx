@@ -24,7 +24,7 @@ export default function AdminLogin() {
       await login(email, password);
       navigate('/admin/dashboard');
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Email yoki parol noto‘g‘ri.', 'error');
+      showToast(err?.response?.data?.error || "Login yoki parol noto'g'ri.", 'error');
     } finally {
       setLoading(false);
     }
@@ -38,14 +38,25 @@ export default function AdminLogin() {
           <h1 className="font-bold text-lg text-ink">{t('admin.login')}</h1>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t('admin.email')}
-            className="input-field"
-          />
+          {/* Login = email; a bare name ("axror") is completed with the
+              login domain by the server, so the full address is optional. */}
+          <div>
+            <label htmlFor="login" className="block text-sm font-medium text-ink mb-1.5">
+              Login
+            </label>
+            <input
+              id="login"
+              type="text"
+              required
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ism@slm.uz"
+              className="input-field"
+            />
+          </div>
           <input
             type="password"
             required

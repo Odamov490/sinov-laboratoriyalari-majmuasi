@@ -9,6 +9,7 @@ const { PORT, CLIENT_URL, NODE_ENV, UPLOAD_DIR } = require('./config/env');
 const { generalLimiter } = require('./middleware/rateLimit');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { generateSitemap } = require('./controllers/sitemapController');
+const { startTaskReminders } = require('./services/taskReminders');
 
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -50,6 +51,7 @@ app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`SLM backend running on port ${PORT} [${NODE_ENV}]`);
+  startTaskReminders();
 });
 
 module.exports = app;

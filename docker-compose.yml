@@ -30,6 +30,7 @@ services:
       CLIENT_URL: https://s-lab.uz
       UPLOAD_DIR: uploads
       MAX_FILE_SIZE_MB: 200
+      LOGIN_EMAIL_DOMAIN: ${LOGIN_EMAIL_DOMAIN:-slm.uz}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
       CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID}
     depends_on:

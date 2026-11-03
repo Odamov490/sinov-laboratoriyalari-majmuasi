@@ -19,4 +19,7 @@ module.exports = {
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
   UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
   MAX_FILE_SIZE_MB: Number(process.env.MAX_FILE_SIZE_MB || 10),
+  // Domain appended to a bare login ("axror" -> "axror@slm.uz"). These are
+  // login names only, never real mailboxes: the system sends them no mail.
+  LOGIN_EMAIL_DOMAIN: (process.env.LOGIN_EMAIL_DOMAIN || 'slm.uz').replace(/^@/, '').toLowerCase(),
 };

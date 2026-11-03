@@ -99,6 +99,7 @@ export default function AdminCrudPage({ config, labScope }) {
     setEditing(null);
     const initial = {};
     fields.forEach((f) => {
+      if (f.type === 'info') return;
       if (f.default !== undefined) initial[f.name] = f.default;
       else if (f.type === 'checkbox') initial[f.name] = false;
       else if (f.type === 'async-multi-select') initial[f.name] = [];
@@ -118,6 +119,7 @@ export default function AdminCrudPage({ config, labScope }) {
     // differently-shaped relation on the item (e.g. a m2m array of objects).
     const initial = {};
     fields.forEach((f) => {
+      if (f.type === 'info') return;
       let val;
       if (f.fromItem) val = f.fromItem(item);
       else if (f.type === 'checkbox') val = item[f.name] ?? false;
@@ -516,7 +518,10 @@ export default function AdminCrudPage({ config, labScope }) {
           {fields.map((f) => (
             <div key={f.name} className={f.fullWidth ? 'sm:col-span-2' : ''}>
               <label className="block text-sm font-medium text-ink mb-1.5">{f.label}</label>
-              {f.type === 'textarea' ? (
+              {f.type === 'info' ? (
+                // Faqat ko'rsatish uchun (formaga qo'shilmaydi).
+                f.render(editing)
+              ) : f.type === 'textarea' ? (
                 <textarea
                   rows={f.rows || 3}
                   className="input-field resize-none"

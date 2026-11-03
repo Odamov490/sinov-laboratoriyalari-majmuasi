@@ -66,7 +66,46 @@ export const updateAdminProfile = (payload) => apiClient.put('/admin/profile', p
 
 export const getMyDashboard = () => apiClient.get('/admin/dashboard/my-activity').then((r) => r.data);
 
-export const getAdminNotifications = () => apiClient.get('/admin/notifications').then((r) => r.data);
+// Murojaat/ariza xulosasi (SUPER_ADMIN/MANAGER) — sarlavhadagi qo'ng'iroqcha uchun.
+export const getInboxSummary = () => apiClient.get('/admin/inbox-summary').then((r) => r.data);
+
+export const changePassword = (currentPassword, newPassword) =>
+  apiClient.post('/auth/change-password', { currentPassword, newPassword }).then((r) => {
+    setAccessToken(r.data.accessToken);
+    return r.data;
+  });
+
+// Foydalanuvchilar: mutaxassislardan hisob yaratish va parolni tiklash.
+export const adminAccounts = {
+  staffWithoutAccount: () => apiClient.get('/admin/users/staff-without-account').then((r) => r.data),
+  fromStaff: (payload) => apiClient.post('/admin/users/from-staff', payload).then((r) => r.data),
+  resetPassword: (id) => apiClient.post(`/admin/users/${id}/reset-password`).then((r) => r.data),
+};
+
+// Vazifalar menejeri.
+export const adminTasks = {
+  list: (params) => apiClient.get('/admin/tasks', { params }).then((r) => r.data),
+  get: (id) => apiClient.get(`/admin/tasks/${id}`).then((r) => r.data),
+  create: (data) => apiClient.post('/admin/tasks', data).then((r) => r.data),
+  update: (id, data) => apiClient.put(`/admin/tasks/${id}`, data).then((r) => r.data),
+  setStatus: (id, status) => apiClient.patch(`/admin/tasks/${id}/status`, { status }).then((r) => r.data),
+  remove: (id) => apiClient.delete(`/admin/tasks/${id}`).then((r) => r.data),
+  mySummary: () => apiClient.get('/admin/tasks/my-summary').then((r) => r.data),
+  assignableUsers: () => apiClient.get('/admin/tasks/assignable-users').then((r) => r.data),
+  addChecklistItem: (id, text) => apiClient.post(`/admin/tasks/${id}/checklist`, { text }).then((r) => r.data),
+  updateChecklistItem: (id, itemId, data) => apiClient.patch(`/admin/tasks/${id}/checklist/${itemId}`, data).then((r) => r.data),
+  removeChecklistItem: (id, itemId) => apiClient.delete(`/admin/tasks/${id}/checklist/${itemId}`).then((r) => r.data),
+  addComment: (id, body) => apiClient.post(`/admin/tasks/${id}/comments`, { body }).then((r) => r.data),
+  addAttachment: (id, data) => apiClient.post(`/admin/tasks/${id}/attachments`, data).then((r) => r.data),
+  removeAttachment: (id, attId) => apiClient.delete(`/admin/tasks/${id}/attachments/${attId}`).then((r) => r.data),
+};
+
+// Shaxsiy bildirishnomalar (hamma rollar).
+export const adminNotifications = {
+  list: () => apiClient.get('/admin/notifications').then((r) => r.data),
+  read: (id) => apiClient.post(`/admin/notifications/${id}/read`).then((r) => r.data),
+  readAll: () => apiClient.post('/admin/notifications/read-all').then((r) => r.data),
+};
 
 export const uploadFiles = (files) => {
   const formData = new FormData();

@@ -11,6 +11,8 @@ enum Role {
   SUPER_ADMIN
   MANAGER
   EDITOR
+  // Xodim: faqat vazifalar, bildirishnomalar va o'z profili.
+  STAFF
 }
 
 enum ApplicationStatus {
@@ -31,6 +33,13 @@ model User {
   labId        String?
   lab          Laboratory? @relation(fields: [labId], references: [id])
   isActive     Boolean  @default(true)
+  // Mutaxassis (Staff) kartasiga bog'langan hisob; login = email.
+  staffId            String?   @unique
+  staff              Staff?    @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  mustChangePassword Boolean   @default(false)
+  lastLoginAt        DateTime?
+  failedLoginCount   Int       @default(0)
+  lockedUntil        DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
@@ -47,6 +56,12 @@ model User {
   riskItemsOwned                  RiskItem[]
   improvementSuggestions           ImprovementSuggestion[]
   testJournalChanges               TestJournalChange[]
+  tasksCreated                     Task[]             @relation("TaskCreator")
+  taskAssignments                  TaskAssignee[]
+  taskComments                     TaskComment[]
+  taskAttachments                  TaskAttachment[]
+  taskActivities                   TaskActivity[]
+  notifications                    Notification[]
 }
 
 model Laboratory {
@@ -78,6 +93,7 @@ model Laboratory {
   testIndicators      TestIndicator[]
   products            Product[]
   internalAudits          InternalAudit[]
+  tasks                   Task[]
   qualityControlRecords   QualityControlRecord[]
   proficiencyTests        ProficiencyTest[]
   environmentLogs         EnvironmentLog[]
@@ -260,6 +276,9 @@ model Staff {
   pinfl           String?
   address         String?
   notes           String?
+  // Nofaol mutaxassisning bog'langan hisobi ham nofaol qilinadi.
+  isActive        Boolean  @default(true)
+  account         User?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   deletedAt       DateTime?
@@ -1251,4 +1270,142 @@ model TestJournalLayout {
   id        String   @id
   columns   Json
   updatedAt DateTime @updatedAt
+}
+
+// ===== Vazifalar menejeri =====
+
+enum TaskStatus {
+  YANGI
+  JARAYONDA
+  TEKSHIRUVDA
+  BAJARILDI
+  BEKOR_QILINDI
+}
+
+enum TaskPriority {
+  PAST
+  ORTACHA
+  YUQORI
+  SHOSHILINCH
+}
+
+enum TaskRelatedType {
+  ARIZA
+  NAMUNA
+  NOMUVOFIQLIK
+  JURNAL
+  BOSHQA
+}
+
+// Ko'rish/o'zgartirish huquqlari: src/utils/taskPermissions.js.
+model Task {
+  id           String           @id @default(uuid())
+  title        String
+  description  String?
+  status       TaskStatus       @default(YANGI)
+  priority     TaskPriority     @default(ORTACHA)
+  dueDate      DateTime?        @db.Date
+  completedAt  DateTime?
+  creatorId    String
+  creator      User             @relation("TaskCreator", fields: [creatorId], references: [id])
+  laboratoryId String?
+  laboratory   Laboratory?      @relation(fields: [laboratoryId], references: [id])
+  relatedType  TaskRelatedType?
+  relatedId    String?
+  relatedLabel String?
+  assignees    TaskAssignee[]
+  checklist    TaskChecklistItem[]
+  comments     TaskComment[]
+  attachments  TaskAttachment[]
+  activities   TaskActivity[]
+  notifications Notification[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([creatorId])
+  @@index([laboratoryId])
+}
+
+model TaskAssignee {
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([taskId, userId])
+  @@index([userId])
+}
+
+model TaskChecklistItem {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  text      String
+  done      Boolean  @default(false)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model TaskComment {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model TaskAttachment {
+  id           String   @id @default(uuid())
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  fileUrl      String
+  fileName     String
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([taskId])
+}
+
+// Avtomatik faoliyat tarixi: action = CREATED, UPDATED, STATUS, ASSIGNED,
+// COMMENT, CHECKLIST, ATTACHMENT, DELETED; meta = tafsilotlar.
+model TaskActivity {
+  id        String   @id @default(uuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+// Shaxsiy bildirishnomalar (sarlavhadagi qo'ng'iroqcha). type: TASK_ASSIGNED,
+// TASK_STATUS, TASK_COMMENT, TASK_DUE_SOON, TASK_OVERDUE.
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  linkUrl   String?
+  taskId    String?
+  task      Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([taskId, type, userId, createdAt])
 }

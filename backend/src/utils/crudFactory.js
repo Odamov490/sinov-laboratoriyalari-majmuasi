@@ -18,6 +18,8 @@ const { asyncHandler } = require('../middleware/errorHandler');
  *    The list is filtered by `?laboratoryId=<id>`. A non-SUPER_ADMIN user bound to a lab
  *    (User.labId) is confined to that lab: they only see, create and edit
  *    its records, whatever laboratoryId the request carries.
+ *  - afterWrite(id, { action, item }): optional side effect after an
+ *    update ('update', with the saved item) or delete ('remove').
  */
 
 // The lab a user is confined to, or null if they may see every lab. Read
@@ -32,7 +34,7 @@ async function confinedLabId(req) {
 function crudFactory(modelName, opts = {}) {
   const model = prisma[modelName];
   if (!model) throw new Error(`Unknown Prisma model: ${modelName}`);
-  const { include, searchFields = [], softDelete = false, orderBy = { createdAt: 'desc' }, buildData, labScoped = false } = opts;
+  const { include, searchFields = [], softDelete = false, orderBy = { createdAt: 'desc' }, buildData, labScoped = false, afterWrite } = opts;
 
   const baseWhere = () => (softDelete ? { deletedAt: null } : {});
 
@@ -110,6 +112,7 @@ function crudFactory(modelName, opts = {}) {
       data,
       include,
     });
+    if (afterWrite) await afterWrite(item.id, { action: 'update', item });
     res.json(item);
   });
 
@@ -120,6 +123,7 @@ function crudFactory(modelName, opts = {}) {
     } else {
       await model.delete({ where: { id: req.params.id } });
     }
+    if (afterWrite) await afterWrite(req.params.id, { action: 'remove' });
     res.status(204).send();
   });
 

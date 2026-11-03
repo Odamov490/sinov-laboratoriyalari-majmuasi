@@ -159,6 +159,29 @@ export const documentConfig = {
   ],
 };
 
+// Mutaxassisga bog'langan login (parol va boshqa maxfiy maydonlarsiz).
+const formatLastLogin = (v) => (v ? new Date(v).toLocaleString('uz-UZ', { dateStyle: 'short', timeStyle: 'short' }) : 'hali kirmagan');
+
+function staffAccountCell(i) {
+  if (i.isActive === false) return React.createElement('span', { className: 'text-xs text-red-500' }, 'Nofaol');
+  if (!i.account) return React.createElement('span', { className: 'text-xs text-slate-400' }, "Hisob yo'q");
+  return React.createElement(
+    'span',
+    { className: `font-mono text-xs ${i.account.isActive ? 'text-ink' : 'text-red-500 line-through'}` },
+    i.account.email
+  );
+}
+
+function staffAccountInfo(item) {
+  const a = item?.account;
+  const text = !item
+    ? "Hisob «Foydalanuvchilar → Mutaxassislardan hisob yaratish» orqali ochiladi."
+    : !a
+      ? "Hisob yo'q. «Foydalanuvchilar → Mutaxassislardan hisob yaratish» orqali yarating."
+      : `Login: ${a.email} · ${a.isActive ? 'faol' : 'nofaol'} · Oxirgi kirish: ${formatLastLogin(a.lastLoginAt)}${a.mustChangePassword ? ' · parol hali almashtirilmagan' : ''}`;
+  return React.createElement('p', { className: 'rounded-lg bg-bg-light px-3 py-2 text-sm text-slate-600' }, text);
+}
+
 export const staffConfig = {
   path: 'staff',
   title: 'Mutaxassislar',
@@ -167,8 +190,16 @@ export const staffConfig = {
     { key: 'position', label: 'Lavozim' },
     { key: 'employeeCode', label: 'Kod', render: (i) => i.employeeCode || '—' },
     { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
+    { key: 'account', label: 'Tizim hisobi', render: staffAccountCell },
   ],
   fields: [
+    { name: 'account', label: 'Tizim hisobi', type: 'info', fullWidth: true, render: staffAccountInfo },
+    {
+      name: 'isActive',
+      label: "Faol (o'chirilsa, bog'langan hisob ham nofaol bo'ladi)",
+      type: 'checkbox',
+      default: true,
+    },
     { name: 'fullName', label: 'F.I.Sh.', required: true },
     { name: 'position', label: 'Lavozim', required: true },
     { name: 'specialization', label: 'Mutaxassislik' },

@@ -1,11 +1,20 @@
 const express = require('express');
 const crudFactory = require('../utils/crudFactory');
 const { authenticate } = require('../middleware/auth');
+const { requireActiveAccount } = require('../middleware/accountState');
 const { requireModule } = require('../middleware/rbac');
 const { upload, verifyFileSignature } = require('../middleware/upload');
 const { updateApplicationStatus, deleteApplication } = require('../controllers/applicationController');
 const { updatePrice, createPrice, listPrices, deletePrice } = require('../controllers/priceAdminController');
-const { listUsers, createUser, updateUser, deleteUser } = require('../controllers/userAdminController');
+const {
+  listUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  listStaffWithoutAccount,
+  createFromStaff,
+  resetPassword,
+} = require('../controllers/userAdminController');
 const { updateSettings } = require('../controllers/settingsAdminController');
 const { getInfoPage, updateInfoPage } = require('../controllers/infoPageAdminController');
 const { listSamples, createSample, getSampleByCode, getSampleHistory, performAction, attachFile, getStats, getSampleById } = require('../controllers/sampleController');
@@ -13,6 +22,8 @@ const { addTestItem, removeTestItem } = require('../controllers/tnvedAdminContro
 const { getAnalyticsOverview } = require('../controllers/analyticsController');
 const { getTopPages } = require('../controllers/pageViewController');
 const testJournal = require('../controllers/testJournalController');
+const tasks = require('../controllers/taskController');
+const notifications = require('../controllers/notificationController');
 const { updateProfile } = require('../controllers/authController');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const {
@@ -36,6 +47,7 @@ const fs = require('fs');
 const router = express.Router();
 
 router.use(authenticate);
+router.use(requireActiveAccount);
 router.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
   next();
@@ -99,10 +111,26 @@ mountCrud('document-categories', 'documents', 'documentCategory', { searchFields
 
 // Staff
 mountCrud('staff', 'staff', 'staff', {
-  include: { laboratory: true },
+  // `account`: the linked login, shown on the specialist card (no secrets).
+  include: {
+    laboratory: true,
+    account: { select: { id: true, email: true, role: true, isActive: true, lastLoginAt: true, mustChangePassword: true } },
+  },
   searchFields: ['fullName', 'position'],
   softDelete: true,
   orderBy: { order: 'asc' },
+  // A deactivated or deleted specialist's account is deactivated too.
+  afterWrite: async (id, { action, item }) => {
+    if (action === 'remove' || item?.isActive === false) {
+      await prisma.user.updateMany({ where: { staffId: id, isActive: true }, data: { isActive: false } });
+    }
+  },
+  // The linked account is read-only here; managed under Foydalanuvchilar.
+  buildData: (body) => {
+    const data = { ...body };
+    delete data.account;
+    return data;
+  },
 });
 
 // Equipment
@@ -183,6 +211,7 @@ router.delete('/applications/:id/test-items/:itemId', requireModule('application
 // File upload endpoint (generic, for admin content like images/PDFs on entities)
 router.post(
   '/uploads',
+  requireModule('uploads'),
   upload.array('files', 5),
   asyncHandler(async (req, res) => {
     const files = req.files || [];
@@ -200,6 +229,11 @@ router.post(
 
 // Users (Super Admin only)
 router.get('/users', requireModule('users'), listUsers);
+// Mutaxassislardan ommaviy hisob yaratish va parolni tiklash (faqat SUPER_ADMIN;
+// javobdagi vaqtinchalik parollar bir martagina ko'rsatiladi).
+router.get('/users/staff-without-account', requireModule('users'), listStaffWithoutAccount);
+router.post('/users/from-staff', requireModule('users'), createFromStaff);
+router.post('/users/:id/reset-password', requireModule('users'), resetPassword);
 router.post('/users', requireModule('users'), createUser);
 router.put('/users/:id', requireModule('users'), updateUser);
 router.delete('/users/:id', requireModule('users'), deleteUser);
@@ -212,11 +246,34 @@ router.get('/analytics/overview', requireModule('analytics'), getAnalyticsOvervi
 router.get('/analytics/top-pages', requireModule('analytics'), getTopPages);
 
 // Own admin-panel profile (any authenticated admin user, self only)
-router.put('/profile', updateProfile);
+router.put('/profile', requireModule('profile'), updateProfile);
 
 // Personalized dashboard (own role-relevant stats + own recent activity)
-router.get('/dashboard/my-activity', getMyDashboard);
-router.get('/notifications', getNotifications);
+router.get('/dashboard/my-activity', requireModule('dashboard'), getMyDashboard);
+// Murojaat/ariza xulosasi (sarlavhadagi qo'ng'iroqchada SA/MANAGER uchun).
+router.get('/inbox-summary', requireModule('inbox'), getNotifications);
+
+// Vazifalar (barcha rollar; har bir so'rovda vazifaning o'zi ham tekshiriladi —
+// utils/taskPermissions.js). Aniq yo'llar /tasks/:id dan oldin turishi shart.
+router.get('/tasks', requireModule('tasks'), tasks.listTasks);
+router.post('/tasks', requireModule('tasks'), tasks.createTask);
+router.get('/tasks/my-summary', requireModule('tasks'), tasks.mySummary);
+router.get('/tasks/assignable-users', requireModule('tasks'), tasks.assignableUsers);
+router.get('/tasks/:id', requireModule('tasks'), tasks.getTask);
+router.put('/tasks/:id', requireModule('tasks'), tasks.updateTask);
+router.patch('/tasks/:id/status', requireModule('tasks'), tasks.setStatus);
+router.delete('/tasks/:id', requireModule('tasks'), tasks.deleteTask);
+router.post('/tasks/:id/checklist', requireModule('tasks'), tasks.addChecklistItem);
+router.patch('/tasks/:id/checklist/:itemId', requireModule('tasks'), tasks.updateChecklistItem);
+router.delete('/tasks/:id/checklist/:itemId', requireModule('tasks'), tasks.removeChecklistItem);
+router.post('/tasks/:id/comments', requireModule('tasks'), tasks.addComment);
+router.post('/tasks/:id/attachments', requireModule('tasks'), tasks.addAttachment);
+router.delete('/tasks/:id/attachments/:attId', requireModule('tasks'), tasks.removeAttachment);
+
+// Shaxsiy bildirishnomalar (faqat o'ziniki).
+router.get('/notifications', requireModule('notifications'), notifications.listNotifications);
+router.post('/notifications/read-all', requireModule('notifications'), notifications.readAllNotifications);
+router.post('/notifications/:id/read', requireModule('notifications'), notifications.readNotification);
 
 // Info pages (admin-editable public explainer pages, e.g. declaration vs certificate)
 router.get('/info-pages/:slug', requireModule('applications'), getInfoPage);

@@ -2,6 +2,7 @@
 // Super Admin -> everything
 // Manager -> applications, services, prices, laboratories
 // Editor -> news, documents, gallery, FAQ
+// Staff (Xodim) -> tasks, notifications, profile only
 const MODULE_ACCESS = {
   laboratories: ['SUPER_ADMIN', 'MANAGER'],
   services: ['SUPER_ADMIN', 'MANAGER'],
@@ -50,11 +51,25 @@ const MODULE_ACCESS = {
   smk_objectives: ['SUPER_ADMIN'],
   smk_improvements: ['SUPER_ADMIN', 'MANAGER'],
   smk_retention: ['SUPER_ADMIN'],
+
+  // Xodim (STAFF) faqat shu uchta modulga kiradi; boshqa hamma joyda yo'q.
+  tasks: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
+  notifications: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
+  profile: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
+  // Fayl yuklash: kontent modullari va vazifa fayllari uchun.
+  uploads: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
+  // Dashboard'dagi umumiy statistika va "oxirgi faoliyat" (STAFF'ga yo'q).
+  dashboard: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'],
+  // Sarlavhadagi murojaat/ariza xulosasi.
+  inbox: ['SUPER_ADMIN', 'MANAGER'],
 };
 
+// Deny by default: a module missing from MODULE_ACCESS is closed to everyone.
 function requireModule(moduleName) {
-  const allowed = MODULE_ACCESS[moduleName] || ['SUPER_ADMIN'];
+  const allowed = MODULE_ACCESS[moduleName];
+  if (!allowed) console.warn(`[rbac] Unknown module "${moduleName}" — access denied for all roles.`);
   return (req, res, next) => {
+    if (!allowed) return res.status(403).json({ error: 'Forbidden: bu bo\'lim uchun ruxsat yo\'q.' });
     if (!req.user) return res.status(401).json({ error: 'Autentifikatsiya talab qilinadi.' });
     if (!allowed.includes(req.user.role)) {
       return res.status(403).json({ error: 'Forbidden: bu bo\'lim uchun ruxsat yo\'q.' });

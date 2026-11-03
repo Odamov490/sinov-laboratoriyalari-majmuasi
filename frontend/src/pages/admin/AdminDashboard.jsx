@@ -6,10 +6,13 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { StatusBadge } from '../../components/UI.jsx';
 import { Loading } from '../../components/StateViews.jsx';
 import AnalyticsPanel from '../../components/admin/AnalyticsPanel.jsx';
+import MyTasksCard from '../../components/admin/MyTasksCard.jsx';
+import { roleLabel } from '../../utils/roles';
 import { formatDate } from '../../utils/localize';
 
+// Toshkent vaqti bo'yicha (brauzer boshqa mintaqada bo'lsa ham).
 function greeting() {
-  const h = new Date().getHours();
+  const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tashkent', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
   if (h >= 6 && h < 12) return 'Xayrli tong';
   if (h >= 12 && h < 18) return 'Xayrli kun';
   return 'Xayrli kech';
@@ -26,8 +29,24 @@ function relativeTime(dateStr) {
   return `${days} kun oldin`;
 }
 
+// Xodim (STAFF): faqat salomlashuv va o'z vazifalari — umumiy statistika
+// so'rovlari umuman yuborilmaydi.
+function StaffDashboard({ user }) {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-ink">{`${greeting()}, ${user.fullName}!`}</h1>
+      <MyTasksCard />
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const { user } = useAuth();
+  if (user.role === 'STAFF') return <StaffDashboard user={user} />;
+  return <RoleDashboard user={user} />;
+}
+
+function RoleDashboard({ user }) {
   const [stats, setStats] = useState(null);
   const [recent, setRecent] = useState(null);
   const [myDashboard, setMyDashboard] = useState(null);
@@ -67,7 +86,11 @@ export default function AdminDashboard() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-ink mb-1">{`${greeting()}, ${user.fullName}!`}</h1>
-      <p className="text-sm text-slate-500 mb-8">{user.role}</p>
+      <p className="text-sm text-slate-500 mb-6">{roleLabel(user.role)}</p>
+
+      <div className="mb-8">
+        <MyTasksCard />
+      </div>
 
       {user.role === 'SUPER_ADMIN' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

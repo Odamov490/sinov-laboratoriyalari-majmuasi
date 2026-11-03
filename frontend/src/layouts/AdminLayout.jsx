@@ -53,17 +53,28 @@ import {
   PenLine,
   MoreHorizontal,
   BarChart3,
+  ListChecks,
+  UserCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
-import { adminResource } from '../services/adminApi';
+import { adminResource, adminTasks } from '../services/adminApi';
+import ChangePasswordForm from '../components/admin/ChangePasswordForm.jsx';
 import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
 import Logo from '../components/Logo.jsx';
 import { smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
 
 // Always shown at the very top, outside any collapsible group.
-const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'] };
+const ALL_ROLES = ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'];
+const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ALL_ROLES };
+// Personal items, shown under Dashboard for every role (the only menu of a STAFF user).
+const PERSONAL_ITEMS = [
+  { to: '/admin/vazifalar', label: 'Vazifalar', icon: ListChecks, roles: ALL_ROLES, badgeKey: 'myTasks' },
+  { to: '/admin/mening-profilim', label: 'Mening profilim', icon: UserCircle, roles: ALL_ROLES },
+];
+// A STAFF user may open only these; any other /admin address goes to the dashboard.
+const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/mening-profilim'];
 
 // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) modules. Each laboratory
 // keeps its own SMK, so these are rendered inside the Sifat group once per
@@ -205,6 +216,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [myTasks, setMyTasks] = useState(0);
   const [openGroups, setOpenGroups] = useState(() => loadOpenGroups(location.pathname));
 
   // The group holding the current page is always expanded on navigation.
@@ -250,10 +262,52 @@ export default function AdminLayout() {
     return () => clearInterval(interval);
   }, [user]);
 
+  // My open tasks badge (every role, once a minute; not while a temporary
+  // password still has to be changed — the API refuses then).
+  useEffect(() => {
+    if (!user || user.mustChangePassword) return undefined;
+    const loadTasks = () =>
+      adminTasks
+        .mySummary()
+        .then((d) => setMyTasks(d.openCount || 0))
+        .catch(() => {});
+    loadTasks();
+    const interval = setInterval(loadTasks, 60000);
+    window.addEventListener('tasks:changed', loadTasks);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('tasks:changed', loadTasks);
+    };
+  }, [user]);
+
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/admin/login" replace />;
 
-  const badgeValues = { unreadMessages };
+  // Temporary password: nothing but the change form until it is replaced
+  // (the API answers 403 to everything else meanwhile).
+  if (user.mustChangePassword) {
+    return (
+      <div className="min-h-screen bg-bg-light flex items-center justify-center p-4">
+        <div className="w-full max-w-md card p-8">
+          <Logo className="mb-5" />
+          <h1 className="text-lg font-bold text-ink">Parolni almashtiring</h1>
+          <p className="mt-1 mb-5 text-sm text-slate-500">
+            Siz vaqtinchalik parol bilan kirdingiz. Davom etish uchun o'zingizning yangi parolingizni o'rnating.
+          </p>
+          <ChangePasswordForm submitLabel="Parolni saqlash va davom etish" />
+          <button onClick={logout} className="mt-4 w-full text-sm text-slate-500 hover:text-ink">
+            Chiqish
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user.role === 'STAFF' && !STAFF_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  const badgeValues = { unreadMessages, myTasks };
   const canSee = (item) => item.roles.includes(user.role);
   // A lab-bound user only gets their own lab's SMK.
   const smkModules = SMK_MODULES.filter(canSee);
@@ -320,6 +374,7 @@ export default function AdminLayout() {
         </div>
         <nav className="admin-sidebar-nav p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
           {canSee(DASHBOARD_ITEM) && renderLink(DASHBOARD_ITEM)}
+          {PERSONAL_ITEMS.filter(canSee).map((item) => renderLink(item))}
           {groups.map((group) => (
             <AdminMenuGroup
               key={group.key}

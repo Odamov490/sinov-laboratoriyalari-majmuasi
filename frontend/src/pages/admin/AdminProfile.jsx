@@ -2,34 +2,31 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { updateAdminProfile } from '../../services/adminApi';
+import ChangePasswordForm from '../../components/admin/ChangePasswordForm.jsx';
+import { roleLabel } from '../../utils/roles';
+
+function Row({ label, value }) {
+  return (
+    <div className="flex flex-wrap justify-between gap-2 py-2 text-sm border-b border-border last:border-0">
+      <span className="text-slate-500">{label}</span>
+      <span className="font-medium text-ink text-right">{value || '—'}</span>
+    </div>
+  );
+}
+
+const formatDateTime = (v) => (v ? new Date(v).toLocaleString('uz-UZ', { dateStyle: 'medium', timeStyle: 'short' }) : null);
 
 export default function AdminProfile() {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
   const [fullName, setFullName] = useState(user.fullName);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const save = async (e) => {
+  const saveName = async (e) => {
     e.preventDefault();
-    if (newPassword && newPassword !== confirmPassword) {
-      showToast("Yangi parollar bir xil emas.", 'error');
-      return;
-    }
     setSaving(true);
     try {
-      const payload = { fullName };
-      if (newPassword) {
-        payload.currentPassword = currentPassword;
-        payload.newPassword = newPassword;
-      }
-      const updated = await updateAdminProfile(payload);
-      setUser(updated);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setUser(await updateAdminProfile({ fullName }));
       showToast('Profil saqlandi.', 'success');
     } catch (err) {
       showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
@@ -39,57 +36,31 @@ export default function AdminProfile() {
   };
 
   return (
-    <div className="max-w-lg">
-      <h1 className="text-2xl font-bold text-ink mb-1">Mening profilim</h1>
-      <p className="text-sm text-slate-500 mb-6">{user.email} — {user.role}</p>
+    <div className="max-w-lg space-y-5">
+      <h1 className="text-2xl font-bold text-ink">Mening profilim</h1>
 
-      <form onSubmit={save} className="card p-6 space-y-5">
+      <div className="card p-6">
+        <Row label="Login" value={user.email} />
+        <Row label="Rol" value={roleLabel(user.role)} />
+        <Row label="Laboratoriya" value={user.labName} />
+        <Row label="Lavozim" value={user.staff?.position} />
+        <Row label="Oxirgi kirish" value={formatDateTime(user.lastLoginAt)} />
+      </div>
+
+      <form onSubmit={saveName} className="card p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-ink mb-1.5">F.I.Sh.</label>
           <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="input-field" required minLength={2} />
         </div>
-
-        <div className="border-t border-border pt-5 space-y-4">
-          <p className="text-sm font-semibold text-ink">Parolni o'zgartirish</p>
-          <p className="text-xs text-slate-400 -mt-2">Parolni o'zgartirmoqchi bo'lmasangiz, quyidagi maydonlarni bo'sh qoldiring.</p>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Joriy parol</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="input-field"
-              autoComplete="current-password"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Yangi parol</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="input-field"
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Yangi parolni tasdiqlash</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="input-field"
-              minLength={6}
-              autoComplete="new-password"
-            />
-          </div>
-        </div>
-
-        <button type="submit" disabled={saving} className="btn-primary w-full">
+        <button type="submit" disabled={saving || fullName.trim() === user.fullName} className="btn-secondary">
           {saving ? 'Saqlanmoqda...' : 'Saqlash'}
         </button>
       </form>
+
+      <div className="card p-6">
+        <p className="mb-4 text-sm font-semibold text-ink">Parolni almashtirish</p>
+        <ChangePasswordForm />
+      </div>
     </div>
   );
 }
