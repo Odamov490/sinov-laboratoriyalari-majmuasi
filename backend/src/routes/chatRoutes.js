@@ -24,6 +24,18 @@ router.put('/settings', chat.updateSettings);
 router.get('/unread', chat.unread);
 router.get('/users', chat.directory);
 router.get('/search', chat.search);
+router.get('/admin/stats', chat.adminStats);
+
+router.post('/uploads', chat.uploadMiddleware, chat.upload);
+router.post('/media-urls', chat.mediaUrls);
+
+router.get('/stickers', chat.listStickers);
+router.post('/sticker-packs', chat.createPack);
+router.put('/sticker-packs/:id', chat.updatePack);
+router.delete('/sticker-packs/:id', chat.deletePack);
+router.post('/sticker-packs/:id/stickers', chat.stickerUploadMiddleware, chat.addStickers);
+router.put('/stickers/:id', chat.updateSticker);
+router.delete('/stickers/:id', chat.deleteSticker);
 
 router.get('/rooms', chat.listRooms);
 router.post('/rooms', chat.createGroup);
@@ -46,6 +58,7 @@ router.delete('/messages/:messageId', chat.deleteMessage);
 router.post('/messages/:messageId/reactions', chat.toggleReaction);
 router.post('/messages/:messageId/pin', chat.pin);
 router.delete('/messages/:messageId/pin', chat.unpin);
+router.post('/messages/:messageId/forward', chat.forward);
 
 router.use(chat.chatErrorHandler);
 

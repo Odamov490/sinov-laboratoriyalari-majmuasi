@@ -9,7 +9,7 @@ RUN npm install --omit=dev
 COPY . .
 RUN npx prisma generate
 
-RUN mkdir -p uploads
+RUN mkdir -p uploads /app/chat-media
 
 EXPOSE 4000
 

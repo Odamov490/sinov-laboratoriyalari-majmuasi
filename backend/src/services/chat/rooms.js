@@ -259,6 +259,8 @@ async function openDirect(user, peerId) {
       if (err.code !== 'P2002') throw err;
       room = await prisma.chatRoom.findUnique({ where: { directKey } });
     }
+    chatEvents.emit('membership:changed', { userId: user.id });
+    chatEvents.emit('membership:changed', { userId: peer.id });
   }
   // Ikkala a'zolik ham faol bo'lsin (masalan, hisob qayta faollashgandan keyin).
   await prisma.chatMember.updateMany({ where: { roomId: room.id, leftAt: { not: null } }, data: { leftAt: null } });

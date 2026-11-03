@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, KeyRound, UserPlus, Copy, Download, Printer, AlertTriangle, Lock } from 'lucide-react';
+import { Plus, Pencil, Trash2, KeyRound, UserPlus, Copy, Download, Printer, AlertTriangle, Lock, MessageCircle, MessageCircleOff } from 'lucide-react';
 import { adminUsers, adminResource, adminAccounts } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
@@ -577,6 +577,7 @@ export default function AdminUsers() {
                 <th className="px-4 py-3">Lavozim</th>
                 <th className="px-4 py-3">Oxirgi kirish</th>
                 <th className="px-4 py-3">Holat</th>
+                <th className="px-4 py-3">Chat</th>
                 <th className="px-4 py-3 text-right">Amallar</th>
               </tr>
             </thead>
@@ -597,6 +598,23 @@ export default function AdminUsers() {
                       </span>
                     )}
                     {u.mustChangePassword && <p className="text-[11px] text-slate-400">parol almashtirilmagan</p>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await adminUsers.update(u.id, { chatEnabled: u.chatEnabled === false });
+                          load();
+                        } catch {
+                          showToast("Chat holatini o'zgartirib bo'lmadi.", 'error');
+                        }
+                      }}
+                      className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium ${u.chatEnabled === false ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-700'}`}
+                      title={u.chatEnabled === false ? 'Chatni yoqish' : "Chatni o'chirish"}
+                    >
+                      {u.chatEnabled === false ? <MessageCircleOff className="h-3.5 w-3.5" /> : <MessageCircle className="h-3.5 w-3.5" />}
+                      {u.chatEnabled === false ? "O'chirilgan" : 'Yoqilgan'}
+                    </button>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">

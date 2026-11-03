@@ -114,7 +114,8 @@ function Section({ title, children, right }) {
 }
 
 // Vazifa oynasi: taskId bo'lmasa — yangi vazifa, bo'lsa — to'liq ko'rinish.
-export default function TaskModal({ open, taskId, onClose, onChanged }) {
+// initial: yangi vazifa uchun boshlang'ich qiymatlar (masalan, chat xabaridan).
+export default function TaskModal({ open, taskId, onClose, onChanged, initial }) {
   const { showToast } = useToast();
   const [currentId, setCurrentId] = useState(taskId);
   const [task, setTask] = useState(null);
@@ -132,7 +133,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged }) {
     if (!open) return;
     setCurrentId(taskId);
     setTask(null);
-    setForm(EMPTY);
+    setForm(taskId ? EMPTY : { ...EMPTY, ...initial });
     setError(null);
     adminTasks
       .assignableUsers()

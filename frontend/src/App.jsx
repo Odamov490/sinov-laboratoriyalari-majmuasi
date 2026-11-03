@@ -89,6 +89,8 @@ import {
 
 // Chat alohida bo'lak (chunk) bo'lib, faqat ochilganda yuklanadi.
 const AdminChat = lazy(() => import('./pages/admin/chat/AdminChat.jsx'));
+const AdminStickers = lazy(() => import('./pages/admin/chat/AdminStickers.jsx'));
+const AdminChatSettings = lazy(() => import('./pages/admin/chat/AdminChatSettings.jsx'));
 
 export default function App() {
   return (
@@ -178,6 +180,22 @@ export default function App() {
           element={
             <Suspense fallback={<Loading />}>
               <AdminChat />
+            </Suspense>
+          }
+        />
+        <Route
+          path="stikerlar"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminStickers />
+            </Suspense>
+          }
+        />
+        <Route
+          path="chat-sozlamalari"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminChatSettings />
             </Suspense>
           }
         />

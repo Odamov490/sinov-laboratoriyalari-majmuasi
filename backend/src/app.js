@@ -1,3 +1,4 @@
+const http = require('http');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -11,6 +12,10 @@ const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { generateSitemap } = require('./controllers/sitemapController');
 const { startTaskReminders } = require('./services/taskReminders');
 const { syncAllMemberships } = require('./services/chat/membership');
+const { seedStarterPack } = require('./services/chat/stickers');
+const { startChatCleanup } = require('./services/chat/cleanup');
+const { initChatSocket } = require('./socket/chatSocket');
+const chatMediaRoutes = require('./routes/chatMediaRoutes');
 
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -45,18 +50,29 @@ app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISO
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+// Chat media: imzolangan havola bilan (cookie talab qilinmaydi).
+app.use('/api/chat', chatMediaRoutes);
 app.use('/api', publicRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// Socket.IO shu HTTP serverga ulanadi (/socket.io — Express'dan oldin,
+// shuning uchun IP limitiga tushmaydi).
+const server = http.createServer(app);
+initChatSocket(server);
+
+server.listen(PORT, () => {
   console.log(`SLM backend running on port ${PORT} [${NODE_ENV}]`);
   startTaskReminders();
   // Chat tizim xonalari a'zoligini hisoblar holatiga moslash.
   syncAllMemberships()
     .then((n) => console.log(`[chat] membership sync: ${n} users`))
     .catch((err) => console.error(`[chat] membership sync failed: ${err.code || err.name}`));
+  seedStarterPack()
+    .then((seeded) => seeded && console.log('[chat] starter sticker pack created'))
+    .catch((err) => console.error(`[chat] sticker seed failed: ${err.code || err.name}`));
+  startChatCleanup();
 });
 
 module.exports = app;

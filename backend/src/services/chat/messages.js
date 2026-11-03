@@ -1,10 +1,12 @@
 const crypto = require('crypto');
+const fs = require('fs');
 const { Prisma } = require('@prisma/client');
 const prisma = require('../../config/prisma');
 const { chatEvents } = require('./events');
 const { getSettings } = require('./settings');
 const { consume } = require('./rateLimit');
-const { removeKeys } = require('./storage');
+const { removeKeys, resolveKey, newKey } = require('./storage');
+const { mediaUrl } = require('./signing');
 const { requireMember, requireWriter, requireMessage, ANNOUNCERS } = require('./access');
 const { notFound, forbidden, badRequest } = require('./errors');
 
@@ -15,6 +17,21 @@ const CLIENT_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const EMOJI_RE = /\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
 const MAX_REACTIONS_PER_USER = 3;
 const MAX_PINS = 20;
+const MAX_ATTACHMENTS = 10;
+const MAX_FORWARD_TARGETS = 10;
+
+const ATTACHMENT_SELECT = {
+  id: true,
+  originalName: true,
+  mime: true,
+  size: true,
+  kind: true,
+  width: true,
+  height: true,
+  durationSec: true,
+  thumbKey: true,
+  expiredAt: true,
+};
 
 const MESSAGE_INCLUDE = {
   sender: { select: { id: true, fullName: true } },
@@ -22,20 +39,7 @@ const MESSAGE_INCLUDE = {
     select: { id: true, senderId: true, type: true, body: true, deletedAt: true, sender: { select: { fullName: true } } },
   },
   reactions: { select: { emoji: true, userId: true }, orderBy: { createdAt: 'asc' } },
-  attachments: {
-    select: {
-      id: true,
-      originalName: true,
-      mime: true,
-      size: true,
-      kind: true,
-      width: true,
-      height: true,
-      durationSec: true,
-      thumbKey: true,
-      expiredAt: true,
-    },
-  },
+  attachments: { select: ATTACHMENT_SELECT, orderBy: { createdAt: 'asc' } },
 };
 
 function aggregateReactions(list) {
@@ -49,7 +53,32 @@ function aggregateReactions(list) {
   return [...map.values()];
 }
 
-function serializeMessage(m) {
+// viewerId berilsa — shu foydalanuvchi uchun imzolangan havolalar ham.
+function attachmentOut(a, viewerId) {
+  const out = {
+    id: a.id,
+    name: a.originalName,
+    mime: a.mime,
+    size: a.size,
+    kind: a.kind,
+    width: a.width,
+    height: a.height,
+    durationSec: a.durationSec,
+    hasThumb: Boolean(a.thumbKey),
+    expired: Boolean(a.expiredAt),
+  };
+  if (viewerId && !a.expiredAt) Object.assign(out, attachmentUrls(a, viewerId));
+  return out;
+}
+
+function attachmentUrls(a, viewerId) {
+  return {
+    url: mediaUrl(viewerId, a.id, 'full'),
+    thumbUrl: a.thumbKey ? mediaUrl(viewerId, a.id, 'thumb') : null,
+  };
+}
+
+function serializeMessage(m, viewerId) {
   const base = {
     id: m.id,
     roomId: m.roomId,
@@ -78,18 +107,7 @@ function serializeMessage(m) {
         }
       : null,
     reactions: aggregateReactions(m.reactions),
-    attachments: (m.attachments || []).map((a) => ({
-      id: a.id,
-      name: a.originalName,
-      mime: a.mime,
-      size: a.size,
-      kind: a.kind,
-      width: a.width,
-      height: a.height,
-      durationSec: a.durationSec,
-      hasThumb: Boolean(a.thumbKey),
-      expired: Boolean(a.expiredAt),
-    })),
+    attachments: (m.attachments || []).map((a) => attachmentOut(a, viewerId)),
   };
 }
 
@@ -103,24 +121,43 @@ async function cursorOf(roomId, id) {
   return m;
 }
 
-async function listMessages(user, roomId, { before, after, limit } = {}) {
+const before = (c) => ({ OR: [{ createdAt: { lt: c.createdAt } }, { createdAt: c.createdAt, id: { lt: c.id } }] });
+const after = (c) => ({ OR: [{ createdAt: { gt: c.createdAt } }, { createdAt: c.createdAt, id: { gt: c.id } }] });
+const DESC = [{ createdAt: 'desc' }, { id: 'desc' }];
+const ASC = [{ createdAt: 'asc' }, { id: 'asc' }];
+
+// ?before= (yuqoriga), ?after= (uzilishdan keyin to'ldirish),
+// ?around= (qidiruv/javobdan xabarga o'tish: atrofidagi sahifa).
+async function listMessages(user, roomId, opts = {}) {
   await requireMember(roomId, user.id);
-  const take = Math.min(Math.max(Number(limit) || 40, 1), 100);
-  const where = { roomId, ...notHiddenFor(user.id) };
-  let orderBy = [{ createdAt: 'desc' }, { id: 'desc' }];
-  if (after) {
-    const c = await cursorOf(roomId, after);
-    where.OR = [{ createdAt: { gt: c.createdAt } }, { createdAt: c.createdAt, id: { gt: c.id } }];
-    orderBy = [{ createdAt: 'asc' }, { id: 'asc' }];
-  } else if (before) {
-    const c = await cursorOf(roomId, before);
-    where.OR = [{ createdAt: { lt: c.createdAt } }, { createdAt: c.createdAt, id: { lt: c.id } }];
+  const take = Math.min(Math.max(Number(opts.limit) || 40, 1), 100);
+  const base = { roomId, ...notHiddenFor(user.id) };
+  const find = (where, orderBy, n) => prisma.chatMessage.findMany({ where, orderBy, take: n, include: MESSAGE_INCLUDE });
+  const out = (rows) => rows.map((m) => serializeMessage(m, user.id));
+
+  if (opts.around) {
+    const c = await cursorOf(roomId, opts.around);
+    const half = Math.floor(take / 2);
+    const [older, anchorAndNewer] = await Promise.all([
+      find({ ...base, ...before(c) }, DESC, half + 1),
+      find({ ...base, OR: [{ id: c.id }, ...after(c).OR] }, ASC, half + 1),
+    ]);
+    const hasMore = older.length > half;
+    const hasNewer = anchorAndNewer.length > half;
+    return {
+      items: out([...older.slice(0, half).reverse(), ...anchorAndNewer.slice(0, half)]),
+      hasMore,
+      hasNewer,
+    };
   }
-  const rows = await prisma.chatMessage.findMany({ where, orderBy, take: take + 1, include: MESSAGE_INCLUDE });
-  const hasMore = rows.length > take;
-  const page = rows.slice(0, take);
-  if (!after) page.reverse();
-  return { items: page.map(serializeMessage), hasMore };
+  if (opts.after) {
+    const c = await cursorOf(roomId, opts.after);
+    const rows = await find({ ...base, ...after(c) }, ASC, take + 1);
+    return { items: out(rows.slice(0, take)), hasMore: false, hasNewer: rows.length > take };
+  }
+  const where = opts.before ? { ...base, ...before(await cursorOf(roomId, opts.before)) } : base;
+  const rows = await find(where, DESC, take + 1);
+  return { items: out(rows.slice(0, take).reverse()), hasMore: rows.length > take, hasNewer: false };
 }
 
 function cleanBody(body, { required }) {
@@ -143,8 +180,75 @@ async function cleanMentions(roomId, mentions) {
   return found.map((f) => f.userId);
 }
 
-async function loadSerialized(id) {
-  return serializeMessage(await prisma.chatMessage.findUnique({ where: { id }, include: MESSAGE_INCLUDE }));
+const num = (v, min, max) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(Math.max(v, min), max) : undefined);
+
+// Ovozli xabar to'lqini: ~48 ta 0..1 son.
+function cleanWaveform(w) {
+  if (!Array.isArray(w)) return undefined;
+  return w.slice(0, 64).map((x) => Math.round((num(Number(x), 0, 1) || 0) * 100) / 100);
+}
+
+async function loadSerialized(id, viewerId) {
+  return serializeMessage(await prisma.chatMessage.findUnique({ where: { id }, include: MESSAGE_INCLUDE }), viewerId);
+}
+
+const MEDIA_RULES = {
+  TEXT: { min: 0, max: 0 },
+  IMAGE: { min: 1, max: MAX_ATTACHMENTS, kinds: ['IMAGE'] },
+  VIDEO: { min: 1, max: 1, kinds: ['VIDEO'] },
+  FILE: { min: 1, max: MAX_ATTACHMENTS, kinds: ['IMAGE', 'VIDEO', 'AUDIO', 'FILE'] },
+  VOICE: { min: 1, max: 1, kinds: ['AUDIO'] },
+  VIDEO_NOTE: { min: 1, max: 1, kinds: ['VIDEO'] },
+  STICKER: { min: 0, max: 0 },
+};
+
+// Xabar turi + biriktirmalar + meta tekshiruvi. Qaytaradi: { body, meta, attachmentIds }.
+async function prepareContent(user, roomId, input) {
+  const type = input.type || 'TEXT';
+  const rule = MEDIA_RULES[type];
+  if (!rule) throw badRequest("Xabar turi noto'g'ri.");
+  const ids = Array.isArray(input.attachmentIds) ? [...new Set(input.attachmentIds.map(String))] : [];
+  if (ids.length < rule.min || ids.length > rule.max) throw badRequest("Biriktirmalar soni noto'g'ri.");
+
+  const meta = {};
+  const mentions = await cleanMentions(roomId, input.mentions);
+  if (mentions.length) meta.mentions = mentions;
+
+  let body = null;
+  if (type === 'TEXT') body = cleanBody(input.body, { required: true });
+  else if (['IMAGE', 'VIDEO', 'FILE'].includes(type)) body = cleanBody(input.body, { required: false });
+
+  if (type === 'STICKER') {
+    const stickerId = input.meta?.stickerId;
+    const sticker =
+      typeof stickerId === 'string'
+        ? await prisma.sticker.findFirst({ where: { id: stickerId, pack: { isActive: true } }, select: { id: true } })
+        : null;
+    if (!sticker) throw badRequest('Stiker topilmadi.');
+    meta.stickerId = sticker.id;
+  }
+
+  let attachments = [];
+  if (ids.length) {
+    attachments = await prisma.chatAttachment.findMany({
+      where: { id: { in: ids }, uploaderId: user.id, status: 'PENDING', messageId: null },
+    });
+    if (attachments.length !== ids.length) throw badRequest('Fayl topilmadi yoki allaqachon yuborilgan.');
+    if (attachments.some((a) => !rule.kinds.includes(a.kind))) throw badRequest("Fayl turi xabar turiga mos emas.");
+  }
+
+  if (type === 'VOICE' || type === 'VIDEO_NOTE') {
+    const settings = await getSettings();
+    const limit = type === 'VOICE' ? settings.maxVoiceSeconds : settings.maxVideoNoteSeconds;
+    const duration = num(Number(input.meta?.duration ?? attachments[0].durationSec), 0, 100000);
+    if (!duration || duration > limit + 2) throw badRequest(`Davomiylik ${limit} soniyadan oshmasin.`);
+    meta.duration = Math.round(duration * 10) / 10;
+    if (type === 'VOICE') {
+      const wf = cleanWaveform(input.meta?.waveform);
+      if (wf) meta.waveform = wf;
+    }
+  }
+  return { type, body, meta: Object.keys(meta).length ? meta : undefined, attachmentIds: attachments.map((a) => a.id) };
 }
 
 // Idempotent yuborish: (senderId, clientId) unique. Takror kelgan so'rov
@@ -152,19 +256,20 @@ async function loadSerialized(id) {
 async function sendMessage(user, roomId, input = {}) {
   const clientId = typeof input.clientId === 'string' && CLIENT_ID_RE.test(input.clientId) ? input.clientId : null;
   if (!clientId) throw badRequest("clientId noto'g'ri.");
+  if (typeof roomId !== 'string') throw notFound('Xona topilmadi.');
 
-  const existing = await prisma.chatMessage.findUnique({ where: { senderId_clientId: { senderId: user.id, clientId } }, select: { id: true, roomId: true } });
+  const existing = await prisma.chatMessage.findUnique({
+    where: { senderId_clientId: { senderId: user.id, clientId } },
+    select: { id: true, roomId: true },
+  });
   if (existing) {
-    if (existing.roomId !== roomId) throw badRequest("clientId boshqa xonada ishlatilgan.");
-    return { message: await loadSerialized(existing.id), duplicate: true };
+    if (existing.roomId !== roomId) throw badRequest('clientId boshqa xonada ishlatilgan.');
+    return { message: await loadSerialized(existing.id, user.id), duplicate: true };
   }
 
   await requireWriter(roomId, user);
+  const content = await prepareContent(user, roomId, input);
   consume('message', user.id);
-
-  const type = input.type || 'TEXT';
-  if (type !== 'TEXT') throw badRequest("Bu turdagi xabar hali qo'llab-quvvatlanmaydi.");
-  const body = cleanBody(input.body, { required: true });
 
   let replyToId = null;
   if (input.replyToId) {
@@ -172,29 +277,36 @@ async function sendMessage(user, roomId, input = {}) {
     if (!target) throw badRequest('Javob berilayotgan xabar topilmadi.');
     replyToId = target.id;
   }
-  const mentions = await cleanMentions(roomId, input.mentions);
 
   let created;
   try {
-    created = await prisma.chatMessage.create({
-      data: { roomId, senderId: user.id, type, body, replyToId, clientId, meta: mentions.length ? { mentions } : undefined },
-      include: MESSAGE_INCLUDE,
+    created = await prisma.$transaction(async (tx) => {
+      const msg = await tx.chatMessage.create({
+        data: { roomId, senderId: user.id, type: content.type, body: content.body, replyToId, clientId, meta: content.meta },
+      });
+      if (content.attachmentIds.length) {
+        const { count } = await tx.chatAttachment.updateMany({
+          where: { id: { in: content.attachmentIds }, status: 'PENDING', messageId: null },
+          data: { messageId: msg.id, status: 'ATTACHED' },
+        });
+        if (count !== content.attachmentIds.length) throw badRequest('Fayl allaqachon yuborilgan.');
+      }
+      return tx.chatMessage.findUnique({ where: { id: msg.id }, include: MESSAGE_INCLUDE });
     });
   } catch (err) {
     if (err.code === 'P2002') {
       const again = await prisma.chatMessage.findUnique({ where: { senderId_clientId: { senderId: user.id, clientId } }, select: { id: true } });
-      return { message: await loadSerialized(again.id), duplicate: true };
+      return { message: await loadSerialized(again.id, user.id), duplicate: true };
     }
     throw err;
   }
-  const message = serializeMessage(created);
   // Yuboruvchi o'z xabarini o'qigan hisoblanadi.
   await prisma.chatMember.updateMany({
     where: { roomId, userId: user.id },
     data: { lastReadAt: created.createdAt, lastReadMessageId: created.id },
   });
-  chatEvents.emit('message:new', { roomId, message });
-  return { message, duplicate: false };
+  chatEvents.emit('message:new', { roomId, message: serializeMessage(created) });
+  return { message: serializeMessage(created, user.id), duplicate: false };
 }
 
 // Tizim xabari (a'zo qo'shildi, nom o'zgardi ...). Matnda faqat ismlar.
@@ -220,12 +332,11 @@ async function editMessage(user, messageId, input = {}) {
   const settings = await getSettings();
   if (minutesSince(message.createdAt) > settings.editWindowMinutes) throw forbidden("Tahrirlash muddati o'tgan.");
   const body = cleanBody(input.body, { required: message.type === 'TEXT' });
-  if (body === message.body) return loadSerialized(message.id);
+  if (body === message.body) return loadSerialized(message.id, user.id);
 
   const updated = await prisma.chatMessage.update({ where: { id: message.id }, data: { body, editedAt: new Date() }, include: MESSAGE_INCLUDE });
-  const result = serializeMessage(updated);
-  chatEvents.emit('message:updated', { roomId: message.roomId, message: result });
-  return result;
+  chatEvents.emit('message:updated', { roomId: message.roomId, message: serializeMessage(updated) });
+  return serializeMessage(updated, user.id);
 }
 
 // scope 'me': faqat o'zidan yashiradi (har doim mumkin).
@@ -315,7 +426,7 @@ async function pinMessage(user, messageId, pinned = true) {
   } else {
     await prisma.chatPinned.deleteMany({ where: { roomId: message.roomId, messageId: message.id } });
   }
-  chatEvents.emit('room:updated', { roomId: message.roomId });
+  chatEvents.emit('room:updated', { roomId: message.roomId, pins: true });
   return listPins(user, message.roomId);
 }
 
@@ -326,7 +437,7 @@ async function listPins(user, roomId) {
     orderBy: { createdAt: 'desc' },
     include: { message: { include: MESSAGE_INCLUDE } },
   });
-  return pins.map((p) => ({ pinnedAt: p.createdAt, pinnedById: p.pinnedById, message: serializeMessage(p.message) }));
+  return pins.map((p) => ({ pinnedAt: p.createdAt, pinnedById: p.pinnedById, message: serializeMessage(p.message, user.id) }));
 }
 
 // O'qildi belgisi faqat oldinga siljiydi.
@@ -334,7 +445,7 @@ async function markRead(user, roomId, messageId) {
   const member = await requireMember(roomId, user.id);
   const target = messageId
     ? await prisma.chatMessage.findFirst({ where: { id: String(messageId), roomId }, select: { id: true, createdAt: true } })
-    : await prisma.chatMessage.findFirst({ where: { roomId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { id: true, createdAt: true } });
+    : await prisma.chatMessage.findFirst({ where: { roomId }, orderBy: DESC, select: { id: true, createdAt: true } });
   if (!target) return { roomId, lastReadAt: member.lastReadAt, lastReadMessageId: member.lastReadMessageId };
   if (member.lastReadAt && member.lastReadAt >= target.createdAt) {
     return { roomId, lastReadAt: member.lastReadAt, lastReadMessageId: member.lastReadMessageId };
@@ -354,7 +465,10 @@ async function searchMessages(user, { q, roomId, offset, limit } = {}) {
   const where = {
     deletedAt: null,
     type: { not: 'SYSTEM' },
-    body: { contains: text, mode: 'insensitive' },
+    OR: [
+      { body: { contains: text, mode: 'insensitive' } },
+      { attachments: { some: { originalName: { contains: text, mode: 'insensitive' } } } },
+    ],
     room: { members: { some: { userId: user.id, leftAt: null } } },
     ...notHiddenFor(user.id),
   };
@@ -362,19 +476,99 @@ async function searchMessages(user, { q, roomId, offset, limit } = {}) {
     await requireMember(String(roomId), user.id);
     where.roomId = String(roomId);
   }
-  const rows = await prisma.chatMessage.findMany({
-    where,
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    skip,
-    take: take + 1,
-    include: MESSAGE_INCLUDE,
+  const rows = await prisma.chatMessage.findMany({ where, orderBy: DESC, skip, take: take + 1, include: MESSAGE_INCLUDE });
+  return { items: rows.slice(0, take).map((m) => serializeMessage(m, user.id)), hasMore: rows.length > take, nextOffset: skip + take };
+}
+
+// Imzolangan havolalar (socket orqali kelgan yangi xabarlar va muddati
+// tugaganlar uchun). Har bir fayl uchun a'zolik qayta tekshiriladi.
+async function mediaUrls(user, ids) {
+  const list = Array.isArray(ids) ? [...new Set(ids.map(String))].slice(0, 200) : [];
+  if (!list.length) return { items: {} };
+  const rows = await prisma.chatAttachment.findMany({
+    where: { id: { in: list }, expiredAt: null },
+    select: { id: true, thumbKey: true, uploaderId: true, status: true, message: { select: { roomId: true, deletedAt: true } } },
   });
-  return { items: rows.slice(0, take).map(serializeMessage), hasMore: rows.length > take, nextOffset: skip + take };
+  const roomIds = [...new Set(rows.map((r) => r.message?.roomId).filter(Boolean))];
+  const memberships = await prisma.chatMember.findMany({
+    where: { userId: user.id, leftAt: null, roomId: { in: roomIds } },
+    select: { roomId: true },
+  });
+  const allowedRooms = new Set(memberships.map((m) => m.roomId));
+  const items = {};
+  for (const a of rows) {
+    const ok = a.message ? !a.message.deletedAt && allowedRooms.has(a.message.roomId) : a.status === 'PENDING' && a.uploaderId === user.id;
+    if (ok) items[a.id] = attachmentUrls(a, user.id);
+  }
+  return { items };
+}
+
+// Ulashish: nusxa maqsad xonalarda yangi xabar bo'ladi; fayllar diskda
+// nusxalanadi (asl xabar o'chirilsa nusxa qoladi va aksincha).
+async function forwardMessage(user, messageId, roomIds) {
+  const targets = Array.isArray(roomIds) ? [...new Set(roomIds.map(String))] : [];
+  if (!targets.length || targets.length > MAX_FORWARD_TARGETS) throw badRequest(`1–${MAX_FORWARD_TARGETS} ta xonani tanlang.`);
+  const { message } = await requireMessage(messageId, user.id, { sender: { select: { fullName: true } }, attachments: true });
+  if (message.deletedAt || message.type === 'SYSTEM') throw badRequest("Bu xabarni ulashib bo'lmaydi.");
+  for (const roomId of targets) await requireWriter(roomId, user);
+
+  const origin = message.forwardedFromId ? message.meta?.forwardedFrom : { senderName: message.sender?.fullName || null };
+  const meta = { ...(message.meta && typeof message.meta === 'object' ? message.meta : {}), forwardedFrom: origin };
+  delete meta.mentions;
+  const files = message.attachments.filter((a) => !a.expiredAt);
+
+  const results = [];
+  for (const roomId of targets) {
+    consume('message', user.id);
+    const copies = [];
+    for (const a of files) {
+      const storageKey = newKey();
+      await fs.promises.copyFile(resolveKey(a.storageKey), resolveKey(storageKey));
+      let thumbKey = null;
+      if (a.thumbKey) {
+        thumbKey = `${storageKey}-t`;
+        await fs.promises.copyFile(resolveKey(a.thumbKey), resolveKey(thumbKey)).catch(() => (thumbKey = null));
+      }
+      copies.push({ ...a, storageKey, thumbKey });
+    }
+    const created = await prisma.chatMessage.create({
+      data: {
+        roomId,
+        senderId: user.id,
+        type: message.type,
+        body: message.body,
+        meta,
+        forwardedFromId: message.forwardedFromId || message.id,
+        clientId: `fwd-${crypto.randomUUID()}`,
+        attachments: {
+          create: copies.map((a) => ({
+            uploaderId: user.id,
+            storageKey: a.storageKey,
+            thumbKey: a.thumbKey,
+            originalName: a.originalName,
+            mime: a.mime,
+            size: a.size,
+            kind: a.kind,
+            width: a.width,
+            height: a.height,
+            durationSec: a.durationSec,
+            status: 'ATTACHED',
+          })),
+        },
+      },
+      include: MESSAGE_INCLUDE,
+    });
+    await prisma.chatMember.updateMany({ where: { roomId, userId: user.id }, data: { lastReadAt: created.createdAt, lastReadMessageId: created.id } });
+    chatEvents.emit('message:new', { roomId, message: serializeMessage(created) });
+    results.push(serializeMessage(created, user.id));
+  }
+  return { items: results };
 }
 
 module.exports = {
   MESSAGE_INCLUDE,
   serializeMessage,
+  attachmentOut,
   listMessages,
   sendMessage,
   systemMessage,
@@ -385,4 +579,6 @@ module.exports = {
   listPins,
   markRead,
   searchMessages,
+  mediaUrls,
+  forwardMessage,
 };

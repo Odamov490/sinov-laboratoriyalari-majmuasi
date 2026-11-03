@@ -56,6 +56,8 @@ import {
   ListChecks,
   UserCircle,
   MessageCircle,
+  Smile,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
@@ -72,7 +74,7 @@ const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: Layou
 // Personal items, shown under Dashboard for every role (the only menu of a STAFF user).
 const PERSONAL_ITEMS = [
   { to: '/admin/vazifalar', label: 'Vazifalar', icon: ListChecks, roles: ALL_ROLES, badgeKey: 'myTasks' },
-  { to: '/admin/chat', label: 'Chat', icon: MessageCircle, roles: ALL_ROLES },
+  { to: '/admin/chat', label: 'Chat', icon: MessageCircle, roles: ALL_ROLES, badgeKey: 'chat' },
   { to: '/admin/mening-profilim', label: 'Mening profilim', icon: UserCircle, roles: ALL_ROLES },
 ];
 // A STAFF user may open only these; any other /admin address goes to the dashboard.
@@ -175,6 +177,8 @@ const MENU_GROUPS = [
     items: [
       { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
       { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/chat-sozlamalari', label: 'Chat sozlamalari', icon: SlidersHorizontal, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/stikerlar', label: 'Stikerlar', icon: Smile, roles: ['SUPER_ADMIN'] },
     ],
   },
   {
@@ -219,6 +223,7 @@ export default function AdminLayout() {
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [myTasks, setMyTasks] = useState(0);
+  const [chatUnread, setChatUnread] = useState(0);
   const [openGroups, setOpenGroups] = useState(() => loadOpenGroups(location.pathname));
 
   // The group holding the current page is always expanded on navigation.
@@ -282,6 +287,52 @@ export default function AdminLayout() {
     };
   }, [user]);
 
+  // Chat: socket ulanishi va o'qilmaganlar badge'i. Modul dinamik yuklanadi
+  // (socket.io-client asosiy bundle'ga tushmaydi).
+  useEffect(() => {
+    if (!user || user.mustChangePassword) return undefined;
+    let offs = [];
+    let alive = true;
+    import('../chat/chatStore').then((chat) => {
+      if (!alive) return;
+      chat.start(user);
+      chat.loadOutbox();
+      chat.refreshUnread();
+      offs = [
+        chat.on('unread', (u) => setChatUnread(u.total || 0)),
+        chat.on('status', (s) => s === 'disabled' && setChatUnread(0)),
+      ];
+    });
+    return () => {
+      alive = false;
+      offs.forEach((off) => off());
+    };
+  }, [user]);
+
+  // Chiqishda socket yopiladi.
+  useEffect(() => {
+    if (user) return;
+    import('../chat/chatStore').then((chat) => chat.stop()).catch(() => {});
+  }, [user]);
+
+  // Brauzer sarlavhasi: "(3) SLM ..." — o'qilmagan chat xabarlari.
+  useEffect(() => {
+    const strip = (t) => t.replace(/^\(\d+\+?\)\s*/, '');
+    const apply = () => {
+      const base = strip(document.title);
+      const next = chatUnread > 0 ? `(${chatUnread > 99 ? '99+' : chatUnread}) ${base}` : base;
+      if (document.title !== next) document.title = next;
+    };
+    apply();
+    const titleEl = document.querySelector('title');
+    const obs = titleEl ? new MutationObserver(apply) : null;
+    obs?.observe(titleEl, { childList: true });
+    return () => {
+      obs?.disconnect();
+      document.title = strip(document.title);
+    };
+  }, [chatUnread, location.pathname]);
+
   if (loading) return <Loading />;
   if (!user) return <Navigate to="/admin/login" replace />;
 
@@ -309,7 +360,7 @@ export default function AdminLayout() {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  const badgeValues = { unreadMessages, myTasks };
+  const badgeValues = { unreadMessages, myTasks, chat: chatUnread };
   const canSee = (item) => item.roles.includes(user.role);
   // A lab-bound user only gets their own lab's SMK.
   const smkModules = SMK_MODULES.filter(canSee);

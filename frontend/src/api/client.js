@@ -6,8 +6,22 @@ const apiClient = axios.create({
 });
 
 let accessToken = null;
+// Token yangilanganini kuzatuvchilar (chat socket yangi token bilan qayta autentifikatsiya qiladi).
+const tokenListeners = new Set();
 export function setAccessToken(token) {
   accessToken = token;
+  tokenListeners.forEach((fn) => {
+    try {
+      fn(token);
+    } catch {
+      // kuzatuvchi xatosi asosiy oqimni buzmasin
+    }
+  });
+}
+export const getAccessToken = () => accessToken;
+export function onAccessToken(fn) {
+  tokenListeners.add(fn);
+  return () => tokenListeners.delete(fn);
 }
 
 apiClient.interceptors.request.use((config) => {

@@ -4,6 +4,9 @@ const rooms = require('../services/chat/rooms');
 const messages = require('../services/chat/messages');
 const { getSettings, invalidateSettings } = require('../services/chat/settings');
 const { ChatError, forbidden } = require('../services/chat/errors');
+const uploads = require('../services/chat/uploads');
+const stickers = require('../services/chat/stickers');
+const { diskUsage } = require('../services/chat/storage');
 
 // /admin/chat — barcha handlerlar yupqa: tekshiruv va mantiq
 // services/chat/* da (socket ham o'sha funksiyalarni chaqiradi).
@@ -45,6 +48,7 @@ function chatErrorHandler(err, req, res, next) {
   if (err instanceof ChatError) return res.status(err.status).json({ error: err.message, code: err.code });
   if (err.name === 'ZodError') return res.status(400).json({ error: "Ma'lumot noto'g'ri." });
   if (err.code === 'P2025') return res.status(404).json({ error: 'Topilmadi.' });
+  if (err.name === 'MulterError') return res.status(400).json({ error: err.code === 'LIMIT_FILE_SIZE' ? 'Fayl juda katta.' : "Faylni yuklab bo'lmadi." });
   console.error(`[chat] ${req.method} ${req.baseUrl}${req.route?.path || ''} -> ${err.code || err.name || 'Error'}`);
   res.status(500).json({ error: 'Serverda xatolik yuz berdi.' });
 }
@@ -70,7 +74,12 @@ const setMute = wrap((req) => rooms.setMute(me(req), req.params.id, req.body || 
 
 // --- Xabarlar --------------------------------------------------------------
 const listMessages = wrap((req) =>
-  messages.listMessages(me(req), req.params.id, { before: req.query.before, after: req.query.after, limit: req.query.limit })
+  messages.listMessages(me(req), req.params.id, {
+    before: req.query.before,
+    after: req.query.after,
+    around: req.query.around,
+    limit: req.query.limit,
+  })
 );
 // Socket bo'lmaganda zaxira yo'l; idempotent (clientId).
 const sendMessage = wrap(async (req, res) => {
@@ -88,6 +97,55 @@ const markRead = wrap((req) => messages.markRead(me(req), req.params.id, req.bod
 const search = wrap((req) =>
   messages.searchMessages(me(req), { q: req.query.q, roomId: req.query.roomId, offset: req.query.offset, limit: req.query.limit })
 );
+
+// --- Media, ulashish ---------------------------------------------------
+const uploadMiddleware = uploads.uploadMiddleware;
+const upload = wrap(async (req, res) => {
+  const result = await uploads.handleUpload(req);
+  res.status(201);
+  return result;
+});
+const mediaUrls = wrap((req) => messages.mediaUrls(me(req), req.body?.ids));
+const forward = wrap((req) => messages.forwardMessage(me(req), req.params.messageId, req.body?.roomIds));
+
+// --- Stikerlar -------------------------------------------------------------
+const stickerUploadMiddleware = (req, res, next) => stickers.stickerUpload(req, res, next);
+const listStickers = wrap((req) => stickers.listStickers(me(req), { all: req.query.all === '1' }));
+const createPack = wrap(async (req, res) => {
+  const pack = await stickers.createPack(me(req), req.body || {});
+  res.status(201);
+  return pack;
+});
+const updatePack = wrap((req) => stickers.updatePack(me(req), req.params.id, req.body || {}));
+const deletePack = wrap((req) => stickers.deletePack(me(req), req.params.id));
+const addStickers = wrap(async (req, res) => {
+  const result = await stickers.addStickers(me(req), req.params.id, req.files, req.body || {});
+  res.status(201);
+  return result;
+});
+const updateSticker = wrap((req) => stickers.updateSticker(me(req), req.params.id, req.body || {}));
+const deleteSticker = wrap((req) => stickers.deleteSticker(me(req), req.params.id));
+
+// --- SUPER_ADMIN: disk va statistika ---------------------------------------
+const adminStats = wrap(async (req) => {
+  if (me(req).role !== 'SUPER_ADMIN') throw forbidden();
+  const [byKind, pending, expired, disk, messagesCount, roomsByType] = await Promise.all([
+    prisma.chatAttachment.groupBy({ by: ['kind'], where: { expiredAt: null }, _sum: { size: true }, _count: true }),
+    prisma.chatAttachment.aggregate({ where: { status: 'PENDING' }, _sum: { size: true }, _count: true }),
+    prisma.chatAttachment.count({ where: { expiredAt: { not: null } } }),
+    diskUsage(),
+    prisma.chatMessage.count({ where: { deletedAt: null } }),
+    prisma.chatRoom.groupBy({ by: ['type'], _count: true }),
+  ]);
+  return {
+    disk,
+    byKind: byKind.map((k) => ({ kind: k.kind, count: k._count, size: k._sum.size || 0 })),
+    pending: { count: pending._count, size: pending._sum.size || 0 },
+    expiredCount: expired,
+    messagesCount,
+    roomsByType: roomsByType.map((r) => ({ type: r.type, count: r._count })),
+  };
+});
 
 // --- Sozlamalar ------------------------------------------------------------
 const LIMIT_FIELDS = [
@@ -163,4 +221,17 @@ module.exports = {
   search,
   getLimits,
   updateSettings,
+  uploadMiddleware,
+  upload,
+  mediaUrls,
+  forward,
+  stickerUploadMiddleware,
+  listStickers,
+  createPack,
+  updatePack,
+  deletePack,
+  addStickers,
+  updateSticker,
+  deleteSticker,
+  adminStats,
 };
