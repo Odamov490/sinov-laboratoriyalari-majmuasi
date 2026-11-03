@@ -40,6 +40,9 @@ model User {
   lastLoginAt        DateTime?
   failedLoginCount   Int       @default(0)
   lockedUntil        DateTime?
+  // Chat: SUPER_ADMIN shaxsan o'chirib qo'yishi mumkin; lastSeenAt — oxirgi socket uzilishi.
+  chatEnabled        Boolean   @default(true)
+  lastSeenAt         DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
@@ -62,6 +65,14 @@ model User {
   taskAttachments                  TaskAttachment[]
   taskActivities                   TaskActivity[]
   notifications                    Notification[]
+  chatRoomsCreated                 ChatRoom[]          @relation("ChatRoomCreator")
+  chatMemberships                  ChatMember[]
+  chatMessages                     ChatMessage[]
+  chatAttachments                  ChatAttachment[]
+  chatReactions                    ChatReaction[]
+  chatPins                         ChatPinned[]
+  chatHidden                       ChatMessageHidden[]
+  stickerPacksCreated              StickerPack[]
 }
 
 model Laboratory {
@@ -94,6 +105,7 @@ model Laboratory {
   products            Product[]
   internalAudits          InternalAudit[]
   tasks                   Task[]
+  chatRoom                ChatRoom?
   qualityControlRecords   QualityControlRecord[]
   proficiencyTests        ProficiencyTest[]
   environmentLogs         EnvironmentLog[]
@@ -1408,4 +1420,222 @@ model Notification {
 
   @@index([userId, readAt])
   @@index([taskId, type, userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Chat (ichki messenjer). Kirish faqat a'zolik orqali tekshiriladi: a'zo
+// bo'lmagan xona/xabar/fayl uchun API 404 qaytaradi. Media fayllar
+// CHAT_STORAGE_DIR'da (ommaviy /uploads'da emas) va faqat imzolangan
+// qisqa muddatli havola bilan beriladi.
+// ---------------------------------------------------------------------------
+
+enum ChatRoomType {
+  DIRECT
+  GROUP
+  LABORATORY
+  GENERAL
+  ANNOUNCEMENT
+}
+
+enum ChatMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum ChatMessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  VIDEO_NOTE
+  VOICE
+  FILE
+  STICKER
+  SYSTEM
+}
+
+enum ChatAttachmentKind {
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+}
+
+enum ChatAttachmentStatus {
+  PENDING
+  ATTACHED
+}
+
+enum ChatGroupCreators {
+  ALL
+  MANAGERS
+}
+
+model ChatRoom {
+  id           String        @id @default(uuid())
+  type         ChatRoomType
+  title        String?
+  // LABORATORY: har laboratoriyaga bitta xona.
+  laboratoryId String?       @unique
+  laboratory   Laboratory?   @relation(fields: [laboratoryId], references: [id], onDelete: SetNull)
+  // DIRECT: "kichikId:kattaId" — ikki kishi orasida bitta xona.
+  directKey    String?       @unique
+  createdById  String?
+  createdBy    User?         @relation("ChatRoomCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  isArchived   Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  members      ChatMember[]
+  messages     ChatMessage[]
+  pins         ChatPinned[]
+
+  @@index([type])
+}
+
+model ChatMember {
+  id                String         @id @default(uuid())
+  roomId            String
+  room              ChatRoom       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role              ChatMemberRole @default(MEMBER)
+  lastReadAt        DateTime?
+  lastReadMessageId String?
+  mutedUntil        DateTime?
+  joinedAt          DateTime       @default(now())
+  leftAt            DateTime?
+
+  @@unique([roomId, userId])
+  @@index([userId, leftAt])
+}
+
+model ChatMessage {
+  id              String              @id @default(uuid())
+  roomId          String
+  room            ChatRoom            @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  senderId        String
+  sender          User                @relation(fields: [senderId], references: [id])
+  type            ChatMessageType     @default(TEXT)
+  body            String?             @db.VarChar(4000)
+  replyToId       String?
+  replyTo         ChatMessage?        @relation("ChatReply", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies         ChatMessage[]       @relation("ChatReply")
+  forwardedFromId String?
+  forwardedFrom   ChatMessage?        @relation("ChatForward", fields: [forwardedFromId], references: [id], onDelete: SetNull)
+  forwards        ChatMessage[]       @relation("ChatForward")
+  // duration, waveform (~48 son), width/height, mentions, stickerId ...
+  meta            Json?
+  // Klient yaratgan id: qayta yuborishda dublikat bo'lmasligi uchun.
+  clientId        String
+  editedAt        DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime            @default(now())
+  attachments     ChatAttachment[]
+  reactions       ChatReaction[]
+  pins            ChatPinned[]
+  hiddenFor       ChatMessageHidden[]
+
+  @@unique([senderId, clientId])
+  @@index([roomId, createdAt, id])
+}
+
+model ChatAttachment {
+  id           String               @id @default(uuid())
+  messageId    String?
+  message      ChatMessage?         @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  uploaderId   String
+  uploader     User                 @relation(fields: [uploaderId], references: [id])
+  storageKey   String               @unique
+  originalName String
+  mime         String
+  size         Int
+  kind         ChatAttachmentKind
+  width        Int?
+  height       Int?
+  durationSec  Float?
+  thumbKey     String?
+  status       ChatAttachmentStatus @default(PENDING)
+  // Saqlash muddati tugab, fayl diskdan o'chirilgan ("Fayl muddati tugagan").
+  expiredAt    DateTime?
+  createdAt    DateTime             @default(now())
+
+  @@index([messageId])
+  @@index([status, createdAt])
+}
+
+model ChatReaction {
+  id        String      @id @default(uuid())
+  messageId String
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji     String      @db.VarChar(32)
+  createdAt DateTime    @default(now())
+
+  @@unique([messageId, userId, emoji])
+}
+
+model ChatPinned {
+  id         String      @id @default(uuid())
+  roomId     String
+  room       ChatRoom    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  messageId  String
+  message    ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  pinnedById String
+  pinnedBy   User        @relation(fields: [pinnedById], references: [id])
+  createdAt  DateTime    @default(now())
+
+  @@unique([roomId, messageId])
+}
+
+// "Faqat men uchun o'chirish".
+model ChatMessageHidden {
+  id        String      @id @default(uuid())
+  messageId String
+  message   ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+
+  @@unique([messageId, userId])
+}
+
+model StickerPack {
+  id          String    @id @default(uuid())
+  title       String
+  isActive    Boolean   @default(true)
+  order       Int       @default(0)
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  stickers    Sticker[]
+}
+
+model Sticker {
+  id         String      @id @default(uuid())
+  packId     String
+  pack       StickerPack @relation(fields: [packId], references: [id], onDelete: Cascade)
+  storageKey String      @unique
+  mime       String
+  emoji      String?
+  order      Int         @default(0)
+  createdAt  DateTime    @default(now())
+
+  @@index([packId, order])
+}
+
+// Yagona qator (id = 1).
+model ChatSetting {
+  id                        Int               @id @default(1)
+  maxImageMB                Int               @default(20)
+  maxVideoMB                Int               @default(95)
+  maxAudioMB                Int               @default(20)
+  maxFileMB                 Int               @default(50)
+  maxVoiceSeconds           Int               @default(300)
+  maxVideoNoteSeconds       Int               @default(60)
+  editWindowMinutes         Int               @default(1440)
+  deleteForAllWindowMinutes Int               @default(1440)
+  mediaRetentionDays        Int               @default(0)
+  whoCanCreateGroups        ChatGroupCreators @default(ALL)
+  chatEnabled               Boolean           @default(true)
+  updatedAt                 DateTime          @updatedAt
 }

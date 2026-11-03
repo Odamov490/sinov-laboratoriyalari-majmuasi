@@ -13,6 +13,10 @@ function authenticate(req, res, next) {
 
   try {
     const payload = jwt.verify(token, JWT_SECRET);
+    // Refresh token faqat /auth/refresh uchun; access token o'rnida o'tmaydi.
+    if (payload.type === 'refresh') {
+      return res.status(401).json({ error: 'Token yaroqsiz yoki muddati tugagan.' });
+    }
     req.user = payload;
     next();
   } catch (err) {

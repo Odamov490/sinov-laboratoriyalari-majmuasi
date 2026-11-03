@@ -10,6 +10,7 @@ const { generalLimiter } = require('./middleware/rateLimit');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { generateSitemap } = require('./controllers/sitemapController');
 const { startTaskReminders } = require('./services/taskReminders');
+const { syncAllMemberships } = require('./services/chat/membership');
 
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -52,6 +53,10 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`SLM backend running on port ${PORT} [${NODE_ENV}]`);
   startTaskReminders();
+  // Chat tizim xonalari a'zoligini hisoblar holatiga moslash.
+  syncAllMemberships()
+    .then((n) => console.log(`[chat] membership sync: ${n} users`))
+    .catch((err) => console.error(`[chat] membership sync failed: ${err.code || err.name}`));
 });
 
 module.exports = app;

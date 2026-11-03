@@ -62,6 +62,8 @@ const MODULE_ACCESS = {
   dashboard: ['SUPER_ADMIN', 'MANAGER', 'EDITOR'],
   // Sarlavhadagi murojaat/ariza xulosasi.
   inbox: ['SUPER_ADMIN', 'MANAGER'],
+  // Ichki chat: hamma rollar; xonalarga kirish a'zolik bo'yicha tekshiriladi.
+  chat: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
 };
 
 // Deny by default: a module missing from MODULE_ACCESS is closed to everyone.

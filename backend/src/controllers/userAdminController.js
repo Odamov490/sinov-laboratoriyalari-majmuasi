@@ -5,6 +5,7 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { LOGIN_EMAIL_DOMAIN } = require('../config/env');
 const { normalizeLogin, isValidLogin, passwordSchema, generatePassword, effectiveLabId } = require('../utils/accounts');
 const { buildLogins } = require('../utils/staffLogin');
+const { syncUserSafe } = require('../services/chat/membership');
 
 const ROLES = ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'];
 // Roles a bulk "accounts from specialists" run may hand out (never SUPER_ADMIN).
@@ -31,6 +32,8 @@ const updateSchema = z.object({
   isActive: z.boolean().optional(),
   password: passwordSchema.optional(),
   labId: z.string().uuid().nullable().optional(),
+  // Faqat SUPER_ADMIN (users moduli): shu hisob uchun chatni o'chirish.
+  chatEnabled: z.boolean().optional(),
 });
 
 const USER_INCLUDE = {
@@ -50,6 +53,7 @@ const safeUser = (u) => ({
   staffId: u.staffId,
   position: u.staff?.position || null,
   isActive: u.isActive,
+  chatEnabled: u.chatEnabled,
   mustChangePassword: u.mustChangePassword,
   lastLoginAt: u.lastLoginAt,
   locked: Boolean(u.lockedUntil && u.lockedUntil > new Date()),
@@ -75,6 +79,7 @@ const createUser = asyncHandler(async (req, res) => {
     data: { fullName: data.fullName, email: data.email, role: data.role, labId: data.labId || null, passwordHash },
     include: USER_INCLUDE,
   });
+  await syncUserSafe(user.id);
   res.status(201).json(safeUser(user));
 });
 
@@ -90,11 +95,13 @@ const updateUser = asyncHandler(async (req, res) => {
     data: update,
     include: USER_INCLUDE,
   });
+  await syncUserSafe(user.id);
   res.json(safeUser(user));
 });
 
 const deleteUser = asyncHandler(async (req, res) => {
   await prisma.user.update({ where: { id: req.params.id }, data: { deletedAt: new Date(), isActive: false } });
+  await syncUserSafe(req.params.id);
   res.status(204).send();
 });
 
@@ -222,6 +229,7 @@ const createFromStaff = asyncHandler(async (req, res) => {
       });
     }
   }, { timeout: 120000 });
+  for (const c of created) await syncUserSafe(c.userId);
 
   noStore(res);
   res.status(201).json({

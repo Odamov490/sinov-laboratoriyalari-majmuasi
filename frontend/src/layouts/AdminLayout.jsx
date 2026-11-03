@@ -55,6 +55,7 @@ import {
   BarChart3,
   ListChecks,
   UserCircle,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
@@ -71,10 +72,11 @@ const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: Layou
 // Personal items, shown under Dashboard for every role (the only menu of a STAFF user).
 const PERSONAL_ITEMS = [
   { to: '/admin/vazifalar', label: 'Vazifalar', icon: ListChecks, roles: ALL_ROLES, badgeKey: 'myTasks' },
+  { to: '/admin/chat', label: 'Chat', icon: MessageCircle, roles: ALL_ROLES },
   { to: '/admin/mening-profilim', label: 'Mening profilim', icon: UserCircle, roles: ALL_ROLES },
 ];
 // A STAFF user may open only these; any other /admin address goes to the dashboard.
-const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/mening-profilim'];
+const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/chat', '/admin/mening-profilim'];
 
 // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) modules. Each laboratory
 // keeps its own SMK, so these are rendered inside the Sifat group once per

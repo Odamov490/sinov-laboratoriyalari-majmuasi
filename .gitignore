@@ -7,6 +7,7 @@ build/
 .DS_Store
 backend/uploads/*
 !backend/uploads/.gitkeep
+backend/chat-media/
 frontend/.vite/
 
 # Maxfiy import fayllari (summalar, shartnomalar, xodimlar) — commit qilinmaydi

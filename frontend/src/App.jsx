@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
 
 import PublicLayout from './layouts/PublicLayout.jsx';
@@ -47,6 +47,7 @@ import AdminScanner from './pages/admin/AdminScanner.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
 import AdminTasks from './pages/admin/AdminTasks.jsx';
 import AdminTestProgramBuilder from './pages/admin/AdminTestProgramBuilder.jsx';
+import { Loading } from './components/StateViews.jsx';
 import {
   laboratoryConfig,
   serviceConfig,
@@ -85,6 +86,9 @@ import {
   improvementSuggestionConfig,
   retentionPolicyConfig,
 } from './pages/admin/adminConfigs.js';
+
+// Chat alohida bo'lak (chunk) bo'lib, faqat ochilganda yuklanadi.
+const AdminChat = lazy(() => import('./pages/admin/chat/AdminChat.jsx'));
 
 export default function App() {
   return (
@@ -169,6 +173,14 @@ export default function App() {
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
         <Route path="mening-profilim" element={<AdminProfile />} />
         <Route path="vazifalar" element={<AdminTasks />} />
+        <Route
+          path="chat"
+          element={
+            <Suspense fallback={<Loading />}>
+              <AdminChat />
+            </Suspense>
+          }
+        />
         <Route path="sozlamalar" element={<AdminSettings />} />
       </Route>
     </Routes>

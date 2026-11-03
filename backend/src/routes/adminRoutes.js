@@ -24,6 +24,8 @@ const { getTopPages } = require('../controllers/pageViewController');
 const testJournal = require('../controllers/testJournalController');
 const tasks = require('../controllers/taskController');
 const notifications = require('../controllers/notificationController');
+const chatRoutes = require('./chatRoutes');
+const { syncUserSafe } = require('../services/chat/membership');
 const { updateProfile } = require('../controllers/authController');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const {
@@ -120,10 +122,18 @@ mountCrud('staff', 'staff', 'staff', {
   softDelete: true,
   orderBy: { order: 'asc' },
   // A deactivated or deleted specialist's account is deactivated too.
+  // Laboratoriyasi o'zgarsa yoki nofaol bo'lsa — chat laboratoriya xonasi ham.
   afterWrite: async (id, { action, item }) => {
     if (action === 'remove' || item?.isActive === false) {
       await prisma.user.updateMany({ where: { staffId: id, isActive: true }, data: { isActive: false } });
     }
+    const account = await prisma.user.findUnique({ where: { staffId: id }, select: { id: true } });
+    if (!account) return;
+    // Bog'langan hisob laboratoriyasi mutaxassis kartasiga ergashadi.
+    if (action === 'update' && item && item.laboratoryId !== undefined) {
+      await prisma.user.update({ where: { id: account.id }, data: { labId: item.laboratoryId || null } });
+    }
+    await syncUserSafe(account.id);
   },
   // The linked account is read-only here; managed under Foydalanuvchilar.
   buildData: (body) => {
@@ -274,6 +284,9 @@ router.delete('/tasks/:id/attachments/:attId', requireModule('tasks'), tasks.rem
 router.get('/notifications', requireModule('notifications'), notifications.listNotifications);
 router.post('/notifications/read-all', requireModule('notifications'), notifications.readAllNotifications);
 router.post('/notifications/:id/read', requireModule('notifications'), notifications.readNotification);
+
+// Ichki chat (xonalar, xabarlar). Ruxsat a'zolik bo'yicha — routes/chatRoutes.js.
+router.use('/chat', requireModule('chat'), chatRoutes);
 
 // Info pages (admin-editable public explainer pages, e.g. declaration vs certificate)
 router.get('/info-pages/:slug', requireModule('applications'), getInfoPage);
