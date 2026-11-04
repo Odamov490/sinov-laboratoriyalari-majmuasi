@@ -11,6 +11,7 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { sampleQrValue } from '../../utils/sampleQr.js';
 import { adminSamples, adminResource } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal } from '../../components/Modal.jsx';
@@ -448,7 +449,7 @@ export default function AdminSamples() {
         {qrItem && (
           <div className="text-center">
             <div id="qr-print-area" className="inline-block p-6 border border-border rounded-xl">
-              <QRCodeSVG value={qrItem.code} size={180} />
+              <QRCodeSVG value={sampleQrValue(qrItem.code)} size={180} />
               <p className="mt-3 font-mono font-bold text-ink">{qrItem.code}</p>
               <p className="text-sm text-slate-500">{qrItem.productName}</p>
             </div>

@@ -360,7 +360,8 @@ export default function AdminLayout() {
   }, [chatUnread, location.pathname]);
 
   if (loading) return <Loading />;
-  if (!user) return <Navigate to="/admin/login" replace />;
+  // Kirgandan keyin shu sahifaga qaytish (masalan, QR havola: /admin/skanerlash?code=...).
+  if (!user) return <Navigate to="/admin/login" replace state={{ from: location.pathname + location.search }} />;
 
   // Temporary password: nothing but the change form until it is replaced
   // (the API answers 403 to everything else meanwhile).

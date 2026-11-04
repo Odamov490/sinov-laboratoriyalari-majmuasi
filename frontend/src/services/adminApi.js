@@ -177,7 +177,7 @@ export const adminProductBuilder = {
 export const adminSamples = {
   list: (params) => apiClient.get('/admin/samples', { params }).then((r) => r.data),
   create: (data) => apiClient.post('/admin/samples', data).then((r) => r.data),
-  getByCode: (code) => apiClient.get(`/admin/samples/code/${code}`).then((r) => r.data),
+  getByCode: (code) => apiClient.get(`/admin/samples/code/${encodeURIComponent(code)}`).then((r) => r.data),
   get: (id) => apiClient.get(`/admin/samples/${id}`).then((r) => r.data),
   history: (id) => apiClient.get(`/admin/samples/${id}/history`).then((r) => r.data),
   action: (id, payload) => apiClient.post(`/admin/samples/${id}/action`, payload).then((r) => r.data),

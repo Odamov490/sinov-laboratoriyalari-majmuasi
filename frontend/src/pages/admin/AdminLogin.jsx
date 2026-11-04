@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LogIn } from 'lucide-react';
 import Logo from '../../components/Logo.jsx';
@@ -13,11 +13,15 @@ export default function AdminLogin() {
   const { user, login } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Faqat o'z admin sahifalarimizga qaytariladi (tashqi manzilga emas).
+  const from = location.state?.from;
+  const target = typeof from === 'string' && from.startsWith('/admin/') && !from.startsWith('/admin/login') ? from : '/admin';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (user) return <Navigate to="/admin" replace />;
+  if (user) return <Navigate to={target} replace />;
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +29,7 @@ export default function AdminLogin() {
     try {
       await login(email, password);
       // /admin — tanlangan boshlang'ich sahifaga yo'naltiradi (AdminLayout).
-      navigate('/admin');
+      navigate(target, { replace: true });
     } catch (err) {
       showToast(err?.response?.data?.error || tr("Login yoki parol noto'g'ri."), 'error');
     } finally {

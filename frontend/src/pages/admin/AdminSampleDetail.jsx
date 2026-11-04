@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Upload, FileText, User } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { sampleQrValue } from '../../utils/sampleQr.js';
 import { adminSamples, uploadFiles, adminResource } from '../../services/adminApi';
 import { Loading, ErrorState } from '../../components/StateViews.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
@@ -80,7 +81,7 @@ export default function AdminSampleDetail() {
           <h1 className="text-2xl font-bold text-ink">{sample.productName}</h1>
         </div>
         <div className="card p-3">
-          <QRCodeSVG value={sample.code} size={80} />
+          <QRCodeSVG value={sampleQrValue(sample.code)} size={80} />
         </div>
       </div>
 
