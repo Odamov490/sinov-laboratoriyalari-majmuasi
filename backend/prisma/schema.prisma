@@ -43,6 +43,12 @@ model User {
   // Chat: SUPER_ADMIN shaxsan o'chirib qo'yishi mumkin; lastSeenAt — oxirgi socket uzilishi.
   chatEnabled        Boolean   @default(true)
   lastSeenAt         DateTime?
+  // Shaxsiy kabinet: rasm, kontaktlar, sozlamalar (faqat egasi o'zgartiradi).
+  avatarUrl          String?
+  phone              String?
+  telegram           String?
+  preferences        Json      @default("{}")
+  passwordChangedAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   deletedAt    DateTime?
@@ -73,6 +79,8 @@ model User {
   chatPins                         ChatPinned[]
   chatHidden                       ChatMessageHidden[]
   stickerPacksCreated              StickerPack[]
+  loginEvents                      LoginEvent[]
+  sessions                         UserSession[]
 }
 
 model Laboratory {
@@ -1638,4 +1646,35 @@ model ChatSetting {
   whoCanCreateGroups        ChatGroupCreators @default(ALL)
   chatEnabled               Boolean           @default(true)
   updatedAt                 DateTime          @updatedAt
+}
+
+// Kirish tarixi. Muvaffaqiyatsiz urinish faqat mavjud hisob uchun yoziladi;
+// parol hech qachon saqlanmaydi. 90 kundan eskilari cron bilan o'chiriladi.
+model LoginEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  success   Boolean
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// Faol qurilmalar: har bir kirish — bitta sessiya. Refresh token faqat xesh
+// ko'rinishida saqlanadi; bekor qilingan sessiyaning refresh'i rad etiladi.
+model UserSession {
+  id               String    @id @default(uuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String
+  ip               String?
+  userAgent        String?
+  createdAt        DateTime  @default(now())
+  lastUsedAt       DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  @@index([userId, revokedAt])
 }

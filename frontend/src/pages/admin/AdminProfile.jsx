@@ -1,66 +1,91 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { UserCircle, ShieldCheck, Bell, SlidersHorizontal, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
-import { updateAdminProfile } from '../../services/adminApi';
-import ChangePasswordForm from '../../components/admin/ChangePasswordForm.jsx';
-import { roleLabel } from '../../utils/roles';
+import { adminProfile, fetchMe } from '../../services/adminApi';
+import { Loading, ErrorState } from '../../components/StateViews.jsx';
+import ProfileGeneral from './profile/ProfileGeneral.jsx';
+import ProfileSecurity from './profile/ProfileSecurity.jsx';
+import ProfileNotifications from './profile/ProfileNotifications.jsx';
+import ProfileSettings from './profile/ProfileSettings.jsx';
+import ProfileActivity from './profile/ProfileActivity.jsx';
 
-function Row({ label, value }) {
-  return (
-    <div className="flex flex-wrap justify-between gap-2 py-2 text-sm border-b border-border last:border-0">
-      <span className="text-slate-500">{label}</span>
-      <span className="font-medium text-ink text-right">{value || '—'}</span>
-    </div>
-  );
-}
-
-const formatDateTime = (v) => (v ? new Date(v).toLocaleString('uz-UZ', { dateStyle: 'medium', timeStyle: 'short' }) : null);
+// Shaxsiy kabinet: har kim faqat o'z ma'lumotini ko'radi va o'zgartiradi.
+// Yorliq havolada: ?tab=umumiy|xavfsizlik|bildirishnomalar|sozlamalar|faoliyat
+const TABS = [
+  { key: 'umumiy', label: 'Umumiy', icon: UserCircle },
+  { key: 'xavfsizlik', label: 'Xavfsizlik', icon: ShieldCheck },
+  { key: 'bildirishnomalar', label: 'Bildirishnomalar', icon: Bell },
+  { key: 'sozlamalar', label: 'Sozlamalar', icon: SlidersHorizontal },
+  { key: 'faoliyat', label: 'Faoliyatim', icon: Activity },
+];
 
 export default function AdminProfile() {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const { showToast } = useToast();
-  const [fullName, setFullName] = useState(user.fullName);
-  const [saving, setSaving] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const tab = TABS.some((t) => t.key === params.get('tab')) ? params.get('tab') : 'umumiy';
+  const [profile, setProfile] = useState(null);
+  const [error, setError] = useState(null);
 
-  const saveName = async (e) => {
-    e.preventDefault();
-    setSaving(true);
-    try {
-      setUser(await updateAdminProfile({ fullName }));
-      showToast('Profil saqlandi.', 'success');
-    } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
+  const load = useCallback(() => {
+    setError(null);
+    adminProfile
+      .get()
+      .then(setProfile)
+      .catch((err) => setError(err?.response?.data?.error || "Profilni yuklab bo'lmadi."));
+  }, []);
+  useEffect(load, [load]);
+
+  // Profil o'zgarganda sarlavha va menyu ham yangilanadi (/auth/me).
+  const onChange = useCallback(
+    (next) => {
+      if (next) setProfile(next);
+      fetchMe()
+        .then(setUser)
+        .catch(() => {});
+    },
+    [setUser]
+  );
+
+  const toast = useCallback((msg, type = 'info') => showToast(msg, type), [showToast]);
 
   return (
-    <div className="max-w-lg space-y-5">
+    <div className="mx-auto max-w-5xl space-y-5">
       <h1 className="text-2xl font-bold text-ink">Mening profilim</h1>
 
-      <div className="card p-6">
-        <Row label="Login" value={user.email} />
-        <Row label="Rol" value={roleLabel(user.role)} />
-        <Row label="Laboratoriya" value={user.labName} />
-        <Row label="Lavozim" value={user.staff?.position} />
-        <Row label="Oxirgi kirish" value={formatDateTime(user.lastLoginAt)} />
-      </div>
-
-      <form onSubmit={saveName} className="card p-6 space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1.5">F.I.Sh.</label>
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="input-field" required minLength={2} />
+      <div className="-mx-1 overflow-x-auto border-b border-border" role="tablist">
+        <div className="flex min-w-max gap-1 px-1">
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => setParams({ tab: t.key })}
+              className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+                tab === t.key ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-ink'
+              }`}
+            >
+              <t.icon className="h-4 w-4" /> {t.label}
+            </button>
+          ))}
         </div>
-        <button type="submit" disabled={saving || fullName.trim() === user.fullName} className="btn-secondary">
-          {saving ? 'Saqlanmoqda...' : 'Saqlash'}
-        </button>
-      </form>
-
-      <div className="card p-6">
-        <p className="mb-4 text-sm font-semibold text-ink">Parolni almashtirish</p>
-        <ChangePasswordForm />
       </div>
+
+      {error ? (
+        <ErrorState message={error} onRetry={load} />
+      ) : !profile ? (
+        <Loading />
+      ) : (
+        <>
+          {tab === 'umumiy' && <ProfileGeneral profile={profile} onChange={onChange} toast={toast} />}
+          {tab === 'xavfsizlik' && <ProfileSecurity profile={profile} onChange={onChange} toast={toast} />}
+          {tab === 'bildirishnomalar' && <ProfileNotifications profile={profile} onChange={onChange} toast={toast} />}
+          {tab === 'sozlamalar' && <ProfileSettings profile={profile} onChange={onChange} toast={toast} />}
+          {tab === 'faoliyat' && <ProfileActivity />}
+        </>
+      )}
     </div>
   );
 }

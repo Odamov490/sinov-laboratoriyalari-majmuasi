@@ -58,7 +58,9 @@ import {
   MessageCircle,
   Smile,
   SlidersHorizontal,
+  Star,
 } from 'lucide-react';
+import { setNotifyPrefs } from '../utils/notifyPrefs';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Loading } from '../components/StateViews.jsx';
 import { adminResource, adminTasks } from '../services/adminApi';
@@ -189,6 +191,19 @@ const MENU_GROUPS = [
   },
 ];
 
+// Menyu kaliti = /admin/<kalit> (backend utils/menuCatalog.js bilan bir xil).
+const menuKey = (item) => item.to.replace('/admin/', '');
+const ALL_MENU_ITEMS = [DASHBOARD_ITEM, ...PERSONAL_ITEMS, ...MENU_GROUPS.flatMap((g) => g.items)];
+// Shu rolga ochiq bandlar: { key, to, label, icon } (Dashboard'dagi tezkor havolalar uchun ham).
+export function menuItemsForRole(role) {
+  return ALL_MENU_ITEMS.filter((i) => i.roles.includes(role)).map((i) => ({ ...i, key: menuKey(i) }));
+}
+export function landingPathFor(user) {
+  const key = user?.preferences?.landingPage;
+  const item = key && menuItemsForRole(user.role).find((i) => i.key === key);
+  return item ? item.to : '/admin/dashboard';
+}
+
 const MENU_STORAGE_KEY = 'admin_menu_groups';
 const DEFAULT_OPEN_GROUP = 'operatsiyalar';
 
@@ -224,6 +239,11 @@ export default function AdminLayout() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [myTasks, setMyTasks] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
+
+  // Bildirishnoma sozlamalari (ovoz, brauzer, tinch soatlar) klientda qo'llanadi.
+  useEffect(() => {
+    setNotifyPrefs(user?.preferences);
+  }, [user]);
   const [openGroups, setOpenGroups] = useState(() => loadOpenGroups(location.pathname));
 
   // The group holding the current page is always expanded on navigation.
@@ -356,11 +376,18 @@ export default function AdminLayout() {
     );
   }
 
+  // "/admin" asosiy manzili: tanlangan boshlang'ich sahifa (ruxsati tekshiriladi).
+  if (location.pathname === '/admin' || location.pathname === '/admin/') {
+    return <Navigate to={landingPathFor(user)} replace />;
+  }
+
   if (user.role === 'STAFF' && !STAFF_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(`${p}/`))) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
   const badgeValues = { unreadMessages, myTasks, chat: chatUnread };
+  const roleItems = menuItemsForRole(user.role);
+  const favorites = (user.preferences?.favorites || []).map((k) => roleItems.find((i) => i.key === k)).filter(Boolean);
   const canSee = (item) => item.roles.includes(user.role);
   // A lab-bound user only gets their own lab's SMK.
   const smkModules = SMK_MODULES.filter(canSee);
@@ -410,7 +437,7 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-light flex">
+    <div className={`min-h-screen bg-bg-light flex ${user.preferences?.density === 'compact' ? 'density-compact' : ''}`}>
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-primary text-white transform transition-transform lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
@@ -426,6 +453,14 @@ export default function AdminLayout() {
           </button>
         </div>
         <nav className="admin-sidebar-nav p-3 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+          {favorites.length > 0 && (
+            <div className="mb-2 border-b border-white/10 pb-2">
+              <p className="flex items-center gap-1.5 px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-white/50">
+                <Star className="h-3 w-3" /> Sevimlilar
+              </p>
+              {favorites.map((item) => renderLink(item))}
+            </div>
+          )}
           {canSee(DASHBOARD_ITEM) && renderLink(DASHBOARD_ITEM)}
           {PERSONAL_ITEMS.filter(canSee).map((item) => renderLink(item))}
           {groups.map((group) => (

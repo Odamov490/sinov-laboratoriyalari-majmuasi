@@ -15,7 +15,8 @@ async function requireActiveAccount(req, res, next) {
       return res.status(401).json({ error: 'Hisob faol emas.' });
     }
     req.user.role = user.role;
-    if (user.mustChangePassword) {
+    // Vaqtinchalik parol: faqat parol almashtirish ochiq.
+    if (user.mustChangePassword && !(req.method === 'PUT' && req.path === '/profile/password')) {
       return res.status(403).json({ error: 'Avval vaqtinchalik parolni almashtiring.', code: 'MUST_CHANGE_PASSWORD' });
     }
     next();

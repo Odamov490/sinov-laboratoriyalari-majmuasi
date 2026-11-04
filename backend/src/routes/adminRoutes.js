@@ -26,7 +26,8 @@ const tasks = require('../controllers/taskController');
 const notifications = require('../controllers/notificationController');
 const chatRoutes = require('./chatRoutes');
 const { syncUserSafe } = require('../services/chat/membership');
-const { updateProfile } = require('../controllers/authController');
+const profile = require('../controllers/profileController');
+const rateLimit = require('express-rate-limit');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const {
   getProductBuilder,
@@ -255,8 +256,28 @@ router.put('/settings', requireModule('settings'), updateSettings);
 router.get('/analytics/overview', requireModule('analytics'), getAnalyticsOverview);
 router.get('/analytics/top-pages', requireModule('analytics'), getTopPages);
 
-// Own admin-panel profile (any authenticated admin user, self only)
-router.put('/profile', requireModule('profile'), updateProfile);
+// Shaxsiy kabinet: faqat authenticate (modul tekshiruvi yo'q), har doim
+// req.user.sub — boshqa foydalanuvchi ID'si qabul qilinmaydi.
+const avatarLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `avatar:${req.user.sub}`,
+  message: { error: "Soatiga ko'pi bilan 10 ta rasm yuklash mumkin." },
+});
+router.get('/profile', profile.getProfile);
+router.put('/profile', profile.updateProfile);
+router.post('/profile/avatar', avatarLimiter, upload.single('avatar'), profile.uploadAvatar);
+router.delete('/profile/avatar', profile.deleteAvatar);
+router.put('/profile/password', profile.changePassword);
+router.get('/profile/sessions', profile.listSessions);
+router.post('/profile/sessions/revoke-others', profile.revokeOthers);
+router.delete('/profile/sessions/:id', profile.revokeSession);
+router.get('/profile/logins', profile.listLogins);
+router.get('/profile/summary', profile.summary);
+router.get('/profile/activity', profile.activity);
+router.post('/profile/correction-request', profile.correctionRequest);
 
 // Personalized dashboard (own role-relevant stats + own recent activity)
 router.get('/dashboard/my-activity', requireModule('dashboard'), getMyDashboard);

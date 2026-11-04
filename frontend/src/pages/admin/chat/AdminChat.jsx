@@ -32,7 +32,7 @@ export default function AdminChat() {
       .rooms()
       .then((r) => {
         setRooms(r.items);
-        store.setMutedRooms(r.items.filter((x) => x.muted).map((x) => x.id));
+        store.setRoomMeta(r.items);
       })
       .catch((err) => {
         if (err?.response?.data?.code === 'CHAT_DISABLED') setStatus('disabled');

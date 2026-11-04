@@ -1,5 +1,6 @@
 // In-app notifications (the bell in the admin header). Nothing is e-mailed:
 // staff logins are not real mailboxes.
+const { wantsInApp } = require('../utils/preferences');
 
 const TZ = 'Asia/Tashkent';
 
@@ -25,8 +26,14 @@ function tashkentDayStart(now = new Date()) {
 const taskLink = (taskId) => `/admin/vazifalar?task=${taskId}`;
 
 // Creates one notification per recipient, skipping the actor and duplicates.
+// "Sayt ichida" sozlamasi o'chirilganlar o'tkazib yuboriladi (task_assigned
+// va task_due — muhim, ular har doim yaratiladi).
 async function notifyUsers(db, userIds, { type, title, taskId = null, linkUrl = null, exceptUserId = null }) {
-  const recipients = [...new Set(userIds)].filter((id) => id && id !== exceptUserId);
+  let recipients = [...new Set(userIds)].filter((id) => id && id !== exceptUserId);
+  if (!recipients.length) return 0;
+  const prefs = await db.user.findMany({ where: { id: { in: recipients } }, select: { id: true, preferences: true } });
+  const off = new Set(prefs.filter((u) => !wantsInApp(u.preferences, type)).map((u) => u.id));
+  recipients = recipients.filter((id) => !off.has(id));
   if (!recipients.length) return 0;
   await db.notification.createMany({
     data: recipients.map((userId) => ({ userId, type, title, taskId, linkUrl: linkUrl || (taskId ? taskLink(taskId) : null) })),

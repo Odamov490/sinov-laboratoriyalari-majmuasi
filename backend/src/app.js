@@ -14,6 +14,7 @@ const { startTaskReminders } = require('./services/taskReminders');
 const { syncAllMemberships } = require('./services/chat/membership');
 const { seedStarterPack } = require('./services/chat/stickers');
 const { startChatCleanup } = require('./services/chat/cleanup');
+const { startAuthCleanup } = require('./services/authCleanup');
 const { initChatSocket } = require('./socket/chatSocket');
 const chatMediaRoutes = require('./routes/chatMediaRoutes');
 
@@ -73,6 +74,7 @@ server.listen(PORT, () => {
     .then((seeded) => seeded && console.log('[chat] starter sticker pack created'))
     .catch((err) => console.error(`[chat] sticker seed failed: ${err.code || err.name}`));
   startChatCleanup();
+  startAuthCleanup();
 });
 
 module.exports = app;

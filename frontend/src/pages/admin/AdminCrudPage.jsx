@@ -5,6 +5,7 @@ import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx
 import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const MONTH_NAMES_UZ = [
   'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
@@ -25,7 +26,10 @@ export default function AdminCrudPage({ config, labScope }) {
   const [error, setError] = useState(false);
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  // Profil sozlamasi: jadvallarda sahifadagi qatorlar soni.
+  const { user } = useAuth();
+  const preferredSize = user?.preferences?.pageSize;
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS.includes(preferredSize) ? preferredSize : PAGE_SIZE_OPTIONS[0]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({});

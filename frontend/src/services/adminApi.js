@@ -62,7 +62,29 @@ export const getTopPages = (params) =>
 export const getAnalyticsOverview = (params) =>
   apiClient.get('/admin/analytics/overview', { params }).then((r) => r.data);
 
-export const updateAdminProfile = (payload) => apiClient.put('/admin/profile', payload).then((r) => r.data);
+// Shaxsiy kabinet (faqat o'zining ma'lumoti).
+export const adminProfile = {
+  get: () => apiClient.get('/admin/profile').then((r) => r.data),
+  update: (payload) => apiClient.put('/admin/profile', payload).then((r) => r.data),
+  uploadAvatar: (file) => {
+    const form = new FormData();
+    form.append('avatar', file, file.name);
+    return apiClient.post('/admin/profile/avatar', form).then((r) => r.data);
+  },
+  deleteAvatar: () => apiClient.delete('/admin/profile/avatar').then((r) => r.data),
+  changePassword: (currentPassword, newPassword, signOutOthers) =>
+    apiClient.put('/admin/profile/password', { currentPassword, newPassword, signOutOthers }).then((r) => {
+      setAccessToken(r.data.accessToken);
+      return r.data;
+    }),
+  sessions: () => apiClient.get('/admin/profile/sessions').then((r) => r.data),
+  revokeSession: (id) => apiClient.delete(`/admin/profile/sessions/${id}`).then((r) => r.data),
+  revokeOthers: () => apiClient.post('/admin/profile/sessions/revoke-others').then((r) => r.data),
+  logins: () => apiClient.get('/admin/profile/logins').then((r) => r.data),
+  summary: () => apiClient.get('/admin/profile/summary').then((r) => r.data),
+  activity: (params) => apiClient.get('/admin/profile/activity', { params }).then((r) => r.data),
+  correctionRequest: (message) => apiClient.post('/admin/profile/correction-request', { message }).then((r) => r.data),
+};
 
 export const getMyDashboard = () => apiClient.get('/admin/dashboard/my-activity').then((r) => r.data);
 

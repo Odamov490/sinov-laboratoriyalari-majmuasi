@@ -4,6 +4,8 @@ const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { signAccessToken, signRefreshToken, verifyToken, cookieOptions } = require('../utils/tokens');
 const { normalizeLogin, passwordSchema, effectiveLabId } = require('../utils/accounts');
+const { normalize, forRole } = require('../utils/preferences');
+const sessions = require('../services/sessions');
 
 // One message for unknown login, wrong password, inactive and locked account
 // alike, so a response never reveals whether an account exists.
@@ -37,6 +39,13 @@ function publicUser(user) {
     labName: user.lab?.nameUz || user.staff?.laboratory?.nameUz || null,
     mustChangePassword: user.mustChangePassword,
     lastLoginAt: user.lastLoginAt,
+    avatarUrl: user.avatarUrl || null,
+    passwordChangedAt: user.passwordChangedAt || null,
+    // Sarlavha, menyu va chat qo'shimcha so'rovsiz chizilishi uchun.
+    preferences: (() => {
+      const p = forRole(normalize(user.preferences), user.role);
+      return { favorites: p.favorites, landingPage: p.landingPage, density: p.density, pageSize: p.pageSize, quietHours: p.quietHours, notifications: p.notifications };
+    })(),
     staff: user.staff
       ? {
           id: user.staff.id,
@@ -48,11 +57,19 @@ function publicUser(user) {
   };
 }
 
-function setAuthCookies(res, user) {
-  const accessToken = signAccessToken(user);
-  const refreshToken = signRefreshToken(user);
+// Yangi sessiya (faol qurilma) va uning refresh tokeni; qaytaradi sid.
+async function issueRefresh(req, res, user) {
+  const session = await sessions.createSession(user.id, req);
+  const refreshToken = signRefreshToken(user, session.id);
+  await sessions.setSessionToken(session.id, refreshToken);
+  res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: sessions.REFRESH_TTL_MS });
+  return session.id;
+}
+
+async function startSession(req, res, user) {
+  const sid = await issueRefresh(req, res, user);
+  const accessToken = signAccessToken(user, sid);
   res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-  res.cookie('refreshToken', refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
   return accessToken;
 }
 
@@ -69,11 +86,13 @@ const login = asyncHandler(async (req, res) => {
   }
 
   if (user.lockedUntil && user.lockedUntil > new Date()) {
+    await sessions.recordLogin(user.id, false, req);
     return res.status(401).json({ error: LOGIN_FAILED });
   }
 
   const valid = await argon2.verify(user.passwordHash, password).catch(() => false);
   if (!valid) {
+    await sessions.recordLogin(user.id, false, req);
     const updated = await prisma.user.update({
       where: { id: user.id },
       data: { failedLoginCount: { increment: 1 } },
@@ -89,6 +108,7 @@ const login = asyncHandler(async (req, res) => {
   }
 
   if (!user.isActive || user.deletedAt) {
+    await sessions.recordLogin(user.id, false, req);
     return res.status(401).json({ error: LOGIN_FAILED });
   }
 
@@ -98,11 +118,19 @@ const login = asyncHandler(async (req, res) => {
     include: ME_INCLUDE,
   });
 
-  const accessToken = setAuthCookies(res, signedIn);
+  await sessions.recordLogin(signedIn.id, true, req);
+  const accessToken = await startSession(req, res, signedIn);
   res.json({ user: publicUser(signedIn), accessToken });
 });
 
 const logout = asyncHandler(async (req, res) => {
+  // Shu qurilma sessiyasi bekor qilinadi.
+  try {
+    const payload = verifyToken(req.cookies?.refreshToken);
+    if (payload.type === 'refresh' && payload.sid) await sessions.revokeSession(payload.sid, payload.sub);
+  } catch {
+    // token yo'q yoki yaroqsiz — cookie baribir tozalanadi
+  }
   res.clearCookie('accessToken', cookieOptions);
   res.clearCookie('refreshToken', cookieOptions);
   res.json({ success: true });
@@ -129,7 +157,22 @@ const refresh = asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: payload.sub } });
   if (!user || !user.isActive || user.deletedAt) return res.status(401).json({ error: 'Foydalanuvchi topilmadi.' });
 
-  const accessToken = signAccessToken(user);
+  let sid = payload.sid;
+  if (sid) {
+    const session = await sessions.validateSession(sid, user.id, token);
+    if (!session) {
+      // Qurilma "Chiqarish" bilan bekor qilingan yoki muddati tugagan.
+      res.clearCookie('accessToken', cookieOptions);
+      res.clearCookie('refreshToken', cookieOptions);
+      return res.status(401).json({ error: 'Sessiya tugagan. Qaytadan kiring.', code: 'SESSION_REVOKED' });
+    }
+    await sessions.touchSession(sid, req);
+  } else {
+    // Sessiyalar joriy qilinishidan oldingi token: bir marta yangi sessiyaga o'tkaziladi.
+    sid = await issueRefresh(req, res, user);
+  }
+
+  const accessToken = signAccessToken(user, sid);
   res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
   res.json({ accessToken });
 });
@@ -137,6 +180,8 @@ const refresh = asyncHandler(async (req, res) => {
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Joriy parolni kiriting.').max(200),
   newPassword: passwordSchema,
+  // "Boshqa qurilmalardan chiqarish" (sukut bo'yicha yoqilgan).
+  signOutOthers: z.boolean().optional().default(true),
 });
 
 // POST /auth/change-password — the one action allowed while
@@ -144,7 +189,7 @@ const changePasswordSchema = z.object({
 const changePassword = asyncHandler(async (req, res) => {
   const parsed = changePasswordSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.issues[0].message });
-  const { currentPassword, newPassword } = parsed.data;
+  const { currentPassword, newPassword, signOutOthers } = parsed.data;
 
   const user = await prisma.user.findUnique({ where: { id: req.user.sub } });
   if (!user || !user.isActive || user.deletedAt) return res.status(401).json({ error: 'Hisob faol emas.' });
@@ -162,23 +207,18 @@ const changePassword = asyncHandler(async (req, res) => {
       mustChangePassword: false,
       failedLoginCount: 0,
       lockedUntil: null,
+      passwordChangedAt: new Date(),
     },
     include: ME_INCLUDE,
   });
-  const accessToken = setAuthCookies(res, updated);
-  res.json({ user: publicUser(updated), accessToken });
+  // Joriy sessiya saqlanadi (eski tokenda sid bo'lmasa — yangisi ochiladi).
+  let sid = req.user.sid;
+  const current = sid ? await prisma.userSession.findFirst({ where: { id: sid, userId: user.id, revokedAt: null } }) : null;
+  if (!current) sid = await issueRefresh(req, res, updated);
+  if (signOutOthers) await sessions.revokeOtherSessions(user.id, sid);
+  const accessToken = signAccessToken(updated, sid);
+  res.cookie('accessToken', accessToken, { ...cookieOptions, maxAge: 15 * 60 * 1000 });
+  res.json({ user: publicUser(updated), accessToken, signedOutOthers: signOutOthers });
 });
 
-const updateProfileSchema = z.object({
-  fullName: z.string().trim().min(2).max(200),
-});
-
-// Any admin-panel user updating their own name -- never another user's.
-// Passwords change only through /auth/change-password (policy enforced there).
-const updateProfile = asyncHandler(async (req, res) => {
-  const { fullName } = updateProfileSchema.parse(req.body);
-  const updated = await prisma.user.update({ where: { id: req.user.sub }, data: { fullName }, include: ME_INCLUDE });
-  res.json(publicUser(updated));
-});
-
-module.exports = { login, logout, me, refresh, changePassword, updateProfile };
+module.exports = { login, logout, me, refresh, changePassword };

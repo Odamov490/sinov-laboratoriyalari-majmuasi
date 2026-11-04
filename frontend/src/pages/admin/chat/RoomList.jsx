@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
-import { Search, SquarePen, Megaphone, Users, FlaskConical, Globe, BellOff, Archive, MoreVertical, Volume2, VolumeX, BellRing, Smile, Settings, MessageSquareText } from 'lucide-react';
+import { Search, SquarePen, Megaphone, Users, FlaskConical, Globe, BellOff, Archive, MoreVertical, BellRing, Smile, Settings, MessageSquareText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Avatar } from './MessageItem.jsx';
 import { shortStamp } from '../../../chat/format';
-import { previewText, getState, prefs, enableNotifications } from '../../../chat/chatStore';
+import { previewText, getState } from '../../../chat/chatStore';
 
 const TABS = [
   ['all', 'Hammasi'],
@@ -23,39 +23,15 @@ function RoomAvatar({ room }) {
   );
 }
 
-function PrefsMenu({ me, onClose, toast }) {
-  const [, force] = useState(0);
-  const notifySupported = typeof Notification !== 'undefined';
+// Ovoz va brauzer bildirishnomalari endi profildagi "Bildirishnomalar" yorlig'ida.
+function PrefsMenu({ me, onClose }) {
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div className="absolute right-0 top-full z-50 mt-1 w-64 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-xl">
-        <button
-          type="button"
-          onClick={() => {
-            prefs.sound = !prefs.sound;
-            force((x) => x + 1);
-          }}
-          className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-bg-light"
-        >
-          {prefs.sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />} Ovozli signal: {prefs.sound ? 'yoqilgan' : "o'chirilgan"}
-        </button>
-        {notifySupported && (
-          <button
-            type="button"
-            onClick={async () => {
-              if (prefs.notify) prefs.notify = false;
-              else {
-                const r = await enableNotifications();
-                if (r === 'denied') toast("Brauzer bildirishnomalarni bloklagan. Sayt sozlamalaridan ruxsat bering.", 'error');
-              }
-              force((x) => x + 1);
-            }}
-            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-bg-light"
-          >
-            <BellRing className="h-4 w-4" /> {prefs.notify ? "Bildirishnomalarni o'chirish" : 'Bildirishnomalarni yoqish'}
-          </button>
-        )}
+        <Link to="/admin/mening-profilim?tab=bildirishnomalar" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
+          <BellRing className="h-4 w-4" /> Bildirishnoma sozlamalari
+        </Link>
         {me.role === 'SUPER_ADMIN' && (
           <>
             <div className="my-1 border-t border-border" />
@@ -102,7 +78,7 @@ export default function RoomList({ rooms, activeId, me, loading, onSelect, onNew
           <button type="button" onClick={() => setMenu((v) => !v)} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Sozlamalar">
             <MoreVertical className="h-5 w-5" />
           </button>
-          {menu && <PrefsMenu me={me} onClose={() => setMenu(false)} toast={toast} />}
+          {menu && <PrefsMenu me={me} onClose={() => setMenu(false)} />}
         </div>
       </div>
       <div className="px-3">

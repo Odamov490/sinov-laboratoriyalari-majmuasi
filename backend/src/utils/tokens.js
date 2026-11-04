@@ -1,16 +1,17 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, JWT_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } = require('../config/env');
 
-function signAccessToken(user) {
+// sid — sessiya (faol qurilma) identifikatori.
+function signAccessToken(user, sid) {
   return jwt.sign(
-    { sub: user.id, email: user.email, role: user.role, fullName: user.fullName },
+    { sub: user.id, email: user.email, role: user.role, fullName: user.fullName, ...(sid && { sid }) },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
 }
 
-function signRefreshToken(user) {
-  return jwt.sign({ sub: user.id, type: 'refresh' }, JWT_SECRET, {
+function signRefreshToken(user, sid) {
+  return jwt.sign({ sub: user.id, type: 'refresh', sid }, JWT_SECRET, {
     expiresIn: REFRESH_TOKEN_EXPIRES_IN,
   });
 }

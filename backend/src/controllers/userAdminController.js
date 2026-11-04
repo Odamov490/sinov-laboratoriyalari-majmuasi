@@ -6,6 +6,7 @@ const { LOGIN_EMAIL_DOMAIN } = require('../config/env');
 const { normalizeLogin, isValidLogin, passwordSchema, generatePassword, effectiveLabId } = require('../utils/accounts');
 const { buildLogins } = require('../utils/staffLogin');
 const { syncUserSafe } = require('../services/chat/membership');
+const { revokeOtherSessions } = require('../services/sessions');
 
 const ROLES = ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'];
 // Roles a bulk "accounts from specialists" run may hand out (never SUPER_ADMIN).
@@ -254,6 +255,8 @@ const resetPassword = asyncHandler(async (req, res) => {
     },
     include: USER_INCLUDE,
   });
+  // Parol tiklanganda barcha qurilmalardan chiqariladi.
+  await revokeOtherSessions(user.id, null);
   noStore(res);
   res.json({ userId: user.id, fullName: user.fullName, laboratoryName: safeUser(user).labName, email: user.email, password });
 });

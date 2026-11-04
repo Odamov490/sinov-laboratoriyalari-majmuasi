@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 import apiClient, { getAccessToken, onAccessToken, setAccessToken } from '../api/client';
 import chatApi from './chatApi';
+import { alertFor } from '../utils/notifyPrefs';
 
 // Chatning global holati: bitta Socket.IO ulanishi, o'qilmaganlar soni,
 // onlayn foydalanuvchilar, yuborilmagan xabarlar navbati (offline queue),
@@ -64,6 +65,7 @@ export function start(me) {
     return;
   }
   state.me = me;
+  loadRoomMeta();
   setStatus('connecting');
   socket = io({
     path: '/socket.io',
@@ -122,6 +124,7 @@ export function start(me) {
   );
   socket.on('room:updated', (d) => {
     fire('room:updated', d);
+    if (d.rooms) loadRoomMeta();
     if (d.rooms) refreshUnread();
   });
 
@@ -228,72 +231,28 @@ function onIncoming(m) {
 }
 
 // ---------------- ovoz va bildirishnoma ----------------
-const PREF_SOUND = 'slm-chat-sound';
-const PREF_NOTIFY = 'slm-chat-notify';
-const readPref = (key, def) => {
-  try {
-    const v = localStorage.getItem(key);
-    return v === null ? def : v === '1';
-  } catch {
-    return def;
-  }
-};
-const writePref = (key, v) => {
-  try {
-    localStorage.setItem(key, v ? '1' : '0');
-  } catch {
-    /* saqlanmasa ham ishlaydi */
-  }
-};
-export const prefs = {
-  get sound() {
-    return readPref(PREF_SOUND, true);
-  },
-  set sound(v) {
-    writePref(PREF_SOUND, v);
-    fire('prefs');
-  },
-  get notify() {
-    return readPref(PREF_NOTIFY, false) && typeof Notification !== 'undefined' && Notification.permission === 'granted';
-  },
-  set notify(v) {
-    writePref(PREF_NOTIFY, v);
-    fire('prefs');
-  },
-};
-
-// Ruxsat faqat foydalanuvchi tugmani bosganda so'raladi.
-export async function enableNotifications() {
-  if (typeof Notification === 'undefined') return 'unsupported';
-  const result = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission();
-  prefs.notify = result === 'granted';
-  return result;
-}
-
-let audioCtx = null;
-function beep() {
-  try {
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(620, audioCtx.currentTime + 0.14);
-    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.25);
-  } catch {
-    /* ovoz chiqmasa — muhim emas */
-  }
-}
-
+// Sozlamalar profildagi "Bildirishnomalar" yorlig'ida (voqea bo'yicha
+// brauzer/ovoz, tinch soatlar) — utils/notifyPrefs.js qo'llaydi.
 const mutedRooms = new Set();
+const roomTypes = new Map();
 export function setMutedRooms(ids) {
   mutedRooms.clear();
   ids.forEach((id) => mutedRooms.add(id));
+}
+// Xonalar ro'yxatidan: ovozsizlar va xona turlari (voqea turini aniqlash uchun).
+export function setRoomMeta(rooms) {
+  setMutedRooms(rooms.filter((r) => r.muted).map((r) => r.id));
+  rooms.forEach((r) => roomTypes.set(r.id, r.type));
+}
+let metaTimer = null;
+function loadRoomMeta() {
+  clearTimeout(metaTimer);
+  metaTimer = setTimeout(() => {
+    chatApi
+      .rooms()
+      .then((r) => setRoomMeta(r.items))
+      .catch(() => {});
+  }, 500);
 }
 
 export const previewText = (m) => {
@@ -303,21 +262,26 @@ export const previewText = (m) => {
   return m.body || m.preview ? `${labels[m.type]}: ${m.body || m.preview}` : labels[m.type] || '';
 };
 
+function chatEvent(m) {
+  if (m.meta?.mentions?.includes(state.me?.id)) return 'chat_mention';
+  const type = roomTypes.get(m.roomId);
+  if (type === 'DIRECT') return 'chat_direct';
+  if (type === 'ANNOUNCEMENT') return 'chat_announcement';
+  return 'chat_group';
+}
+
 function notify(m) {
   if (mutedRooms.has(m.roomId)) return;
-  if (prefs.sound) beep();
-  if (prefs.notify && document.visibilityState !== 'visible') {
-    try {
-      const n = new Notification(m.sender?.fullName || 'Yangi xabar', { body: previewText(m).slice(0, 140), tag: m.roomId });
-      n.onclick = () => {
-        window.focus();
-        fire('open-room', m.roomId);
-        n.close();
-      };
-    } catch {
-      /* ba'zi brauzerlarda Notification konstruktori yo'q */
-    }
-  }
+  if (!roomTypes.has(m.roomId)) loadRoomMeta();
+  alertFor(chatEvent(m), {
+    title: m.sender?.fullName || 'Yangi xabar',
+    body: previewText(m),
+    tag: m.roomId,
+    onClick: () => {
+      if (listeners.get('open-room')?.size) fire('open-room', m.roomId);
+      else window.location.assign(`/admin/chat?room=${m.roomId}`);
+    },
+  });
 }
 
 // ---------------- yuborish navbati (offline queue) ----------------

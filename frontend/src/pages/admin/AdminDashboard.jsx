@@ -7,6 +7,7 @@ import { StatusBadge } from '../../components/UI.jsx';
 import { Loading } from '../../components/StateViews.jsx';
 import AnalyticsPanel from '../../components/admin/AnalyticsPanel.jsx';
 import MyTasksCard from '../../components/admin/MyTasksCard.jsx';
+import QuickLinksCard from '../../components/admin/QuickLinksCard.jsx';
 import { roleLabel } from '../../utils/roles';
 import { formatDate } from '../../utils/localize';
 
@@ -35,6 +36,7 @@ function StaffDashboard({ user }) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-ink">{`${greeting()}, ${user.fullName}!`}</h1>
+      <QuickLinksCard />
       <MyTasksCard />
     </div>
   );
@@ -88,7 +90,8 @@ function RoleDashboard({ user }) {
       <h1 className="text-2xl font-bold text-ink mb-1">{`${greeting()}, ${user.fullName}!`}</h1>
       <p className="text-sm text-slate-500 mb-6">{roleLabel(user.role)}</p>
 
-      <div className="mb-8">
+      <div className="mb-8 space-y-6">
+        <QuickLinksCard />
         <MyTasksCard />
       </div>
 

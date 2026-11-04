@@ -15,14 +15,15 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (user) return <Navigate to="/admin/dashboard" replace />;
+  if (user) return <Navigate to="/admin" replace />;
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/admin/dashboard');
+      // /admin — tanlangan boshlang'ich sahifaga yo'naltiradi (AdminLayout).
+      navigate('/admin');
     } catch (err) {
       showToast(err?.response?.data?.error || "Login yoki parol noto'g'ri.", 'error');
     } finally {

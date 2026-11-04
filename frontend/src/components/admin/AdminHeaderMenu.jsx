@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, User, ChevronDown, LogOut, CheckCheck } from 'lucide-react';
+import { Bell, User, ChevronDown, LogOut, CheckCheck, ShieldCheck, BellRing } from 'lucide-react';
+import Avatar from '../Avatar.jsx';
+import { alertFor, TYPE_TO_EVENT } from '../../utils/notifyPrefs';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { adminNotifications, getInboxSummary } from '../../services/adminApi';
 import { roleLabel } from '../../utils/roles';
@@ -39,7 +41,18 @@ export default function AdminHeaderMenu() {
     return () => clearInterval(t);
   }, []);
 
-  const loadPersonal = () => adminNotifications.list().then(setPersonal).catch(() => {});
+  // Yangi kelgan bildirishnomalar uchun ovoz/brauzer xabari (sozlamaga qarab).
+  const seen = useRef(null);
+  const loadPersonal = () =>
+    adminNotifications
+      .list()
+      .then((data) => {
+        const fresh = seen.current ? data.items.filter((n) => !n.readAt && !seen.current.has(n.id)) : [];
+        seen.current = new Set(data.items.map((n) => n.id));
+        fresh.forEach((n) => alertFor(TYPE_TO_EVENT[n.type] || 'task_status', { title: 'SLM', body: n.title, tag: n.id, onClick: () => n.linkUrl && navigate(n.linkUrl) }));
+        setPersonal(data);
+      })
+      .catch(() => {});
 
   useEffect(() => {
     loadPersonal();
@@ -149,40 +162,131 @@ export default function AdminHeaderMenu() {
         )}
       </div>
 
-      <div className="relative">
-        <button
-          onClick={() => {
-            setProfileOpen((v) => !v);
-            setNotifOpen(false);
-          }}
-          className="flex items-center gap-2 text-sm hover:opacity-80 transition-opacity"
-        >
-          <span className="font-medium text-ink">{user.fullName}</span>
-          <span className="text-xs rounded-full bg-bg-light px-2 py-1 text-slate-500">{roleLabel(user.role)}</span>
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-        </button>
+      <ProfileMenu
+        user={user}
+        logout={logout}
+        open={profileOpen}
+        setOpen={(v) => {
+          setProfileOpen(v);
+          if (v) setNotifOpen(false);
+        }}
+      />
+    </div>
+  );
+}
 
-        {profileOpen && (
-          <>
-            <div className="fixed inset-0 z-10" onClick={() => setProfileOpen(false)} />
-            <div className="absolute right-0 mt-2 w-48 rounded-lg border border-border bg-white shadow-card py-1 z-20">
-              <Link
-                to="/admin/mening-profilim"
-                onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-bg-light"
-              >
-                <User className="h-4 w-4" /> Profilim
-              </Link>
-              <button
-                onClick={logout}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-bg-light"
-              >
-                <LogOut className="h-4 w-4" /> Chiqish
-              </button>
+const PROFILE_LINKS = [
+  { to: '/admin/mening-profilim?tab=umumiy', label: 'Mening profilim', icon: User },
+  { to: '/admin/mening-profilim?tab=xavfsizlik', label: 'Xavfsizlik', icon: ShieldCheck },
+  { to: '/admin/mening-profilim?tab=bildirishnomalar', label: 'Bildirishnoma sozlamalari', icon: BellRing },
+];
+
+// Avatar menyusi: Esc va tashqariga bosish bilan yopiladi, strelkalar bilan boshqariladi.
+function ProfileMenu({ user, logout, open, setOpen }) {
+  const navigate = useNavigate();
+  const wrap = useRef(null);
+  const button = useRef(null);
+  const items = useRef([]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e) => {
+      if (wrap.current && !wrap.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('touchstart', onDown);
+    setTimeout(() => items.current[0]?.focus(), 0);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('touchstart', onDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const onKeyDown = (e) => {
+    const list = items.current.filter(Boolean);
+    const i = list.indexOf(document.activeElement);
+    if (e.key === 'Escape') {
+      setOpen(false);
+      button.current?.focus();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      list[(i + 1) % list.length]?.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      list[(i - 1 + list.length) % list.length]?.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      list[0]?.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      list[list.length - 1]?.focus();
+    } else if (e.key === 'Tab') {
+      setOpen(false);
+    }
+  };
+
+  const go = (to) => {
+    setOpen(false);
+    navigate(to);
+  };
+
+  return (
+    <div className="relative" ref={wrap} onKeyDown={onKeyDown}>
+      <button
+        ref={button}
+        onClick={() => setOpen(!open)}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown' && !open) {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 text-sm transition-colors hover:bg-bg-light focus-ring"
+      >
+        <Avatar name={user.fullName} src={user.avatarUrl} seed={user.id} size="sm" />
+        <span className="hidden max-w-[180px] truncate font-medium text-ink sm:inline">{user.fullName}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+      </button>
+
+      {open && (
+        <div role="menu" className="absolute right-0 z-30 mt-2 w-72 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-border bg-white shadow-card">
+          <div className="flex items-center gap-3 border-b border-border bg-bg-light px-4 py-3">
+            <Avatar name={user.fullName} src={user.avatarUrl} seed={user.id} size="md" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-ink">{user.fullName}</p>
+              <p className="truncate text-xs text-slate-500">{[roleLabel(user.role), user.labName].filter(Boolean).join(' · ')}</p>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+          <div className="py-1">
+            {PROFILE_LINKS.map((l, i) => (
+              <button
+                key={l.to}
+                ref={(el) => (items.current[i] = el)}
+                role="menuitem"
+                onClick={() => go(l.to)}
+                className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-bg-light focus:bg-bg-light focus:outline-none"
+              >
+                <l.icon className="h-4 w-4 text-slate-400" /> {l.label}
+              </button>
+            ))}
+            <div className="my-1 border-t border-border" />
+            <button
+              ref={(el) => (items.current[PROFILE_LINKS.length] = el)}
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                logout();
+              }}
+              className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
+            >
+              <LogOut className="h-4 w-4" /> Chiqish
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
