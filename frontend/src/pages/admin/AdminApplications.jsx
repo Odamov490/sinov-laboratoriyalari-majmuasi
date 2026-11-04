@@ -6,6 +6,7 @@ import { Select, Pagination, StatusBadge, APPLICATION_STATUSES, STATUS_LABELS } 
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
+import { tr, locName } from '../../i18n/tr.js';
 
 export default function AdminApplications() {
   const { showToast } = useToast();
@@ -58,11 +59,11 @@ export default function AdminApplications() {
   const removeApplication = async (id) => {
     try {
       await adminApplications.remove(id);
-      showToast("Ariza o'chirildi.", 'success');
+      showToast(tr("Ariza o'chirildi."), 'success');
       if (selected?.id === id) setSelected(null);
       load();
     } catch {
-      showToast("O'chirishda xatolik.", 'error');
+      showToast(tr("O'chirishda xatolik."), 'error');
     }
   };
 
@@ -70,11 +71,11 @@ export default function AdminApplications() {
     setSaving(true);
     try {
       await adminApplications.updateStatus(selected.id, statusDraft, commentDraft);
-      showToast('Holat yangilandi.', 'success');
+      showToast(tr('Holat yangilandi.'), 'success');
       setSelected(null);
       load();
     } catch {
-      showToast('Xatolik yuz berdi.', 'error');
+      showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -88,7 +89,7 @@ export default function AdminApplications() {
       setAddServiceId('');
       await refreshSelected();
     } catch {
-      showToast('Xatolik yuz berdi.', 'error');
+      showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setTestItemBusy(false);
     }
@@ -100,7 +101,7 @@ export default function AdminApplications() {
       await adminTestItems.remove(selected.id, itemId);
       await refreshSelected();
     } catch {
-      showToast('Xatolik yuz berdi.', 'error');
+      showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setTestItemBusy(false);
     }
@@ -108,13 +109,13 @@ export default function AdminApplications() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink mb-6">Arizalar</h1>
+      <h1 className="text-2xl font-bold text-ink mb-6">{tr('Arizalar')}</h1>
 
       <div className="max-w-xs mb-5">
         <Select
           value={status}
           onChange={(v) => { setStatus(v); setPage(1); }}
-          placeholder="Barcha holatlar"
+          placeholder={tr('Barcha holatlar')}
           options={APPLICATION_STATUSES.map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
         />
       </div>
@@ -130,14 +131,14 @@ export default function AdminApplications() {
           <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-3">Raqam</th>
-                <th className="px-4 py-3">Mijoz</th>
-                <th className="px-4 py-3">Telefon</th>
-                <th className="px-4 py-3">Tashkilot</th>
-                <th className="px-4 py-3">Laboratoriya</th>
-                <th className="px-4 py-3">Sana</th>
-                <th className="px-4 py-3">Holat</th>
-                <th className="px-4 py-3 text-right">Amallar</th>
+                <th className="px-4 py-3">{tr('Raqam')}</th>
+                <th className="px-4 py-3">{tr('Mijoz')}</th>
+                <th className="px-4 py-3">{tr('Telefon')}</th>
+                <th className="px-4 py-3">{tr('Tashkilot')}</th>
+                <th className="px-4 py-3">{tr('Laboratoriya')}</th>
+                <th className="px-4 py-3">{tr('Sana')}</th>
+                <th className="px-4 py-3">{tr('Holat')}</th>
+                <th className="px-4 py-3 text-right">{tr('Amallar')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -147,7 +148,7 @@ export default function AdminApplications() {
                   <td className="px-4 py-3">{a.fullName}</td>
                   <td className="px-4 py-3">{a.phone}</td>
                   <td className="px-4 py-3">{a.organization || '—'}</td>
-                  <td className="px-4 py-3">{a.service?.laboratory?.nameUz || '—'}</td>
+                  <td className="px-4 py-3">{locName(a.service?.laboratory) || '—'}</td>
                   <td className="px-4 py-3 text-slate-500">{formatDate(a.createdAt)}</td>
                   <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
@@ -169,11 +170,11 @@ export default function AdminApplications() {
       <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.applicationNumber} size="md">
         {selected && (
           <div className="space-y-4">
-            <Row label="Mijoz" value={selected.fullName} />
-            <Row label="Telefon" value={selected.phone} />
+            <Row label={tr('Mijoz')} value={selected.fullName} />
+            <Row label={tr('Telefon')} value={selected.phone} />
             <Row label="Email" value={selected.email} />
-            <Row label="Mahsulot" value={selected.productName} />
-            <Row label="Izoh" value={selected.comment} />
+            <Row label={tr('Mahsulot')} value={selected.productName} />
+            <Row label={tr('Izoh')} value={selected.comment} />
 
             {selected.tnVedWarningShown && (
               <div
@@ -189,14 +190,14 @@ export default function AdminApplications() {
                   <Info className="h-3.5 w-3.5 shrink-0" />
                 )}
                 {selected.tnVedWarningCategory === 'SERTIFIKAT'
-                  ? 'TN VED: Sertifikat talab qilinadi'
-                  : 'TN VED: Deklaratsiya tavsiya etiladi'}
+                  ? tr('TN VED: Sertifikat talab qilinadi')
+                  : tr('TN VED: Deklaratsiya tavsiya etiladi')}
               </div>
             )}
 
             {selected.files?.length > 0 && (
               <div>
-                <p className="text-sm text-slate-500 mb-1">Fayllar</p>
+                <p className="text-sm text-slate-500 mb-1">{tr('Fayllar')}</p>
                 <div className="flex flex-wrap gap-2">
                   {selected.files.map((f) => (
                     <a key={f.id} href={f.fileUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline">
@@ -208,13 +209,13 @@ export default function AdminApplications() {
             )}
 
             <div>
-              <p className="text-sm font-semibold text-ink mb-2">Sinov dasturi</p>
+              <p className="text-sm font-semibold text-ink mb-2">{tr('Sinov dasturi')}</p>
 
               {selected.tnVedCode && (
                 <div className="flex items-center gap-2 mb-3 text-xs text-ink bg-bg-light border border-border rounded-lg px-3 py-2">
                   <Tag className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                   <span>
-                    TN VED kodi: <span className="font-mono font-semibold">{selected.tnVedCode}</span>
+                    {tr('TN VED kodi:')} <span className="font-mono font-semibold">{selected.tnVedCode}</span>
                   </span>
                 </div>
               )}
@@ -223,12 +224,12 @@ export default function AdminApplications() {
               )}
 
               {(selected.testItems || []).length === 0 ? (
-                <p className="text-xs text-slate-400 mb-2">Hali xizmat qo'shilmagan.</p>
+                <p className="text-xs text-slate-400 mb-2">{tr("Hali xizmat qo'shilmagan.")}</p>
               ) : (
                 <ul className="space-y-1.5 mb-2">
                   {selected.testItems.map((item) => (
                     <li key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-                      <span className="text-ink">{item.service?.nameUz}</span>
+                      <span className="text-ink">{locName(item.service)}</span>
                       <button
                         onClick={() => removeTestItem(item.id)}
                         disabled={testItemBusy}
@@ -246,10 +247,10 @@ export default function AdminApplications() {
                   <Select
                     value={addServiceId}
                     onChange={setAddServiceId}
-                    placeholder="Xizmat tanlang"
+                    placeholder={tr('Xizmat tanlang')}
                     options={services
                       .filter((s) => !(selected.testItems || []).some((t) => t.serviceId === s.id))
-                      .map((s) => ({ value: s.id, label: s.nameUz }))}
+                      .map((s) => ({ value: s.id, label: locName(s) }))}
                   />
                 </div>
                 <button
@@ -263,7 +264,7 @@ export default function AdminApplications() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Holat</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Holat')}</label>
               <Select
                 value={statusDraft}
                 onChange={setStatusDraft}
@@ -272,7 +273,7 @@ export default function AdminApplications() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Izoh (ixtiyoriy)</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Izoh (ixtiyoriy)')}</label>
               <textarea
                 value={commentDraft}
                 onChange={(e) => setCommentDraft(e.target.value)}
@@ -281,13 +282,13 @@ export default function AdminApplications() {
               />
             </div>
             <button onClick={saveStatus} disabled={saving} className="btn-primary w-full">
-              {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
             </button>
             <button
               onClick={() => setConfirmDelete(selected.id)}
               className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-5 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
             >
-              <Trash2 className="h-4 w-4" /> Arizani o'chirish
+              <Trash2 className="h-4 w-4" /> {tr("Arizani o'chirish")}
             </button>
           </div>
         )}
@@ -297,7 +298,7 @@ export default function AdminApplications() {
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => removeApplication(confirmDelete)}
-        message="Ushbu arizani o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+        message={tr("Ushbu arizani o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.")}
       />
     </div>
   );

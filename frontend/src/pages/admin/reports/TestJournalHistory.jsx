@@ -11,8 +11,9 @@ import {
   formatMoney,
 } from './journalConstants';
 import { resolveColumns } from './journalColumns.jsx';
+import { tr } from '../../../i18n/tr.js';
 
-const ACTION_LABELS = { CREATE: "qo'shdi", UPDATE: "o'zgartirdi", DELETE: "o'chirdi" };
+const ACTION_LABELS = { CREATE: tr("qo'shdi"), UPDATE: tr("o'zgartirdi"), DELETE: tr("o'chirdi") };
 const DATE_FIELDS = ['actDate', 'sampleReceivedDate', 'protocolDate', 'contractDate'];
 
 const formatDateTime = (value) => {
@@ -41,10 +42,10 @@ function formatValue(field, value, dictionaries) {
     case 'directions':
       return value.map((d) => DIRECTION_SHORT[d] || d).join('+');
     case 'amount':
-      return `${formatMoney(value)} so'm`;
+      return tr("{0} so'm", formatMoney(value));
     default:
       if (DATE_FIELDS.includes(field)) return formatDate(value);
-      if (typeof value === 'boolean') return value ? 'ha' : "yo'q";
+      if (typeof value === 'boolean') return value ? 'ha' : tr("yo'q");
       if (Array.isArray(value)) return value.join('; ');
       return String(value);
   }
@@ -60,7 +61,7 @@ export default function TestJournalHistory({ recordId, dictionaries }) {
       .map((c) => [`customFields.${c.key}`, c.label()])
   );
   const fieldLabel = (field) =>
-    FIELD_LABELS[field] || customLabels[field] || (field.startsWith('customFields.') ? "O'chirilgan qo'shimcha ustun" : field);
+    FIELD_LABELS[field] || customLabels[field] || (field.startsWith('customFields.') ? tr("O'chirilgan qo'shimcha ustun") : field);
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
 
@@ -76,10 +77,10 @@ export default function TestJournalHistory({ recordId, dictionaries }) {
   return (
     <div className="mt-6 border-t border-border pt-4">
       <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
-        <History className="h-4 w-4 text-slate-400" /> O'zgarishlar tarixi
+        <History className="h-4 w-4 text-slate-400" /> {tr("O'zgarishlar tarixi")}
       </p>
       {error ? (
-        <p className="text-xs text-red-500">Tarixni yuklab bo'lmadi.</p>
+        <p className="text-xs text-red-500">{tr("Tarixni yuklab bo'lmadi.")}</p>
       ) : !data ? (
         <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
       ) : (
@@ -87,7 +88,7 @@ export default function TestJournalHistory({ recordId, dictionaries }) {
           {data.items.map((e) => (
             <li key={e.id}>
               <span className="text-slate-400">{formatDateTime(e.createdAt)}</span>{' '}
-              <span className="font-medium text-ink">{e.userName || "Noma'lum foydalanuvchi"}</span> {ACTION_LABELS[e.action]}
+              <span className="font-medium text-ink">{e.userName || tr("Noma'lum foydalanuvchi")}</span> {ACTION_LABELS[e.action]}
               {e.changes && (
                 <ul className="mt-0.5 pl-4 list-disc">
                   {Object.entries(e.changes).map(([field, { from, to }]) => (
@@ -102,10 +103,10 @@ export default function TestJournalHistory({ recordId, dictionaries }) {
           ))}
           {data.importedFromExcel && (
             <li>
-              <span className="text-slate-400">{formatDateTime(data.importedAt)}</span> Excel jurnalidan import qilingan
+              <span className="text-slate-400">{formatDateTime(data.importedAt)}</span> {tr('Excel jurnalidan import qilingan')}
             </li>
           )}
-          {!data.items.length && !data.importedFromExcel && <li>Tarix yo'q.</li>}
+          {!data.items.length && !data.importedFromExcel && <li>{tr("Tarix yo'q.")}</li>}
         </ul>
       )}
     </div>

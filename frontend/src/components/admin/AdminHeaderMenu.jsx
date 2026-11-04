@@ -6,21 +6,23 @@ import { alertFor, TYPE_TO_EVENT } from '../../utils/notifyPrefs';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { adminNotifications, getInboxSummary } from '../../services/adminApi';
 import { roleLabel } from '../../utils/roles';
+import { tr, trServer, dateLocale } from '../../i18n/tr.js';
+import LanguageSwitcher from './LanguageSwitcher.jsx';
 
 const INBOX_TARGET = { message: '/admin/murojaatlar', application: '/admin/arizalar' };
 const POLL_MS = 60000;
 
 function formatDateTime(d) {
-  return d.toLocaleString('uz-UZ', { dateStyle: 'medium', timeStyle: 'short' });
+  return d.toLocaleString(dateLocale(), { dateStyle: 'medium', timeStyle: 'short' });
 }
 
 const timeAgo = (value) => {
   const min = Math.round((Date.now() - new Date(value).getTime()) / 60000);
-  if (min < 1) return 'hozir';
-  if (min < 60) return `${min} daqiqa oldin`;
+  if (min < 1) return tr('hozir');
+  if (min < 60) return tr('{0} daqiqa oldin', min);
   const h = Math.round(min / 60);
-  if (h < 24) return `${h} soat oldin`;
-  return new Date(value).toLocaleDateString('uz-UZ');
+  if (h < 24) return tr('{0} soat oldin', h);
+  return new Date(value).toLocaleDateString(dateLocale());
 };
 
 export default function AdminHeaderMenu() {
@@ -49,7 +51,7 @@ export default function AdminHeaderMenu() {
       .then((data) => {
         const fresh = seen.current ? data.items.filter((n) => !n.readAt && !seen.current.has(n.id)) : [];
         seen.current = new Set(data.items.map((n) => n.id));
-        fresh.forEach((n) => alertFor(TYPE_TO_EVENT[n.type] || 'task_status', { title: 'SLM', body: n.title, tag: n.id, onClick: () => n.linkUrl && navigate(n.linkUrl) }));
+        fresh.forEach((n) => alertFor(TYPE_TO_EVENT[n.type] || 'task_status', { title: 'SLM', body: trServer(n.title), tag: n.id, onClick: () => n.linkUrl && navigate(n.linkUrl) }));
         setPersonal(data);
       })
       .catch(() => {});
@@ -91,6 +93,7 @@ export default function AdminHeaderMenu() {
   return (
     <div className="flex items-center gap-3">
       <span className="hidden md:inline text-xs text-slate-400">{formatDateTime(now)}</span>
+      <LanguageSwitcher />
 
       <div className="relative">
         <button
@@ -99,7 +102,7 @@ export default function AdminHeaderMenu() {
             setProfileOpen(false);
           }}
           className="relative p-2 rounded-lg text-slate-500 hover:bg-bg-light hover:text-primary transition-colors"
-          aria-label={`Bildirishnomalar${badge ? `: ${badge} ta o'qilmagan` : ''}`}
+          aria-label={tr('Bildirishnomalar{0}', badge ? tr(": {0} ta o'qilmagan", badge) : '')}
         >
           <Bell className="h-5 w-5" />
           {badge > 0 && (
@@ -114,15 +117,15 @@ export default function AdminHeaderMenu() {
             <div className="fixed inset-0 z-10" onClick={() => setNotifOpen(false)} />
             <div className="absolute right-0 mt-2 w-80 max-h-[70vh] overflow-y-auto rounded-lg border border-border bg-white shadow-card py-2 z-20">
               <div className="flex items-center justify-between px-4 py-1.5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bildirishnomalar</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{tr('Bildirishnomalar')}</p>
                 {personal.unreadCount > 0 && (
                   <button onClick={readAll} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                    <CheckCheck className="h-3.5 w-3.5" /> Hammasini o'qildi qilish
+                    <CheckCheck className="h-3.5 w-3.5" /> {tr("Hammasini o'qildi qilish")}
                   </button>
                 )}
               </div>
               {personal.items.length === 0 ? (
-                <p className="px-4 py-3 text-sm text-slate-400">Bildirishnoma yo'q.</p>
+                <p className="px-4 py-3 text-sm text-slate-400">{tr("Bildirishnoma yo'q.")}</p>
               ) : (
                 personal.items.map((n) => (
                   <button
@@ -130,7 +133,7 @@ export default function AdminHeaderMenu() {
                     onClick={() => openNotification(n)}
                     className={`block w-full text-left px-4 py-2 text-sm hover:bg-bg-light ${n.readAt ? 'text-slate-500' : 'text-ink font-medium bg-primary/5'}`}
                   >
-                    {n.title}
+                    {trServer(n.title)}
                     <span className="block text-xs font-normal text-slate-400">{timeAgo(n.createdAt)}</span>
                   </button>
                 ))
@@ -139,10 +142,10 @@ export default function AdminHeaderMenu() {
               {seesInbox && (
                 <>
                   <p className="mt-1 border-t border-border px-4 pt-2 pb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                    Murojaat va arizalar
+                    {tr('Murojaat va arizalar')}
                   </p>
                   {inbox.items.length === 0 ? (
-                    <p className="px-4 py-2 text-sm text-slate-400">Yangi murojaat yoki ariza yo'q.</p>
+                    <p className="px-4 py-2 text-sm text-slate-400">{tr("Yangi murojaat yoki ariza yo'q.")}</p>
                   ) : (
                     inbox.items.map((n) => (
                       <Link
@@ -176,9 +179,9 @@ export default function AdminHeaderMenu() {
 }
 
 const PROFILE_LINKS = [
-  { to: '/admin/mening-profilim?tab=umumiy', label: 'Mening profilim', icon: User },
-  { to: '/admin/mening-profilim?tab=xavfsizlik', label: 'Xavfsizlik', icon: ShieldCheck },
-  { to: '/admin/mening-profilim?tab=bildirishnomalar', label: 'Bildirishnoma sozlamalari', icon: BellRing },
+  { to: '/admin/mening-profilim?tab=umumiy', label: tr('Mening profilim'), icon: User },
+  { to: '/admin/mening-profilim?tab=xavfsizlik', label: tr('Xavfsizlik'), icon: ShieldCheck },
+  { to: '/admin/mening-profilim?tab=bildirishnomalar', label: tr('Bildirishnoma sozlamalari'), icon: BellRing },
 ];
 
 // Avatar menyusi: Esc va tashqariga bosish bilan yopiladi, strelkalar bilan boshqariladi.
@@ -282,7 +285,7 @@ function ProfileMenu({ user, logout, open, setOpen }) {
               }}
               className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 focus:bg-red-50 focus:outline-none"
             >
-              <LogOut className="h-4 w-4" /> Chiqish
+              <LogOut className="h-4 w-4" /> {tr('Chiqish')}
             </button>
           </div>
         </div>

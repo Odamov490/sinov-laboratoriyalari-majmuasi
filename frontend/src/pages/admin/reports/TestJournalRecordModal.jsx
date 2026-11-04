@@ -5,6 +5,7 @@ import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalHistory from './TestJournalHistory.jsx';
 import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
+import { tr } from '../../../i18n/tr.js';
 
 const EMPTY = {
   journalYear: new Date().getFullYear(),
@@ -169,7 +170,7 @@ export default function TestJournalRecordModal({
 
   const save = async () => {
     if (!form.productTypeId) {
-      showToast('Mahsulot turini tanlang.', 'error');
+      showToast(tr('Mahsulot turini tanlang.'), 'error');
       return;
     }
     setSaving(true);
@@ -177,10 +178,10 @@ export default function TestJournalRecordModal({
       const payload = toPayload(form, showFinance, customColumns);
       if (record) await adminTestJournal.update(record.id, payload);
       else await adminTestJournal.create(payload);
-      showToast(record ? 'Yangilandi.' : "Qo'shildi.", 'success');
+      showToast(record ? tr('Yangilandi.') : tr("Qo'shildi."), 'success');
       onSaved();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Saqlashda xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Saqlashda xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -189,10 +190,10 @@ export default function TestJournalRecordModal({
   const remove = async () => {
     try {
       await adminTestJournal.remove(record.id);
-      showToast("O'chirildi.", 'success');
+      showToast(tr("O'chirildi."), 'success');
       onSaved();
     } catch {
-      showToast("O'chirishda xatolik.", 'error');
+      showToast(tr("O'chirishda xatolik."), 'error');
     }
   };
 
@@ -227,14 +228,14 @@ export default function TestJournalRecordModal({
       <Modal
         open={open}
         onClose={onClose}
-        title={record ? `Yozuvni tahrirlash${record.actNo ? ` — ${record.actNo}` : ''}` : copyFrom ? 'Yangi yozuv (nusxa)' : 'Yangi yozuv'}
+        title={record ? tr('Yozuvni tahrirlash{0}', record.actNo ? ` — ${record.actNo}` : '') : copyFrom ? tr('Yangi yozuv (nusxa)') : tr('Yangi yozuv')}
         size="xl"
       >
         {record?.needsReview && (
           <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
             <div>
-              <p className="font-semibold">Tekshirish kerak</p>
+              <p className="font-semibold">{tr('Tekshirish kerak')}</p>
               <ul className="list-disc pl-4">
                 {(record.reviewReasons || []).map((r) => (
                   <li key={r}>{r}</li>
@@ -245,20 +246,20 @@ export default function TestJournalRecordModal({
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Mahsulot turi *">{select('productTypeId', toOptions(dictionaries.productTypes, 'nameUz'), 'Tanlang')}</Field>
-          <Field label="Buyurtmachi">{select('certificationBodyId', toOptions(dictionaries.bodies, 'name'))}</Field>
-          <Field label="Akt ID">{input('actNo')}</Field>
-          <Field label="Akt sanasi">{input('actDate', 'date')}</Field>
-          <Field label="Ijrochi">{input('executorName', 'text', { list: 'journal-executors', autoComplete: 'off' })}</Field>
-          <Field label="Jurnal yili">{input('journalYear', 'number', { min: 2000, max: 2100 })}</Field>
-          <Field label="Namuna kelgan sana">{input('sampleReceivedDate', 'date')}</Field>
-          <Field label="Namuna kelgan vaqt">{input('sampleReceivedTime', 'text', { placeholder: 'masalan 14:30' })}</Field>
-          <Field label="Namunalar soni">{input('sampleCount', 'number', { min: 0 })}</Field>
-          <Field label="Shundan bekor qilingan">{input('cancelledSampleCount', 'number', { min: 0 })}</Field>
-          <Field label="Bayonnoma sanasi">{input('protocolDate', 'date')}</Field>
-          <Field label="Og'irlik (kir yuvish mashinasi)">{input('weightNote', 'text', { placeholder: 'masalan 7, 8 kg' })}</Field>
+          <Field label={tr('Mahsulot turi *')}>{select('productTypeId', toOptions(dictionaries.productTypes, 'nameUz'), tr('Tanlang'))}</Field>
+          <Field label={tr('Buyurtmachi')}>{select('certificationBodyId', toOptions(dictionaries.bodies, 'name'))}</Field>
+          <Field label={tr('Akt ID')}>{input('actNo')}</Field>
+          <Field label={tr('Akt sanasi')}>{input('actDate', 'date')}</Field>
+          <Field label={tr('Ijrochi')}>{input('executorName', 'text', { list: 'journal-executors', autoComplete: 'off' })}</Field>
+          <Field label={tr('Jurnal yili')}>{input('journalYear', 'number', { min: 2000, max: 2100 })}</Field>
+          <Field label={tr('Namuna kelgan sana')}>{input('sampleReceivedDate', 'date')}</Field>
+          <Field label={tr('Namuna kelgan vaqt')}>{input('sampleReceivedTime', 'text', { placeholder: 'masalan 14:30' })}</Field>
+          <Field label={tr('Namunalar soni')}>{input('sampleCount', 'number', { min: 0 })}</Field>
+          <Field label={tr('Shundan bekor qilingan')}>{input('cancelledSampleCount', 'number', { min: 0 })}</Field>
+          <Field label={tr('Bayonnoma sanasi')}>{input('protocolDate', 'date')}</Field>
+          <Field label={tr("Og'irlik (kir yuvish mashinasi)")}>{input('weightNote', 'text', { placeholder: tr('masalan 7, 8 kg') })}</Field>
 
-          <Field label="Yo'nalishlar" full>
+          <Field label={tr("Yo'nalishlar")} full>
             <div className="flex flex-wrap gap-3">
               {DIRECTIONS.map((d) => (
                 <label key={d.value} className="flex items-center gap-2 text-sm text-ink cursor-pointer">
@@ -274,23 +275,23 @@ export default function TestJournalRecordModal({
             </div>
           </Field>
 
-          <Field label="Natija">
+          <Field label={tr('Natija')}>
             {select(
               'result',
               Object.entries(RESULT_LABELS).map(([value, label]) => ({ value, label })),
-              'Tanlang'
+              tr('Tanlang')
             )}
           </Field>
-          <Field label="Mos emas namunalar soni">{input('nonconformingCount', 'number', { min: 0 })}</Field>
-          <Field label="Bekor qilgan tomon">
+          <Field label={tr('Mos emas namunalar soni')}>{input('nonconformingCount', 'number', { min: 0 })}</Field>
+          <Field label={tr('Bekor qilgan tomon')}>
             {select(
               'cancelledBy',
               Object.entries(CANCELLED_BY_LABELS).map(([value, label]) => ({ value, label }))
             )}
           </Field>
-          <Field label="Marka">{input('brand', 'text', { list: 'journal-brands', autoComplete: 'off' })}</Field>
-          <Field label="Joy">{select('locationId', toOptions(dictionaries.locations, 'nameUz'))}</Field>
-          <Field label="Takroriy sinov">
+          <Field label={tr('Marka')}>{input('brand', 'text', { list: 'journal-brands', autoComplete: 'off' })}</Field>
+          <Field label={tr('Joy')}>{select('locationId', toOptions(dictionaries.locations, 'nameUz'))}</Field>
+          <Field label={tr('Takroriy sinov')}>
             <label className="flex items-center gap-2 text-sm text-ink cursor-pointer h-10">
               <input
                 type="checkbox"
@@ -298,15 +299,15 @@ export default function TestJournalRecordModal({
                 onChange={(e) => set('isRepeat', e.target.checked)}
                 className="h-4 w-4 rounded border-border text-primary"
               />
-              Ha, takroriy (povtor)
+              {tr('Ha, takroriy (povtor)')}
             </label>
           </Field>
 
           {showFinance && (
             <>
-              <Field label="Shartnoma raqami">{input('contractNo')}</Field>
-              <Field label="Shartnoma sanasi">{input('contractDate', 'date')}</Field>
-              <Field label="Summa (so'm)">
+              <Field label={tr('Shartnoma raqami')}>{input('contractNo')}</Field>
+              <Field label={tr('Shartnoma sanasi')}>{input('contractDate', 'date')}</Field>
+              <Field label={tr("Summa (so'm)")}>
                 <input
                   type="number"
                   min={0}
@@ -320,10 +321,10 @@ export default function TestJournalRecordModal({
                 />
                 <p className="mt-1 text-xs text-slate-500">
                   {unitPrice === null ? (
-                    "Bu mahsulot/sinov turi uchun narx spravochnikda yo'q — summani qo'lda kiriting."
+                    tr("Bu mahsulot/sinov turi uchun narx spravochnikda yo'q — summani qo'lda kiriting.")
                   ) : (
                     <>
-                      Narx: {formatMoney(unitPrice)} × {sampleCount} = {formatMoney(suggestedAmount ?? 0)}
+                      {tr('Narx:')} {formatMoney(unitPrice)} × {sampleCount} = {formatMoney(suggestedAmount ?? 0)}
                       {suggestedAmount !== null && Number(form.amount) !== suggestedAmount && (
                         <button
                           type="button"
@@ -333,18 +334,18 @@ export default function TestJournalRecordModal({
                           }}
                           className="ml-2 text-primary hover:underline"
                         >
-                          Qo'llash
+                          {tr("Qo'llash")}
                         </button>
                       )}
                     </>
                   )}
                 </p>
               </Field>
-              <Field label="To'lov">
+              <Field label={tr("To'lov")}>
                 {select(
                   'paymentStatus',
                   Object.entries(PAYMENT_LABELS).map(([value, label]) => ({ value, label })),
-                  'Kuzatilmagan'
+                  tr('Kuzatilmagan')
                 )}
               </Field>
             </>
@@ -352,7 +353,7 @@ export default function TestJournalRecordModal({
 
           {customColumns.length > 0 && (
             <>
-              <p className="sm:col-span-2 mt-2 border-t border-border pt-3 text-sm font-semibold text-ink">Qo'shimcha ustunlar</p>
+              <p className="sm:col-span-2 mt-2 border-t border-border pt-3 text-sm font-semibold text-ink">{tr("Qo'shimcha ustunlar")}</p>
               {customColumns.map((c) => (
                 <Field key={c.key} label={c.label()}>
                   <input
@@ -366,10 +367,10 @@ export default function TestJournalRecordModal({
             </>
           )}
 
-          <Field label="Izohlar (har biri yangi qatorda)" full>
+          <Field label={tr('Izohlar (har biri yangi qatorda)')} full>
             <textarea rows={3} className="input-field resize-none" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
           </Field>
-          <Field label="Tekshiruv" full>
+          <Field label={tr('Tekshiruv')} full>
             <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
               <input
                 type="checkbox"
@@ -377,7 +378,7 @@ export default function TestJournalRecordModal({
                 onChange={(e) => set('needsReview', e.target.checked)}
                 className="h-4 w-4 rounded border-border text-primary"
               />
-              Tekshirish kerak (belgini olib tashlasangiz, sabablar ham tozalanadi)
+              {tr('Tekshirish kerak (belgini olib tashlasangiz, sabablar ham tozalanadi)')}
             </label>
           </Field>
         </div>
@@ -388,25 +389,25 @@ export default function TestJournalRecordModal({
           <div className="flex flex-wrap items-center gap-4">
             {record && (
               <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 text-sm text-red-600 hover:underline">
-                <Trash2 className="h-4 w-4" /> O'chirish
+                <Trash2 className="h-4 w-4" /> {tr("O'chirish")}
               </button>
             )}
             {record && onCopy && (
               <button
                 onClick={() => onCopy(record)}
                 className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                title="Shu akt bo'yicha yangi qator ochish (masalan, shovqin sinovi uchun)"
+                title={tr("Shu akt bo'yicha yangi qator ochish (masalan, shovqin sinovi uchun)")}
               >
-                <Copy className="h-4 w-4" /> Nusxa olib yangi yozuv
+                <Copy className="h-4 w-4" /> {tr('Nusxa olib yangi yozuv')}
               </button>
             )}
           </div>
           <div className="flex gap-3">
             <button onClick={onClose} className="btn-secondary">
-              Bekor qilish
+              {tr('Bekor qilish')}
             </button>
             <button onClick={save} disabled={saving} className="btn-primary">
-              {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+              {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
             </button>
           </div>
         </div>
@@ -416,7 +417,7 @@ export default function TestJournalRecordModal({
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         onConfirm={remove}
-        message="Ushbu jurnal yozuvini o'chirmoqchimisiz?"
+        message={tr("Ushbu jurnal yozuvini o'chirmoqchimisiz?")}
       />
     </>
   );

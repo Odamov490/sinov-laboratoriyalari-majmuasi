@@ -5,6 +5,7 @@ import { passwordProblem } from '../../../components/admin/ChangePasswordForm.js
 import { Loading, EmptyState } from '../../../components/StateViews.jsx';
 import { Modal } from '../../../components/Modal.jsx';
 import { apiErr, fmtDateTime } from './ProfileGeneral.jsx';
+import { tr, trServer } from '../../../i18n/tr.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -20,10 +21,10 @@ function strength(p) {
 }
 const STRENGTH = [
   ['', 'bg-slate-200'],
-  ['Zaif', 'bg-red-500'],
-  ["O'rtacha", 'bg-amber-500'],
-  ['Yaxshi', 'bg-sky-500'],
-  ['Kuchli', 'bg-emerald-500'],
+  [tr('Zaif'), 'bg-red-500'],
+  [tr("O'rtacha"), 'bg-amber-500'],
+  [tr('Yaxshi'), 'bg-sky-500'],
+  [tr('Kuchli'), 'bg-emerald-500'],
 ];
 
 function PasswordInput({ value, onChange, show, label, autoComplete }) {
@@ -43,7 +44,7 @@ function PasswordCard({ profile, onChange, toast, onSessionsChanged }) {
   const [signOutOthers, setSignOutOthers] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const problem = next ? passwordProblem(next) || (next === current ? 'Yangi parol joriy paroldan farq qilishi kerak.' : null) : null;
+  const problem = next ? passwordProblem(next) || (next === current ? tr('Yangi parol joriy paroldan farq qilishi kerak.') : null) : null;
   const mismatch = confirm && next !== confirm;
   const score = strength(next);
   const stale = !profile.passwordChangedAt || Date.now() - new Date(profile.passwordChangedAt).getTime() > 180 * DAY;
@@ -57,7 +58,7 @@ function PasswordCard({ profile, onChange, toast, onSessionsChanged }) {
       setCurrent('');
       setNext('');
       setConfirm('');
-      toast(r.signedOutOthers ? `Parol almashtirildi. ${r.signedOutOthers} ta boshqa qurilmadan chiqarildi.` : 'Parol almashtirildi.', 'success');
+      toast(r.signedOutOthers ? tr('Parol almashtirildi. {0} ta boshqa qurilmadan chiqarildi.', r.signedOutOthers) : tr('Parol almashtirildi.'), 'success');
       onChange();
       onSessionsChanged();
     } catch (err) {
@@ -71,18 +72,18 @@ function PasswordCard({ profile, onChange, toast, onSessionsChanged }) {
     <form onSubmit={submit} className="card space-y-4 p-6">
       <div className="flex items-center justify-between gap-2">
         <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <KeyRound className="h-4 w-4 text-primary" /> Parolni almashtirish
+          <KeyRound className="h-4 w-4 text-primary" /> {tr('Parolni almashtirish')}
         </p>
-        <span className="text-xs text-slate-400">Oxirgi marta: {profile.passwordChangedAt ? fmtDateTime(profile.passwordChangedAt) : "ma'lum emas"}</span>
+        <span className="text-xs text-slate-400">{tr('Oxirgi marta:')} {profile.passwordChangedAt ? fmtDateTime(profile.passwordChangedAt) : tr("ma'lum emas")}</span>
       </div>
       {stale && (
         <p className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-800">
-          <Info className="h-4 w-4 shrink-0" /> Parolingiz 180 kundan beri almashtirilmagan. Xavfsizlik uchun yangilab qo'yishni tavsiya qilamiz.
+          <Info className="h-4 w-4 shrink-0" /> {tr("Parolingiz 180 kundan beri almashtirilmagan. Xavfsizlik uchun yangilab qo'yishni tavsiya qilamiz.")}
         </p>
       )}
-      <PasswordInput label="Joriy parol" value={current} onChange={setCurrent} show={show} autoComplete="current-password" />
+      <PasswordInput label={tr('Joriy parol')} value={current} onChange={setCurrent} show={show} autoComplete="current-password" />
       <div>
-        <PasswordInput label="Yangi parol" value={next} onChange={setNext} show={show} autoComplete="new-password" />
+        <PasswordInput label={tr('Yangi parol')} value={next} onChange={setNext} show={show} autoComplete="new-password" />
         {next && (
           <div className="mt-2 flex items-center gap-2">
             <div className="flex flex-1 gap-1">
@@ -93,23 +94,23 @@ function PasswordCard({ profile, onChange, toast, onSessionsChanged }) {
             <span className="w-16 text-right text-xs text-slate-500">{STRENGTH[score][0]}</span>
           </div>
         )}
-        <p className={`mt-1 text-xs ${problem ? 'text-red-600' : 'text-slate-400'}`}>{problem || "Kamida 10 belgi, harf va raqam bo'lishi kerak."}</p>
+        <p className={`mt-1 text-xs ${problem ? 'text-red-600' : 'text-slate-400'}`}>{problem || tr("Kamida 10 belgi, harf va raqam bo'lishi kerak.")}</p>
       </div>
       <div>
-        <PasswordInput label="Yangi parolni tasdiqlash" value={confirm} onChange={setConfirm} show={show} autoComplete="new-password" />
-        {mismatch && <p className="mt-1 text-xs text-red-600">Parollar bir xil emas.</p>}
+        <PasswordInput label={tr('Yangi parolni tasdiqlash')} value={confirm} onChange={setConfirm} show={show} autoComplete="new-password" />
+        {mismatch && <p className="mt-1 text-xs text-red-600">{tr('Parollar bir xil emas.')}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
         <button type="button" onClick={() => setShow((v) => !v)} className="inline-flex items-center gap-1.5 text-slate-600 hover:text-primary">
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />} {show ? 'Yashirish' : "Ko'rsatish"}
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />} {show ? tr('Yashirish') : tr("Ko'rsatish")}
         </button>
         <label className="inline-flex items-center gap-2 text-slate-600">
           <input type="checkbox" checked={signOutOthers} onChange={(e) => setSignOutOthers(e.target.checked)} className="h-4 w-4" />
-          Boshqa qurilmalardan chiqarish
+          {tr('Boshqa qurilmalardan chiqarish')}
         </label>
       </div>
       <button type="submit" disabled={saving || Boolean(problem) || mismatch || !current || !next} className="btn-primary !py-2">
-        {saving ? 'Saqlanmoqda…' : 'Parolni almashtirish'}
+        {saving ? tr('Saqlanmoqda…') : tr('Parolni almashtirish')}
       </button>
     </form>
   );
@@ -137,7 +138,7 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
   const revoke = async (s) => {
     try {
       await adminProfile.revokeSession(s.id);
-      toast(`${s.device} — qurilmadan chiqarildi.`, 'success');
+      toast(tr('{0} — qurilmadan chiqarildi.', trServer(s.device)), 'success');
       loadSessions();
     } catch (err) {
       toast(apiErr(err), 'error');
@@ -146,7 +147,7 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
   const revokeOthers = async () => {
     try {
       const r = await adminProfile.revokeOthers();
-      toast(`${r.revoked} ta qurilmadan chiqarildi.`, 'success');
+      toast(tr('{0} ta qurilmadan chiqarildi.', r.revoked), 'success');
       loadSessions();
     } catch (err) {
       toast(apiErr(err), 'error');
@@ -162,27 +163,27 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
       <div className="card p-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <Laptop className="h-4 w-4 text-primary" /> Faol qurilmalar
+            <Laptop className="h-4 w-4 text-primary" /> {tr('Faol qurilmalar')}
           </p>
           {others.length > 0 && (
             <button type="button" onClick={() => setConfirm({ all: true })} className="inline-flex items-center gap-1.5 text-sm font-medium text-red-600 hover:underline">
-              <LogOut className="h-4 w-4" /> Boshqa hammasidan chiqish
+              <LogOut className="h-4 w-4" /> {tr('Boshqa hammasidan chiqish')}
             </button>
           )}
         </div>
         {!sessions ? (
           <Loading />
         ) : sessions.items.length === 0 ? (
-          <EmptyState message="Faol qurilma yo'q." />
+          <EmptyState message={tr("Faol qurilma yo'q.")} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px] text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="py-2 pr-3">Qurilma</th>
+                  <th className="py-2 pr-3">{tr('Qurilma')}</th>
                   <th className="py-2 pr-3">IP</th>
-                  <th className="py-2 pr-3">Kirgan</th>
-                  <th className="py-2 pr-3">Oxirgi faollik</th>
+                  <th className="py-2 pr-3">{tr('Kirgan')}</th>
+                  <th className="py-2 pr-3">{tr('Oxirgi faollik')}</th>
                   <th className="py-2" />
                 </tr>
               </thead>
@@ -190,8 +191,8 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
                 {sessions.items.map((s) => (
                   <tr key={s.id}>
                     <td className="py-2.5 pr-3 font-medium text-ink">
-                      {s.device}
-                      {s.current && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">shu qurilma</span>}
+                      {trServer(s.device)}
+                      {s.current && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">{tr('shu qurilma')}</span>}
                     </td>
                     <td className="py-2.5 pr-3 font-mono text-xs text-slate-500">{s.ip || '—'}</td>
                     <td className="py-2.5 pr-3 text-slate-500">{fmtDateTime(s.createdAt)}</td>
@@ -199,7 +200,7 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
                     <td className="py-2.5 text-right">
                       {!s.current && (
                         <button type="button" onClick={() => setConfirm(s)} className="text-sm font-medium text-red-600 hover:underline">
-                          Chiqarish
+                          {tr('Chiqarish')}
                         </button>
                       )}
                     </td>
@@ -210,26 +211,26 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
           </div>
         )}
         <p className="mt-3 flex items-start gap-2 text-xs text-slate-500">
-          <Info className="h-4 w-4 shrink-0" /> Chiqarilgan qurilma keyingi yangilanishda tizimdan chiqadi; ochiq sahifa ko'pi bilan {sessions?.accessTokenMinutes || 15} daqiqa ishlashda davom etishi mumkin.
+          <Info className="h-4 w-4 shrink-0" /> {tr("Chiqarilgan qurilma keyingi yangilanishda tizimdan chiqadi; ochiq sahifa ko'pi bilan")} {sessions?.accessTokenMinutes || 15} {tr('daqiqa ishlashda davom etishi mumkin.')}
         </p>
       </div>
 
       <div className="card p-6">
-        <p className="mb-3 text-sm font-semibold text-ink">Oxirgi kirishlar</p>
+        <p className="mb-3 text-sm font-semibold text-ink">{tr('Oxirgi kirishlar')}</p>
         {logins?.failedLast30Days > 0 && (
           <p className="mb-3 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            <ShieldAlert className="h-4 w-4 shrink-0" /> Oxirgi 30 kunda {logins.failedLast30Days} ta muvaffaqiyatsiz urinish bo'lgan. Bu siz bo'lmasangiz, parolni almashtiring.
+            <ShieldAlert className="h-4 w-4 shrink-0" /> {tr('Oxirgi 30 kunda')} {logins.failedLast30Days} {tr("ta muvaffaqiyatsiz urinish bo'lgan. Bu siz bo'lmasangiz, parolni almashtiring.")}
           </p>
         )}
         {!logins ? (
           <Loading />
         ) : logins.items.length === 0 ? (
-          <EmptyState message="Kirishlar tarixi hali yo'q." />
+          <EmptyState message={tr("Kirishlar tarixi hali yo'q.")} />
         ) : (
           <ul className="divide-y divide-border text-sm">
             {logins.items.map((l) => (
               <li key={l.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span className="text-ink">{l.device}</span>
+                <span className="text-ink">{trServer(l.device)}</span>
                 <span className="text-slate-500">
                   <span className="mr-3 font-mono text-xs">{l.ip || '—'}</span>
                   {fmtDateTime(l.at)}
@@ -240,13 +241,13 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
         )}
       </div>
 
-      <Modal open={Boolean(confirm)} onClose={() => setConfirm(null)} title="Qurilmadan chiqarish" size="sm">
+      <Modal open={Boolean(confirm)} onClose={() => setConfirm(null)} title={tr('Qurilmadan chiqarish')} size="sm">
         <p className="text-sm text-slate-600">
-          {confirm?.all ? 'Shu qurilmadan tashqari barcha qurilmalardan chiqarilasiz.' : `${confirm?.device || ''} qurilmasidan chiqarilasiz.`}
+          {confirm?.all ? tr('Shu qurilmadan tashqari barcha qurilmalardan chiqarilasiz.') : tr('{0} qurilmasidan chiqarilasiz.', trServer(confirm?.device || ''))}
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={() => setConfirm(null)} className="btn-secondary !py-2">
-            Bekor qilish
+            {tr('Bekor qilish')}
           </button>
           <button
             type="button"
@@ -258,7 +259,7 @@ export default function ProfileSecurity({ profile, onChange, toast }) {
             }}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700"
           >
-            <LogOut className="h-4 w-4" /> Chiqarish
+            <LogOut className="h-4 w-4" /> {tr('Chiqarish')}
           </button>
         </div>
       </Modal>

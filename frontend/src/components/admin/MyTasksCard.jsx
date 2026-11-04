@@ -4,6 +4,7 @@ import { ListChecks, AlertTriangle, CalendarDays, ArrowRight } from 'lucide-reac
 import { adminTasks } from '../../services/adminApi';
 import { Loading } from '../StateViews.jsx';
 import { PRIORITY_BY, STATUS_BY, formatDue } from '../../utils/tasks';
+import { tr } from '../../i18n/tr.js';
 
 // Dashboard: eng yaqin muddatli 5 ta ochiq vazifa va muddati o'tganlar soni.
 export default function MyTasksCard() {
@@ -28,22 +29,22 @@ export default function MyTasksCard() {
     <div className="card p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <ListChecks className="h-4 w-4 text-primary" /> Mening vazifalarim
-          {data && <span className="rounded-full bg-bg-light px-2 py-0.5 text-xs text-slate-500">{data.openCount} ta ochiq</span>}
+          <ListChecks className="h-4 w-4 text-primary" /> {tr('Mening vazifalarim')}
+          {data && <span className="rounded-full bg-bg-light px-2 py-0.5 text-xs text-slate-500">{data.openCount} {tr('ta ochiq')}</span>}
         </p>
         {data?.overdueCount > 0 && (
           <Link to="/admin/vazifalar" className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
-            <AlertTriangle className="h-3.5 w-3.5" /> Muddati o'tgan: {data.overdueCount}
+            <AlertTriangle className="h-3.5 w-3.5" /> {tr("Muddati o'tgan:")} {data.overdueCount}
           </Link>
         )}
       </div>
 
       {failed ? (
-        <p className="text-sm text-slate-400">Vazifalarni yuklab bo'lmadi.</p>
+        <p className="text-sm text-slate-400">{tr("Vazifalarni yuklab bo'lmadi.")}</p>
       ) : !data ? (
         <Loading />
       ) : data.upcoming.length === 0 ? (
-        <p className="text-sm text-slate-400">Ochiq vazifangiz yo'q.</p>
+        <p className="text-sm text-slate-400">{tr("Ochiq vazifangiz yo'q.")}</p>
       ) : (
         <ul className="divide-y divide-border">
           {data.upcoming.map((t) => (
@@ -64,7 +65,7 @@ export default function MyTasksCard() {
       )}
 
       <Link to="/admin/vazifalar" className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-        Barcha vazifalar <ArrowRight className="h-4 w-4" />
+        {tr('Barcha vazifalar')} <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
   );

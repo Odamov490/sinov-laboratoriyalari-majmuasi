@@ -9,12 +9,13 @@ import TaskModal from '../../components/admin/TaskModal.jsx';
 import { adminTasks } from '../../services/adminApi';
 import { getLaboratories } from '../../services/publicApi';
 import { TASK_STATUSES, TASK_PRIORITIES, PRIORITY_BY, formatDue, notifyTasksChanged, apiError } from '../../utils/tasks';
+import { tr, locName } from '../../i18n/tr.js';
 
 const VIEW_KEY = 'admin.tasks.view';
 const DUE_OPTIONS = [
-  { value: 'today', label: 'Bugun' },
-  { value: 'week', label: 'Shu hafta' },
-  { value: 'overdue', label: "Muddati o'tgan" },
+  { value: 'today', label: tr('Bugun') },
+  { value: 'week', label: tr('Shu hafta') },
+  { value: 'overdue', label: tr("Muddati o'tgan") },
 ];
 
 const readView = () => {
@@ -57,7 +58,7 @@ function StatusSelect({ task, onChange, className = '' }) {
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => onChange(task, e.target.value)}
       className={`rounded-md border border-border bg-white px-1.5 py-1 text-xs text-ink disabled:opacity-60 ${className}`}
-      aria-label="Holat"
+      aria-label={tr('Holat')}
     >
       {TASK_STATUSES.map((s) => (
         <option key={s.value} value={s.value}>
@@ -167,12 +168,12 @@ function TaskTable({ tasks, onOpen, onStatus, showLab }) {
       <table className="w-full text-sm">
         <thead className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
           <tr>
-            <th className="px-4 py-3">Vazifa</th>
-            <th className="px-4 py-3">Holat</th>
-            <th className="px-4 py-3">Muhimlik</th>
-            <th className="px-4 py-3">Muddat</th>
-            <th className="px-4 py-3">Ijrochilar</th>
-            {showLab && <th className="px-4 py-3">Laboratoriya</th>}
+            <th className="px-4 py-3">{tr('Vazifa')}</th>
+            <th className="px-4 py-3">{tr('Holat')}</th>
+            <th className="px-4 py-3">{tr('Muhimlik')}</th>
+            <th className="px-4 py-3">{tr('Muddat')}</th>
+            <th className="px-4 py-3">{tr('Ijrochilar')}</th>
+            {showLab && <th className="px-4 py-3">{tr('Laboratoriya')}</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -192,7 +193,7 @@ function TaskTable({ tasks, onOpen, onStatus, showLab }) {
                 <DueLabel task={t} />
               </td>
               <td className="px-4 py-3 text-slate-600">{t.assignees.map((a) => a.fullName).join(', ') || '—'}</td>
-              {showLab && <td className="px-4 py-3 text-slate-600">{t.laboratory?.nameUz || '—'}</td>}
+              {showLab && <td className="px-4 py-3 text-slate-600">{locName(t.laboratory) || '—'}</td>}
             </tr>
           ))}
         </tbody>
@@ -325,26 +326,26 @@ export default function AdminTasks() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-ink">Vazifalar</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr('Vazifalar')}</h1>
         <div className="flex items-center gap-2">
           <div className="inline-flex rounded-lg border border-border bg-white p-0.5">
             <button onClick={() => setView('kanban')} className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm ${view === 'kanban' ? 'bg-primary text-white' : 'text-slate-600'}`}>
               <LayoutGrid className="h-4 w-4" /> Kanban
             </button>
             <button onClick={() => setView('list')} className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm ${view === 'list' ? 'bg-primary text-white' : 'text-slate-600'}`}>
-              <List className="h-4 w-4" /> Ro'yxat
+              <List className="h-4 w-4" /> {tr("Ro'yxat")}
             </button>
           </div>
           <button onClick={() => openTask(null)} className="btn-primary">
-            <Plus className="h-4 w-4" /> Yangi vazifa
+            <Plus className="h-4 w-4" /> {tr('Yangi vazifa')}
           </button>
         </div>
       </div>
 
       <div className="flex gap-1 border-b border-border">
         {[
-          { key: 'mine', label: 'Mening vazifalarim' },
-          ...(seesAll ? [{ key: 'all', label: 'Barchasi' }] : []),
+          { key: 'mine', label: tr('Mening vazifalarim') },
+          ...(seesAll ? [{ key: 'all', label: tr('Barchasi') }] : []),
         ].map((t) => (
           <button
             key={t.key}
@@ -362,34 +363,34 @@ export default function AdminTasks() {
           value={quick}
           onChange={(e) => setQuick(e.target.value)}
           className="w-full bg-transparent text-sm outline-none"
-          placeholder="Tezkor vazifa qo'shish — sarlavhani yozib Enter bosing"
+          placeholder={tr("Tezkor vazifa qo'shish — sarlavhani yozib Enter bosing")}
           maxLength={300}
         />
       </form>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <SearchBar value={q} onChange={setQ} placeholder="Vazifalardan qidirish..." />
+          <SearchBar value={q} onChange={setQ} placeholder={tr('Vazifalardan qidirish...')} />
         </div>
-        <Select value={priority} onChange={setPriority} options={TASK_PRIORITIES} placeholder="Barcha muhimlik" />
-        <Select value={due} onChange={setDue} options={DUE_OPTIONS} placeholder="Barcha muddatlar" />
+        <Select value={priority} onChange={setPriority} options={TASK_PRIORITIES} placeholder={tr('Barcha muhimlik')} />
+        <Select value={due} onChange={setDue} options={DUE_OPTIONS} placeholder={tr('Barcha muddatlar')} />
         <Select
           value={assigneeId}
           onChange={setAssigneeId}
           options={users.map((u) => ({ value: u.id, label: u.fullName }))}
-          placeholder="Barcha ijrochilar"
+          placeholder={tr('Barcha ijrochilar')}
         />
         {seesAll && tab === 'all' && (
-          <Select value={laboratoryId} onChange={setLaboratoryId} options={labs.map((l) => ({ value: l.id, label: l.nameUz }))} placeholder="Barcha laboratoriyalar" />
+          <Select value={laboratoryId} onChange={setLaboratoryId} options={labs.map((l) => ({ value: l.id, label: locName(l) }))} placeholder={tr('Barcha laboratoriyalar')} />
         )}
       </div>
 
       {loading ? (
         <Loading />
       ) : error ? (
-        <ErrorState message={error} onRetry={load} retryLabel="Qayta urinish" />
+        <ErrorState message={error} onRetry={load} retryLabel={tr('Qayta urinish')} />
       ) : tasks.length === 0 ? (
-        <EmptyState message={filtered ? 'Filtrga mos vazifa topilmadi.' : "Hozircha vazifa yo'q. Yuqoridan tezkor qo'shing."} />
+        <EmptyState message={filtered ? tr('Filtrga mos vazifa topilmadi.') : tr("Hozircha vazifa yo'q. Yuqoridan tezkor qo'shing.")} />
       ) : view === 'kanban' ? (
         <Kanban tasks={tasks} onOpen={openTask} onStatus={changeStatus} />
       ) : (

@@ -5,6 +5,7 @@ import { adminSamples, adminResource } from '../../services/adminApi';
 import { useToast } from '../../context/ToastContext.jsx';
 import SampleStatusBadge from '../../components/samples/SampleStatusBadge.jsx';
 import SampleActionPanel from '../../components/samples/SampleActionPanel.jsx';
+import { tr, locName } from '../../i18n/tr.js';
 
 export default function AdminScanner() {
   const { showToast } = useToast();
@@ -62,7 +63,7 @@ export default function AdminScanner() {
       setSample(found);
       setManualCode('');
     } catch {
-      showToast('Namuna topilmadi. Kodni qayta tekshiring.', 'error');
+      showToast(tr('Namuna topilmadi. Kodni qayta tekshiring.'), 'error');
     } finally {
       setLookupBusy(false);
     }
@@ -77,10 +78,10 @@ export default function AdminScanner() {
     setBusy(true);
     try {
       const updated = await adminSamples.action(sample.id, { action, toLabId, notes });
-      showToast('Amal bajarildi.', 'success');
+      showToast(tr('Amal bajarildi.'), 'success');
       setSample(updated);
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setBusy(false);
     }
@@ -88,16 +89,15 @@ export default function AdminScanner() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-ink mb-2">Namunani skanerlash / qidirish</h1>
+      <h1 className="text-2xl font-bold text-ink mb-2">{tr('Namunani skanerlash / qidirish')}</h1>
       <p className="text-sm text-slate-500 mb-6">
-        Namuna kodini (masalan <span className="font-mono">SMP-2026-00001</span>) qo'lda kiriting, yoki
-        kamera orqali QR kodni skanerlang.
+        {tr('Namuna kodini (masalan')} <span className="font-mono">SMP-2026-00001</span>{tr(") qo'lda kiriting, yoki kamera orqali QR kodni skanerlang.")}
       </p>
 
       {!sample ? (
         <div className="card p-6 max-w-md space-y-5">
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Namuna kodi</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Namuna kodi')}</label>
             <div className="flex gap-2">
               <input
                 value={manualCode}
@@ -116,17 +116,17 @@ export default function AdminScanner() {
             </div>
           </div>
 
-          <div className="text-center text-xs text-slate-400">yoki</div>
+          <div className="text-center text-xs text-slate-400">{tr('yoki')}</div>
 
           {!cameraOpen ? (
             <button onClick={() => setCameraOpen(true)} className="btn-secondary w-full">
-              <Camera className="h-4 w-4" /> Kamera orqali skanerlash
+              <Camera className="h-4 w-4" /> {tr('Kamera orqali skanerlash')}
             </button>
           ) : (
             <div>
               <div id="qr-reader" ref={scannerRef} />
               <button onClick={() => setCameraOpen(false)} className="text-sm text-slate-500 hover:text-primary mt-3">
-                Kamerani yopish
+                {tr('Kamerani yopish')}
               </button>
             </div>
           )}
@@ -139,10 +139,10 @@ export default function AdminScanner() {
           </div>
           <h2 className="text-lg font-bold text-ink">{sample.productName}</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Hozirgi joyi: <span className="font-medium text-ink">{sample.currentLab?.nameUz || '—'}</span>
+            {tr('Hozirgi joyi:')} <span className="font-medium text-ink">{locName(sample.currentLab) || '—'}</span>
           </p>
           <p className="text-sm text-slate-500">
-            Kelib chiqishi: <span className="font-medium text-ink">{sample.originLab?.nameUz}</span>
+            {tr('Kelib chiqishi:')} <span className="font-medium text-ink">{locName(sample.originLab)}</span>
           </p>
 
           <div className="mt-6">
@@ -151,10 +151,10 @@ export default function AdminScanner() {
 
           <div className="flex flex-wrap items-center gap-4 mt-5 pt-4 border-t border-border">
             <Link to={`/admin/namunalar/${sample.id}`} className="text-sm font-medium text-primary hover:underline">
-              Batafsil sahifasini ochish
+              {tr('Batafsil sahifasini ochish')}
             </Link>
             <button onClick={reset} className="text-sm text-slate-500 hover:text-primary">
-              ← Boshqa namunani qidirish
+              {tr('← Boshqa namunani qidirish')}
             </button>
           </div>
         </div>

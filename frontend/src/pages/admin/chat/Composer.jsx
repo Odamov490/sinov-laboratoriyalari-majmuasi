@@ -5,6 +5,7 @@ import { VoiceRecorder, VideoNoteRecorder } from './Recorders.jsx';
 import { Avatar } from './MessageItem.jsx';
 import { formatSize } from '../../../chat/format';
 import { Modal } from '../../../components/Modal.jsx';
+import { tr } from '../../../i18n/tr.js';
 
 const DRAFT_KEY = (roomId) => `slm-chat-draft:${roomId}`;
 const readDraft = (roomId) => {
@@ -30,7 +31,7 @@ export function AttachDialog({ files, onRemove, onClose, onSend, limits }) {
   useEffect(() => () => previews.forEach((p) => p && URL.revokeObjectURL(p)), [previews]);
   const tooBig = files.filter((f) => f.size > limitFor(f, limits) * 1024 * 1024);
   return (
-    <Modal open onClose={onClose} title={`Yuborish (${files.length})`} size="md">
+    <Modal open onClose={onClose} title={tr('Yuborish ({0})', files.length)} size="md">
       <div className="max-h-[50vh] space-y-2 overflow-y-auto">
         {files.map((f, i) => (
           <div key={`${f.name}-${i}`} className="flex items-center gap-3 rounded-lg border border-border p-2">
@@ -45,10 +46,10 @@ export function AttachDialog({ files, onRemove, onClose, onSend, limits }) {
               <p className="truncate text-sm font-medium text-ink">{f.name}</p>
               <p className={`text-xs ${tooBig.includes(f) ? 'text-red-600' : 'text-slate-500'}`}>
                 {formatSize(f.size)}
-                {tooBig.includes(f) && ` — ruxsat etilgan ${limitFor(f, limits)} MB dan katta`}
+                {tooBig.includes(f) && (' ' + tr('— ruxsat etilgan {0} MB dan katta', limitFor(f, limits)))}
               </p>
             </div>
-            <button type="button" onClick={() => onRemove(i)} className="rounded p-1 text-slate-400 hover:text-red-600" title="Olib tashlash">
+            <button type="button" onClick={() => onRemove(i)} className="rounded p-1 text-slate-400 hover:text-red-600" title={tr('Olib tashlash')}>
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -59,18 +60,18 @@ export function AttachDialog({ files, onRemove, onClose, onSend, limits }) {
         onChange={(e) => setCaption(e.target.value)}
         maxLength={4000}
         rows={2}
-        placeholder="Izoh (ixtiyoriy)"
+        placeholder={tr('Izoh (ixtiyoriy)')}
         className="input-field mt-3 resize-none"
       />
       <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-        <ImageIcon className="h-3.5 w-3.5" /> Rasmlar yuborishdan oldin siqiladi (eng uzun tomoni 1920 px).
+        <ImageIcon className="h-3.5 w-3.5" /> {tr('Rasmlar yuborishdan oldin siqiladi (eng uzun tomoni 1920 px).')}
       </p>
       <div className="mt-4 flex justify-end gap-2">
         <button type="button" onClick={onClose} className="btn-secondary !py-2">
-          Bekor qilish
+          {tr('Bekor qilish')}
         </button>
         <button type="button" disabled={!files.length || tooBig.length > 0} onClick={() => onSend(caption.trim())} className="btn-primary !py-2">
-          <Send className="h-4 w-4" /> Yuborish
+          <Send className="h-4 w-4" /> {tr('Yuborish')}
         </button>
       </div>
     </Modal>
@@ -161,7 +162,7 @@ export default function Composer({
   if (!room.canWrite) {
     return (
       <div className="flex items-center justify-center gap-2 border-t border-border bg-white px-4 py-4 text-sm text-slate-500">
-        <Lock className="h-4 w-4" /> {room.readOnlyReason || "Bu xonaga yozib bo'lmaydi."}
+        <Lock className="h-4 w-4" /> {room.readOnlyReason || tr("Bu xonaga yozib bo'lmaydi.")}
       </div>
     );
   }
@@ -196,7 +197,7 @@ export default function Composer({
     const body = text.trim();
     if (!body) return;
     if (body.length > 4000) {
-      onError('Xabar 4000 belgidan oshmasin.');
+      onError(tr('Xabar 4000 belgidan oshmasin.'));
       return;
     }
     if (editing) {
@@ -283,7 +284,7 @@ export default function Composer({
         <div className="flex items-center gap-3 border-b border-border px-4 py-2">
           {editing ? <Pencil className="h-4 w-4 shrink-0 text-primary" /> : <CornerUpLeft className="h-4 w-4 shrink-0 text-primary" />}
           <div className="min-w-0 flex-1 border-l-2 border-primary pl-2">
-            <p className="text-xs font-semibold text-primary">{editing ? 'Tahrirlash' : `Javob: ${replyTo.sender?.fullName || ''}`}</p>
+            <p className="text-xs font-semibold text-primary">{editing ? tr('Tahrirlash') : tr('Javob: {0}', replyTo.sender?.fullName || '')}</p>
             <p className="truncate text-xs text-slate-500">{(editing || replyTo).body || 'Media'}</p>
           </div>
           <button
@@ -295,7 +296,7 @@ export default function Composer({
               } else onCancelReply();
             }}
             className="rounded p-1 text-slate-400 hover:text-slate-600"
-            title="Bekor qilish"
+            title={tr('Bekor qilish')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -321,7 +322,7 @@ export default function Composer({
         )}
         {!editing && (
           <div className="relative flex items-center">
-            <button type="button" onClick={() => fileInput.current?.click()} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Fayl biriktirish">
+            <button type="button" onClick={() => fileInput.current?.click()} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr('Fayl biriktirish')}>
               <Paperclip className="h-5 w-5" />
             </button>
             <input
@@ -359,7 +360,7 @@ export default function Composer({
             onBlur={() => setTimeout(() => setMention(null), 150)}
             rows={1}
             maxLength={4000}
-            placeholder="Xabar yozing…"
+            placeholder={tr('Xabar yozing…')}
             className="max-h-[200px] min-h-[42px] flex-1 resize-none bg-transparent px-4 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:outline-none"
           />
           <div className="relative flex items-center pb-1 pr-1">
@@ -367,22 +368,22 @@ export default function Composer({
               <Smile className="h-5 w-5" />
             </button>
             {!editing && stickerPacks?.length > 0 && (
-              <button type="button" onClick={() => setPicker(picker === 'sticker' ? null : 'sticker')} className="rounded-full p-1.5 text-slate-500 hover:text-primary" title="Stikerlar">
+              <button type="button" onClick={() => setPicker(picker === 'sticker' ? null : 'sticker')} className="rounded-full p-1.5 text-slate-500 hover:text-primary" title={tr('Stikerlar')}>
                 <Sticker className="h-5 w-5" />
               </button>
             )}
           </div>
         </div>
         {canSend || editing ? (
-          <button type="button" onClick={submit} disabled={!canSend} className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-light disabled:opacity-50" title={editing ? 'Saqlash' : 'Yuborish'}>
+          <button type="button" onClick={submit} disabled={!canSend} className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-light disabled:opacity-50" title={editing ? tr('Saqlash') : tr('Yuborish')}>
             <Send className="h-5 w-5" />
           </button>
         ) : (
           <>
-            <button type="button" onClick={() => setRecording('video')} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Video xabar">
+            <button type="button" onClick={() => setRecording('video')} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr('Video xabar')}>
               <Video className="h-5 w-5" />
             </button>
-            <button type="button" onClick={() => setRecording('voice')} className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-light" title="Ovozli xabar">
+            <button type="button" onClick={() => setRecording('voice')} className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-light" title={tr('Ovozli xabar')}>
               <Mic className="h-5 w-5" />
             </button>
           </>

@@ -5,6 +5,7 @@ import { adminProductBuilder, adminTestIndicators } from '../../services/adminAp
 import { Loading, ErrorState, EmptyState } from '../../components/StateViews.jsx';
 import { Modal } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { tr, locName } from '../../i18n/tr.js';
 
 // Search-as-you-type picker over the full TestIndicator pool, shown inside
 // a modal (see the shared "picker" Modal below) rather than inline — with
@@ -34,12 +35,12 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
         autoFocus
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Nomi, standart yoki pozitsiya kodi bo'yicha qidiring..."
+        placeholder={tr("Nomi, standart yoki pozitsiya kodi bo'yicha qidiring...")}
         className="input-field"
       />
       <div className="mt-3 max-h-96 overflow-y-auto space-y-1">
         {filtered.length === 0 ? (
-          <p className="text-sm text-slate-400 px-1 py-4 text-center">Hech narsa topilmadi.</p>
+          <p className="text-sm text-slate-400 px-1 py-4 text-center">{tr('Hech narsa topilmadi.')}</p>
         ) : (
           filtered.map((i) => (
             <button
@@ -51,7 +52,7 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
             >
               <span className="truncate">
                 {i.positionCode && <span className="text-slate-400">#{i.positionCode} </span>}
-                {i.nameUz}
+                {locName(i)}
                 {i.standardCode && <span className="text-slate-400"> — {i.standardCode}</span>}
               </span>
               <Plus className="h-3.5 w-3.5 text-primary shrink-0" />
@@ -59,7 +60,7 @@ function IndicatorPicker({ pool, excludeIds, onAdd, adding }) {
           ))
         )}
         {filtered.length === 50 && (
-          <p className="text-xs text-slate-400 px-2 py-1">Faqat birinchi 50 ta natija ko'rsatilmoqda — aniqroq qidiring.</p>
+          <p className="text-xs text-slate-400 px-2 py-1">{tr("Faqat birinchi 50 ta natija ko'rsatilmoqda — aniqroq qidiring.")}</p>
         )}
       </div>
     </div>
@@ -140,7 +141,7 @@ function AssignmentChip({ assignment, onRemove, removing, draggable }) {
           {assignment.indicator?.positionCode && (
             <span className="text-slate-400">#{assignment.indicator.positionCode} </span>
           )}
-          {assignment.indicator?.nameUz}
+          {locName(assignment.indicator)}
         </p>
         {(assignment.indicator?.standardCode || assignment.indicator?.unit) && (
           <p className="text-xs text-slate-400 truncate">
@@ -153,7 +154,7 @@ function AssignmentChip({ assignment, onRemove, removing, draggable }) {
         disabled={removing}
         onClick={() => onRemove(assignment.id)}
         className="shrink-0 text-slate-400 hover:text-red-600 disabled:opacity-50"
-        aria-label="o'chirish"
+        aria-label={tr("o'chirish")}
       >
         <X className="h-4 w-4" />
       </button>
@@ -219,7 +220,7 @@ export default function AdminTestProgramBuilder() {
       await adminProductBuilder.addIndicator(id, { indicatorId, conditionOptionId: conditionOptionId || undefined });
       load();
     } catch {
-      showToast("Ko'rsatkich qo'shishda xatolik yuz berdi.", 'error');
+      showToast(tr("Ko'rsatkich qo'shishda xatolik yuz berdi."), 'error');
     } finally {
       setBusy(null);
     }
@@ -231,7 +232,7 @@ export default function AdminTestProgramBuilder() {
       await adminProductBuilder.removeIndicator(id, assignmentId);
       load();
     } catch {
-      showToast("O'chirishda xatolik yuz berdi.", 'error');
+      showToast(tr("O'chirishda xatolik yuz berdi."), 'error');
     } finally {
       setBusy(null);
     }
@@ -242,7 +243,7 @@ export default function AdminTestProgramBuilder() {
       await adminProductBuilder.reorderIndicators(id, assignmentIds);
       load();
     } catch {
-      showToast("Tartibni saqlashda xatolik yuz berdi.", 'error');
+      showToast(tr('Tartibni saqlashda xatolik yuz berdi.'), 'error');
     }
   };
 
@@ -263,22 +264,22 @@ export default function AdminTestProgramBuilder() {
       }
       setQuestionModal(null);
       load();
-      showToast('Saqlandi.', 'success');
+      showToast(tr('Saqlandi.'), 'success');
     } catch {
-      showToast('Saqlashda xatolik yuz berdi.', 'error');
+      showToast(tr('Saqlashda xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const removeQuestion = async (questionId) => {
-    if (!window.confirm("Savol va unga tegishli barcha variantlar/ko'rsatkichlar o'chiriladi. Davom etilsinmi?")) return;
+    if (!window.confirm(tr("Savol va unga tegishli barcha variantlar/ko'rsatkichlar o'chiriladi. Davom etilsinmi?"))) return;
     setBusy(questionId);
     try {
       await adminProductBuilder.removeQuestion(id, questionId);
       load();
     } catch {
-      showToast("O'chirishda xatolik yuz berdi.", 'error');
+      showToast(tr("O'chirishda xatolik yuz berdi."), 'error');
     } finally {
       setBusy(null);
     }
@@ -294,22 +295,22 @@ export default function AdminTestProgramBuilder() {
       }
       setOptionModal(null);
       load();
-      showToast('Saqlandi.', 'success');
+      showToast(tr('Saqlandi.'), 'success');
     } catch {
-      showToast('Saqlashda xatolik yuz berdi.', 'error');
+      showToast(tr('Saqlashda xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
   };
 
   const removeOption = async (questionId, optionId) => {
-    if (!window.confirm("Variant va unga bog'liq ko'rsatkichlar o'chiriladi. Davom etilsinmi?")) return;
+    if (!window.confirm(tr("Variant va unga bog'liq ko'rsatkichlar o'chiriladi. Davom etilsinmi?"))) return;
     setBusy(optionId);
     try {
       await adminProductBuilder.removeOption(id, questionId, optionId);
       load();
     } catch {
-      showToast("O'chirishda xatolik yuz berdi.", 'error');
+      showToast(tr("O'chirishda xatolik yuz berdi."), 'error');
     } finally {
       setBusy(null);
     }
@@ -318,12 +319,12 @@ export default function AdminTestProgramBuilder() {
   return (
     <div>
       <Link to="/admin/sinov-dasturlari" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary">
-        <ChevronLeft className="h-4 w-4" /> Mahsulotlarga qaytish
+        <ChevronLeft className="h-4 w-4" /> {tr('Mahsulotlarga qaytish')}
       </Link>
       <div className="mt-2 flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-primary">{product.nameUz}</h1>
-          <p className="text-sm text-slate-500">{product.laboratory?.nameUz}</p>
+          <h1 className="text-2xl font-extrabold text-primary">{locName(product)}</h1>
+          <p className="text-sm text-slate-500">{locName(product.laboratory)}</p>
         </div>
       </div>
 
@@ -332,43 +333,43 @@ export default function AdminTestProgramBuilder() {
         <div className="card p-5">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-semibold text-ink flex items-center gap-2">
-              <ListChecks className="h-4 w-4 text-primary" /> Asosiy ko'rsatkichlar
+              <ListChecks className="h-4 w-4 text-primary" /> {tr("Asosiy ko'rsatkichlar")}
             </h2>
-            <span className="text-xs font-medium text-slate-400 shrink-0">{baselineAssignments.length} ta</span>
+            <span className="text-xs font-medium text-slate-400 shrink-0">{tr('{0} ta', baselineAssignments.length)}</span>
           </div>
-          <p className="mt-1 text-xs text-slate-400">Har doim sinov dasturiga kiritiladi.</p>
+          <p className="mt-1 text-xs text-slate-400">{tr('Har doim sinov dasturiga kiritiladi.')}</p>
 
           <div className="mt-3">
             <AssignmentList
               assignments={baselineAssignments}
               onRemove={removeAssignment}
               busy={busy}
-              emptyLabel="Hali qo'shilmagan."
+              emptyLabel={tr("Hali qo'shilmagan.")}
               onReorder={reorderAssignments}
             />
           </div>
 
           <button
             className="btn-secondary !py-2 !px-3 text-sm w-full mt-3 justify-center"
-            onClick={() => setPickerTarget({ conditionOptionId: null, label: "Asosiy ko'rsatkichlar" })}
+            onClick={() => setPickerTarget({ conditionOptionId: null, label: tr("Asosiy ko'rsatkichlar") })}
           >
-            <Plus className="h-4 w-4" /> Ko'rsatkich qo'shish
+            <Plus className="h-4 w-4" /> {tr("Ko'rsatkich qo'shish")}
           </button>
         </div>
 
         {/* Right: questions, each with options and their conditional indicators */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-ink">Savollar</h2>
+            <h2 className="font-semibold text-ink">{tr('Savollar')}</h2>
             <button
               className="btn-secondary !py-2 !px-3 text-sm inline-flex items-center gap-1.5"
               onClick={() => setQuestionModal({ mode: 'create', data: { ...emptyQuestion }, binary: false })}
             >
-              <Plus className="h-4 w-4" /> Savol qo'shish
+              <Plus className="h-4 w-4" /> {tr("Savol qo'shish")}
             </button>
           </div>
 
-          {product.questions.length === 0 && <EmptyState message="Hali savollar qo'shilmagan." />}
+          {product.questions.length === 0 && <EmptyState message={tr("Hali savollar qo'shilmagan.")} />}
 
           {product.questions.map((q) => (
             <div key={q.id} className="card p-5">
@@ -397,7 +398,7 @@ export default function AdminTestProgramBuilder() {
                     disabled={busy === q.id}
                     className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-bg-light disabled:opacity-50"
                     onClick={() => removeQuestion(q.id)}
-                    aria-label="o'chirish"
+                    aria-label={tr("o'chirish")}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -430,7 +431,7 @@ export default function AdminTestProgramBuilder() {
                             disabled={busy === opt.id}
                             className="p-1 rounded-lg text-slate-400 hover:text-red-600 disabled:opacity-50"
                             onClick={() => removeOption(q.id, opt.id)}
-                            aria-label="o'chirish"
+                            aria-label={tr("o'chirish")}
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -438,15 +439,15 @@ export default function AdminTestProgramBuilder() {
                       </div>
 
                       <div className="mt-2 flex items-center justify-between gap-2">
-                        <p className="text-xs font-medium text-slate-500">Shu variantga xos ko'rsatkichlar:</p>
-                        <span className="text-xs text-slate-400 shrink-0">{optionAssignments.length} ta</span>
+                        <p className="text-xs font-medium text-slate-500">{tr("Shu variantga xos ko'rsatkichlar:")}</p>
+                        <span className="text-xs text-slate-400 shrink-0">{tr('{0} ta', optionAssignments.length)}</span>
                       </div>
                       <div className="mt-1.5">
                         <AssignmentList
                           assignments={optionAssignments}
                           onRemove={removeAssignment}
                           busy={busy}
-                          emptyLabel="Hali qo'shilmagan."
+                          emptyLabel={tr("Hali qo'shilmagan.")}
                           onReorder={reorderAssignments}
                         />
                       </div>
@@ -454,7 +455,7 @@ export default function AdminTestProgramBuilder() {
                         className="text-sm font-medium text-primary inline-flex items-center gap-1.5 hover:underline mt-2"
                         onClick={() => setPickerTarget({ conditionOptionId: opt.id, label: opt.labelUz })}
                       >
-                        <Plus className="h-3.5 w-3.5" /> Ko'rsatkich qo'shish
+                        <Plus className="h-3.5 w-3.5" /> {tr("Ko'rsatkich qo'shish")}
                       </button>
                     </div>
                   );
@@ -464,7 +465,7 @@ export default function AdminTestProgramBuilder() {
                   className="text-sm font-medium text-primary inline-flex items-center gap-1.5 hover:underline"
                   onClick={() => setOptionModal({ mode: 'create', questionId: q.id, data: { ...emptyOption } })}
                 >
-                  <Plus className="h-3.5 w-3.5" /> Variant qo'shish
+                  <Plus className="h-3.5 w-3.5" /> {tr("Variant qo'shish")}
                 </button>
               </div>
             </div>
@@ -475,29 +476,28 @@ export default function AdminTestProgramBuilder() {
       <Modal
         open={!!questionModal}
         onClose={() => setQuestionModal(null)}
-        title={questionModal?.mode === 'edit' ? 'Savolni tahrirlash' : 'Yangi savol'}
+        title={questionModal?.mode === 'edit' ? tr('Savolni tahrirlash') : tr('Yangi savol')}
       >
         {questionModal && (
           <div className="space-y-3">
             <p className="text-xs text-slate-400 -mt-1">
-              Savol shaklida yozing (masalan "Ishlaydigan kuchlanish?"), keyingi qadamda uning variantlarini
-              (220V, 380V...) qo'shasiz.
+              {tr("Savol shaklida yozing (masalan \"Ishlaydigan kuchlanish?\"), keyingi qadamda uning variantlarini (220V, 380V...) qo'shasiz.")}
             </p>
             <input
               className="input-field"
-              placeholder='Savol (UZ) — masalan "Ishlaydigan kuchlanish?"'
+              placeholder={tr('Savol (UZ) — masalan "Ishlaydigan kuchlanish?"')}
               value={questionModal.data.questionUz}
               onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, questionUz: e.target.value } })}
             />
             <input
               className="input-field"
-              placeholder="Savol (RU)"
+              placeholder={tr('Savol (RU)')}
               value={questionModal.data.questionRu}
               onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, questionRu: e.target.value } })}
             />
             <input
               className="input-field"
-              placeholder="Savol (EN)"
+              placeholder={tr('Savol (EN)')}
               value={questionModal.data.questionEn}
               onChange={(e) => setQuestionModal({ ...questionModal, data: { ...questionModal.data, questionEn: e.target.value } })}
             />
@@ -510,16 +510,16 @@ export default function AdminTestProgramBuilder() {
                   className="mt-0.5 h-4 w-4 rounded border-border text-primary shrink-0"
                 />
                 <span>
-                  <span className="font-medium">Ha / Yo'q savoli sifatida yaratish</span>
+                  <span className="font-medium">{tr("Ha / Yo'q savoli sifatida yaratish")}</span>
                   <span className="block text-xs text-slate-500 mt-0.5">
-                    "Ha" va "Yo'q" variantlari avtomatik qo'shiladi — o'zingiz alohida yaratmaysiz.
+                    {tr("\"Ha\" va \"Yo'q\" variantlari avtomatik qo'shiladi — o'zingiz alohida yaratmaysiz.")}
                   </span>
                 </span>
               </label>
             )}
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">
-                Tartib raqami (bir nechta savol bo'lsa, kichik raqam avvalroq chiqadi)
+                {tr("Tartib raqami (bir nechta savol bo'lsa, kichik raqam avvalroq chiqadi)")}
               </label>
               <input
                 type="number"
@@ -530,10 +530,10 @@ export default function AdminTestProgramBuilder() {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button className="btn-secondary" onClick={() => setQuestionModal(null)}>
-                Bekor qilish
+                {tr('Bekor qilish')}
               </button>
               <button disabled={saving} className="btn-primary" onClick={saveQuestion}>
-                Saqlash
+                {tr('Saqlash')}
               </button>
             </div>
           </div>
@@ -543,32 +543,32 @@ export default function AdminTestProgramBuilder() {
       <Modal
         open={!!optionModal}
         onClose={() => setOptionModal(null)}
-        title={optionModal?.mode === 'edit' ? 'Variantni tahrirlash' : 'Yangi variant'}
+        title={optionModal?.mode === 'edit' ? tr('Variantni tahrirlash') : tr('Yangi variant')}
         size="sm"
       >
         {optionModal && (
           <div className="space-y-3">
             <input
               className="input-field"
-              placeholder="Variant (UZ) — masalan 220V"
+              placeholder={tr('Variant (UZ) — masalan 220V')}
               value={optionModal.data.labelUz}
               onChange={(e) => setOptionModal({ ...optionModal, data: { ...optionModal.data, labelUz: e.target.value } })}
             />
             <input
               className="input-field"
-              placeholder="Variant (RU)"
+              placeholder={tr('Variant (RU)')}
               value={optionModal.data.labelRu}
               onChange={(e) => setOptionModal({ ...optionModal, data: { ...optionModal.data, labelRu: e.target.value } })}
             />
             <input
               className="input-field"
-              placeholder="Variant (EN)"
+              placeholder={tr('Variant (EN)')}
               value={optionModal.data.labelEn}
               onChange={(e) => setOptionModal({ ...optionModal, data: { ...optionModal.data, labelEn: e.target.value } })}
             />
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">
-                Tartib raqami (bir nechta variant bo'lsa, kichik raqam avvalroq chiqadi)
+                {tr("Tartib raqami (bir nechta variant bo'lsa, kichik raqam avvalroq chiqadi)")}
               </label>
               <input
                 type="number"
@@ -579,10 +579,10 @@ export default function AdminTestProgramBuilder() {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button className="btn-secondary" onClick={() => setOptionModal(null)}>
-                Bekor qilish
+                {tr('Bekor qilish')}
               </button>
               <button disabled={saving} className="btn-primary" onClick={saveOption}>
-                Saqlash
+                {tr('Saqlash')}
               </button>
             </div>
           </div>
@@ -592,7 +592,7 @@ export default function AdminTestProgramBuilder() {
       <Modal
         open={!!pickerTarget}
         onClose={() => setPickerTarget(null)}
-        title={pickerTarget ? `Ko'rsatkich qo'shish — ${pickerTarget.label}` : ''}
+        title={pickerTarget ? tr("Ko'rsatkich qo'shish — {0}", pickerTarget.label) : ''}
         size="lg"
       >
         {pickerTarget && (

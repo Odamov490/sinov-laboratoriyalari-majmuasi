@@ -6,14 +6,15 @@ import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { RESULT_LABELS, RESULT_STYLES, formatMoney } from './journalConstants';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
+import { tr } from '../../../i18n/tr.js';
 
 const NAVY = '#0B3A63';
 const GRID = '#E2E8F0';
 const TOP_BODIES = 10;
-const MONTHS = ['Yan', 'Fev', 'Mar', 'Apr', 'May', 'Iyun', 'Iyul', 'Avg', 'Sen', 'Okt', 'Noy', 'Dek'];
+const MONTHS = [tr('Yan'), tr('Fev'), tr('Mar'), tr('Apr'), tr('May'), tr('Iyun'), tr('Iyul'), tr('Avg'), tr('Sen'), tr('Okt'), tr('Noy'), tr('Dek')];
 
 const monthLabel = (m) => {
-  if (!m) return "Sanasiz";
+  if (!m) return tr('Sanasiz');
   const [y, mm] = m.split('-');
   return `${MONTHS[Number(mm) - 1]} ${y}`;
 };
@@ -26,7 +27,7 @@ function topBodies(rows) {
   const rest = rows.slice(TOP_BODIES);
   const other = rest.reduce(
     (acc, r) => ({ ...acc, records: acc.records + r.records, samples: acc.samples + r.samples, amount: (acc.amount || 0) + (r.amount || 0) }),
-    { id: 'other', name: `Boshqalar (${rest.length} ta)`, records: 0, samples: 0, amount: 0 }
+    { id: 'other', name: tr('Boshqalar ({0} ta)', rest.length), records: 0, samples: 0, amount: 0 }
   );
   return [...rows.slice(0, TOP_BODIES), other];
 }
@@ -55,10 +56,10 @@ function BreakdownTable({ title, rows, nameOf, showFinance, totalSamples }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-            <th className="py-2 pr-2">Nomi</th>
-            <th className="py-2 px-2 text-right">Yozuv</th>
-            <th className="py-2 px-2 text-right">Namuna</th>
-            {showFinance && <th className="py-2 pl-2 text-right">Summa</th>}
+            <th className="py-2 pr-2">{tr('Nomi')}</th>
+            <th className="py-2 px-2 text-right">{tr('Yozuv')}</th>
+            <th className="py-2 px-2 text-right">{tr('Namuna')}</th>
+            {showFinance && <th className="py-2 pl-2 text-right">{tr('Summa')}</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -68,7 +69,7 @@ function BreakdownTable({ title, rows, nameOf, showFinance, totalSamples }) {
                 <div className="truncate text-ink" title={typeof nameOf(r) === 'string' ? nameOf(r) : undefined}>
                   {nameOf(r)}
                 </div>
-                <div className="mt-1 h-1.5 rounded-full bg-bg-light overflow-hidden" title={`${totalSamples ? ((r.samples / totalSamples) * 100).toFixed(1) : 0}% namunalar`}>
+                <div className="mt-1 h-1.5 rounded-full bg-bg-light overflow-hidden" title={tr('{0}% namunalar', totalSamples ? ((r.samples / totalSamples) * 100).toFixed(1) : 0)}>
                   <div className="h-full rounded-full bg-primary" style={{ width: `${(r.samples / max) * 100}%` }} />
                 </div>
               </td>
@@ -92,7 +93,7 @@ function MonthChart({ title, data, dataKey, name, format }) {
           <CartesianGrid strokeDasharray="3 3" stroke={GRID} vertical={false} />
           <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" height={50} interval={0} />
           <YAxis tick={{ fontSize: 11 }} width={format ? 72 : 40} tickFormatter={format} allowDecimals={false} />
-          <Tooltip formatter={(v) => (format ? `${formatMoney(v)} so'm` : fmtInt(v))} cursor={{ fill: 'rgba(11,58,99,0.06)' }} />
+          <Tooltip formatter={(v) => (format ? tr("{0} so'm", formatMoney(v)) : fmtInt(v))} cursor={{ fill: 'rgba(11,58,99,0.06)' }} />
           <Bar dataKey={dataKey} name={name} fill={NAVY} radius={[4, 4, 0, 0]} maxBarSize={36} />
         </BarChart>
       </ResponsiveContainer>
@@ -145,9 +146,9 @@ export default function TestJournalSummaryTab({ showFinance }) {
         addTableSheet(wb, sheetName, {
           columns: [
             { header: nameLabel, width: 36 },
-            { header: 'Yozuvlar', width: 12, align: 'right' },
-            { header: 'Namunalar', width: 12, align: 'right' },
-            ...(showFinance ? [{ header: "Summa (so'm)", width: 20, align: 'right', money: true }] : []),
+            { header: tr('Yozuvlar'), width: 12, align: 'right' },
+            { header: tr('Namunalar'), width: 12, align: 'right' },
+            ...(showFinance ? [{ header: tr("Summa (so'm)"), width: 20, align: 'right', money: true }] : []),
           ],
           rows: rows.map((r) => ({
             values: [nameOf(r), r.records, r.samples, ...(showFinance ? [r.amount] : [])],
@@ -155,33 +156,33 @@ export default function TestJournalSummaryTab({ showFinance }) {
           })),
           total: ['JAMI', data.totals.records, data.totals.samples, ...(showFinance ? [data.totals.amount] : [])],
         });
-      sheet('Oylar', data.byMonth, 'Oy', (r) => monthLabel(r.month));
-      sheet('Mahsulot turlari', data.byProductType, 'Mahsulot turi', (r) => r.name);
-      sheet('Buyurtmachilar', data.byCertificationBody, 'Buyurtmachi', (r) => r.name);
-      sheet('Natijalar', data.byResult, 'Natija', (r) => RESULT_LABELS[r.result] || r.result, (r) => RESULT_FILLS[r.result]);
+      sheet(tr('Oylar'), data.byMonth, tr('Oy'), (r) => monthLabel(r.month));
+      sheet(tr('Mahsulot turlari'), data.byProductType, tr('Mahsulot turi'), (r) => r.name);
+      sheet(tr('Buyurtmachilar'), data.byCertificationBody, tr('Buyurtmachi'), (r) => r.name);
+      sheet(tr('Natijalar'), data.byResult, tr('Natija'), (r) => RESULT_LABELS[r.result] || r.result, (r) => RESULT_FILLS[r.result]);
       const period = `${from || 'boshidan'}_${to || 'hozirgacha'}`;
-      await downloadWorkbook(wb, `umumiy-hisobot_${period}.xlsx`);
+      await downloadWorkbook(wb, tr('umumiy-hisobot_{0}.xlsx', period));
     } catch {
-      showToast('Excel eksportda xatolik yuz berdi.', 'error');
+      showToast(tr('Excel eksportda xatolik yuz berdi.'), 'error');
     } finally {
       setExporting(false);
     }
   };
 
   const monthData = (data?.byMonth || []).map((m) => ({ ...m, label: monthLabel(m.month) }));
-  const compactMoney = (v) => (v >= 1e9 ? `${(v / 1e9).toFixed(1)} mlrd` : v >= 1e6 ? `${Math.round(v / 1e6)} mln` : fmtInt(v));
+  const compactMoney = (v) => (v >= 1e9 ? tr('{0} mlrd', (v / 1e9).toFixed(1)) : v >= 1e6 ? tr('{0} mln', Math.round(v / 1e6)) : fmtInt(v));
 
   return (
     <div>
       <div className="card p-4 mb-5 flex flex-wrap items-center gap-3">
         <button type="button" onClick={() => setPreset('all')} className="btn-secondary !py-1.5 !px-3 text-xs">
-          Hammasi
+          {tr('Hammasi')}
         </button>
         <button type="button" onClick={() => setPreset('year')} className="btn-secondary !py-1.5 !px-3 text-xs">
-          Joriy yil
+          {tr('Joriy yil')}
         </button>
         <label className="flex items-center gap-1.5 text-sm text-slate-500">
-          Davr:
+          {tr('Davr:')}
           <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className="input-field !py-1.5 !w-auto text-sm" />
           —
           <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className="input-field !py-1.5 !w-auto text-sm" />
@@ -193,18 +194,18 @@ export default function TestJournalSummaryTab({ showFinance }) {
             onChange={(e) => setIncludeCancelled(e.target.checked)}
             className="h-4 w-4 rounded border-border text-primary"
           />
-          Bekor qilinganlarni ham hisoblash
+          {tr('Bekor qilinganlarni ham hisoblash')}
         </label>
         <button onClick={exportExcel} disabled={!data || exporting} className="btn-secondary !py-1.5 !px-3 text-xs ml-auto">
-          <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
+          <FileSpreadsheet className="h-4 w-4" /> {exporting ? tr('Tayyorlanmoqda...') : 'Excel'}
         </button>
       </div>
 
       <p className="mb-4 text-xs text-slate-500">
-        Davr namuna kelgan sana bo'yicha (bo'lmasa akt sanasi).{' '}
+        {tr("Davr namuna kelgan sana bo'yicha (bo'lmasa akt sanasi).")}{' '}
         {includeCancelled
-          ? "Bekor qilingan va namuna taqdim etilmagan yozuvlar ham hisobga olinmoqda."
-          : "Bekor qilingan va namuna taqdim etilmagan yozuvlar namuna va summaga kirmaydi; namunalar = soni − bekor qilinganlar."}
+          ? tr('Bekor qilingan va namuna taqdim etilmagan yozuvlar ham hisobga olinmoqda.')
+          : tr('Bekor qilingan va namuna taqdim etilmagan yozuvlar namuna va summaga kirmaydi; namunalar = soni − bekor qilinganlar.')}
       </p>
 
       {error ? (
@@ -216,33 +217,33 @@ export default function TestJournalSummaryTab({ showFinance }) {
       ) : (
         <div className="space-y-5">
           <div className={`grid grid-cols-1 sm:grid-cols-2 ${showFinance ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4`}>
-            <StatCard icon={FileText} label="Yozuvlar" value={fmtInt(data.totals.records)} />
-            <StatCard icon={FlaskConical} label="Namunalar" value={fmtInt(data.totals.samples)} />
-            {showFinance && <StatCard icon={Wallet} label="Summa, so'm" value={formatMoney(data.totals.amount)} />}
+            <StatCard icon={FileText} label={tr('Yozuvlar')} value={fmtInt(data.totals.records)} />
+            <StatCard icon={FlaskConical} label={tr('Namunalar')} value={fmtInt(data.totals.samples)} />
+            {showFinance && <StatCard icon={Wallet} label={tr("Summa, so'm")} value={formatMoney(data.totals.amount)} />}
             <StatCard
               icon={CheckCircle2}
-              label="Mos / mos emas"
+              label={tr('Mos / mos emas')}
               value={`${pct(data.totals.conformShare)} / ${pct(data.totals.nonconformShare)}`}
-              hint="Yakuniy natijali yozuvlar ichida"
+              hint={tr('Yakuniy natijali yozuvlar ichida')}
             />
           </div>
 
           {monthData.length > 0 && (
             <div className={`grid grid-cols-1 ${showFinance ? 'lg:grid-cols-2' : ''} gap-5`}>
-              <MonthChart title="Oylar bo'yicha namunalar" data={monthData} dataKey="samples" name="Namunalar" />
-              {showFinance && <MonthChart title="Oylar bo'yicha summa, so'm" data={monthData} dataKey="amount" name="Summa" format={compactMoney} />}
+              <MonthChart title={tr("Oylar bo'yicha namunalar")} data={monthData} dataKey="samples" name="Namunalar" />
+              {showFinance && <MonthChart title={tr("Oylar bo'yicha summa, so'm")} data={monthData} dataKey="amount" name="Summa" format={compactMoney} />}
             </div>
           )}
 
           <div className="card p-5 overflow-x-auto">
-            <p className="text-sm font-semibold text-ink mb-3">Oylik jadval</p>
+            <p className="text-sm font-semibold text-ink mb-3">{tr('Oylik jadval')}</p>
             <table className="w-full text-sm min-w-[420px]">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="py-2 pr-2">Oy</th>
-                  <th className="py-2 px-2 text-right">Yozuvlar</th>
-                  <th className="py-2 px-2 text-right">Namunalar</th>
-                  {showFinance && <th className="py-2 pl-2 text-right">Summa, so'm</th>}
+                  <th className="py-2 pr-2">{tr('Oy')}</th>
+                  <th className="py-2 px-2 text-right">{tr('Yozuvlar')}</th>
+                  <th className="py-2 px-2 text-right">{tr('Namunalar')}</th>
+                  {showFinance && <th className="py-2 pl-2 text-right">{tr("Summa, so'm")}</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -257,7 +258,7 @@ export default function TestJournalSummaryTab({ showFinance }) {
               </tbody>
               <tfoot>
                 <tr className="font-semibold text-ink border-t-2 border-border">
-                  <td className="py-2 pr-2">Jami</td>
+                  <td className="py-2 pr-2">{tr('Jami')}</td>
                   <td className="py-2 px-2 text-right tabular-nums">{fmtInt(data.totals.records)}</td>
                   <td className="py-2 px-2 text-right tabular-nums">{fmtInt(data.totals.samples)}</td>
                   {showFinance && <td className="py-2 pl-2 text-right tabular-nums">{formatMoney(data.totals.amount)}</td>}
@@ -268,14 +269,14 @@ export default function TestJournalSummaryTab({ showFinance }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <BreakdownTable
-              title="Mahsulot turlari bo'yicha"
+              title={tr("Mahsulot turlari bo'yicha")}
               rows={data.byProductType}
               nameOf={(r) => r.name}
               showFinance={showFinance}
               totalSamples={data.totals.samples}
             />
             <BreakdownTable
-              title="Natijalar bo'yicha"
+              title={tr("Natijalar bo'yicha")}
               rows={data.byResult}
               nameOf={(r) => (
                 <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${RESULT_STYLES[r.result] || ''}`}>
@@ -288,7 +289,7 @@ export default function TestJournalSummaryTab({ showFinance }) {
           </div>
 
           <BreakdownTable
-            title={`Buyurtmachilar bo'yicha (eng ko'p ${TOP_BODIES} ta)`}
+            title={tr("Buyurtmachilar bo'yicha (eng ko'p {0} ta)", TOP_BODIES)}
             rows={topBodies(data.byCertificationBody)}
             nameOf={(r) => r.name}
             showFinance={showFinance}

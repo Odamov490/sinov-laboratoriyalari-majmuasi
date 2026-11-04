@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { trServer } from '../i18n/tr.js';
 
 const apiClient = axios.create({
   baseURL: '/api',
@@ -34,9 +35,20 @@ apiClient.interceptors.request.use((config) => {
 let isRefreshing = false;
 let queue = [];
 
+// Server xabarlari (o'zbekcha) joriy tilga: { error, message } maydonlari.
+function translateBody(error) {
+  const data = error?.response?.data;
+  if (data && typeof data === 'object') {
+    if (typeof data.error === 'string') data.error = trServer(data.error);
+    if (typeof data.message === 'string') data.message = trServer(data.message);
+  }
+  return error;
+}
+
 apiClient.interceptors.response.use(
   (res) => res,
   async (error) => {
+    translateBody(error);
     const original = error.config;
     if (error.response?.status === 401 && !original._retry && !original.url.includes('/auth/')) {
       if (isRefreshing) {

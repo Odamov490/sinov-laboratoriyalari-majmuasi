@@ -2,30 +2,31 @@ import React, { useEffect, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { getTopPages } from '../../services/adminApi';
 import { Loading, ErrorState } from '../StateViews.jsx';
+import { tr } from '../../i18n/tr.js';
 
 // Public route -> readable name; detail pages ("/yangiliklar/<slug>") are
 // shown as "Yangiliklar › <slug>".
 const PAGE_LABELS = {
-  '/': 'Bosh sahifa',
-  '/biz-haqimizda': 'Biz haqimizda',
-  '/laboratoriyalar': 'Laboratoriyalar',
-  '/xizmatlar': 'Xizmatlar',
-  '/narxlar': 'Narxlar',
-  '/standartlar': 'Standartlar',
-  '/akkreditatsiya': 'Akkreditatsiya',
-  '/yangiliklar': 'Yangiliklar',
-  '/hujjatlar': 'Hujjatlar',
-  '/mutaxassislar': 'Mutaxassislar',
-  '/uskunalar': 'Uskunalar',
-  '/galereya': 'Galereya',
+  '/': tr('Bosh sahifa'),
+  '/biz-haqimizda': tr('Biz haqimizda'),
+  '/laboratoriyalar': tr('Laboratoriyalar'),
+  '/xizmatlar': tr('Xizmatlar'),
+  '/narxlar': tr('Narxlar'),
+  '/standartlar': tr('Standartlar'),
+  '/akkreditatsiya': tr('Akkreditatsiya'),
+  '/yangiliklar': tr('Yangiliklar'),
+  '/hujjatlar': tr('Hujjatlar'),
+  '/mutaxassislar': tr('Mutaxassislar'),
+  '/uskunalar': tr('Uskunalar'),
+  '/galereya': tr('Galereya'),
   '/faq': 'FAQ',
-  '/arizani-tekshirish': 'Arizani tekshirish',
-  '/ariza': 'Ariza yuborish',
-  '/tnved-tekshirish': 'TN VED tekshirish',
-  '/mxik-tekshirish': 'MXIK tekshirish',
-  '/deklaratsiya-va-sertifikat': 'Deklaratsiya va sertifikat',
-  '/mahsulotlar': 'Sinov dasturlari',
-  '/aloqa': 'Aloqa',
+  '/arizani-tekshirish': tr('Arizani tekshirish'),
+  '/ariza': tr('Ariza yuborish'),
+  '/tnved-tekshirish': tr('TN VED tekshirish'),
+  '/mxik-tekshirish': tr('MXIK tekshirish'),
+  '/deklaratsiya-va-sertifikat': tr('Deklaratsiya va sertifikat'),
+  '/mahsulotlar': tr('Sinov dasturlari'),
+  '/aloqa': tr('Aloqa'),
 };
 
 function pageLabel(path) {
@@ -59,20 +60,20 @@ export default function TopPagesCard({ range }) {
   return (
     <div className="card p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
-        <p className="text-sm font-semibold text-ink">Eng ko'p ko'rilgan sahifalar</p>
+        <p className="text-sm font-semibold text-ink">{tr("Eng ko'p ko'rilgan sahifalar")}</p>
         {data && (
           <p className="text-xs text-slate-500">
-            Jami: <span className="font-semibold text-ink">{data.totalViews.toLocaleString('uz-UZ')}</span> ko'rish
+            {tr('Jami:')} <span className="font-semibold text-ink">{data.totalViews.toLocaleString('uz-UZ')}</span> {tr("ko'rish")}
           </p>
         )}
       </div>
 
       {error ? (
-        <ErrorState message="Ma'lumotni olishda xatolik yuz berdi." onRetry={load} retryLabel="Qayta urinish" />
+        <ErrorState message={tr("Ma'lumotni olishda xatolik yuz berdi.")} onRetry={load} retryLabel={tr('Qayta urinish')} />
       ) : data === null ? (
         <Loading />
       ) : data.pages.length === 0 ? (
-        <p className="py-6 text-center text-sm text-slate-500">Tanlangan oraliq uchun ma'lumot topilmadi.</p>
+        <p className="py-6 text-center text-sm text-slate-500">{tr("Tanlangan oraliq uchun ma'lumot topilmadi.")}</p>
       ) : (
         <ol className="space-y-3">
           {data.pages.map((page, idx) => {

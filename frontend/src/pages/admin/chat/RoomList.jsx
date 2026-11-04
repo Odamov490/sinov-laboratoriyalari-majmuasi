@@ -4,11 +4,12 @@ import { Link } from 'react-router-dom';
 import { Avatar } from './MessageItem.jsx';
 import { shortStamp } from '../../../chat/format';
 import { previewText, getState } from '../../../chat/chatStore';
+import { tr } from '../../../i18n/tr.js';
 
 const TABS = [
-  ['all', 'Hammasi'],
-  ['direct', 'Shaxsiy'],
-  ['groups', 'Guruhlar'],
+  ['all', tr('Hammasi')],
+  ['direct', tr('Shaxsiy')],
+  ['groups', tr('Guruhlar')],
 ];
 
 const TYPE_ICON = { ANNOUNCEMENT: Megaphone, GENERAL: Globe, LABORATORY: FlaskConical, GROUP: Users };
@@ -30,16 +31,16 @@ function PrefsMenu({ me, onClose }) {
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div className="absolute right-0 top-full z-50 mt-1 w-64 overflow-hidden rounded-xl border border-border bg-white py-1 shadow-xl">
         <Link to="/admin/mening-profilim?tab=bildirishnomalar" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
-          <BellRing className="h-4 w-4" /> Bildirishnoma sozlamalari
+          <BellRing className="h-4 w-4" /> {tr('Bildirishnoma sozlamalari')}
         </Link>
         {me.role === 'SUPER_ADMIN' && (
           <>
             <div className="my-1 border-t border-border" />
             <Link to="/admin/stikerlar" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
-              <Smile className="h-4 w-4" /> Stikerlar
+              <Smile className="h-4 w-4" /> {tr('Stikerlar')}
             </Link>
             <Link to="/admin/chat-sozlamalari" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
-              <Settings className="h-4 w-4" /> Chat sozlamalari
+              <Settings className="h-4 w-4" /> {tr('Chat sozlamalari')}
             </Link>
           </>
         )}
@@ -67,15 +68,15 @@ export default function RoomList({ rooms, activeId, me, loading, onSelect, onNew
   return (
     <div className="flex h-full w-full flex-col border-r border-border bg-white md:w-80 lg:w-96">
       <div className="flex items-center gap-2 px-3 pb-2 pt-3">
-        <h1 className="flex-1 text-lg font-bold text-ink">Chat</h1>
-        <button type="button" onClick={onSearch} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Xabarlarni qidirish">
+        <h1 className="flex-1 text-lg font-bold text-ink">{tr('Chat')}</h1>
+        <button type="button" onClick={onSearch} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr('Xabarlarni qidirish')}>
           <MessageSquareText className="h-5 w-5" />
         </button>
-        <button type="button" onClick={onNew} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Yangi suhbat">
+        <button type="button" onClick={onNew} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr('Yangi suhbat')}>
           <SquarePen className="h-5 w-5" />
         </button>
         <div className="relative">
-          <button type="button" onClick={() => setMenu((v) => !v)} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Sozlamalar">
+          <button type="button" onClick={() => setMenu((v) => !v)} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr('Sozlamalar')}>
             <MoreVertical className="h-5 w-5" />
           </button>
           {menu && <PrefsMenu me={me} onClose={() => setMenu(false)} />}
@@ -84,7 +85,7 @@ export default function RoomList({ rooms, activeId, me, loading, onSelect, onNew
       <div className="px-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Suhbatlarni qidirish" className="input-field !rounded-full !py-2 !pl-9" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr('Suhbatlarni qidirish')} className="input-field !rounded-full !py-2 !pl-9" />
         </div>
         <div className="mt-2 flex gap-1">
           {TABS.map(([k, label]) => {
@@ -104,17 +105,17 @@ export default function RoomList({ rooms, activeId, me, loading, onSelect, onNew
         </div>
       </div>
       <div className="mt-2 min-h-0 flex-1 overflow-y-auto">
-        {loading && rooms.length === 0 && <p className="p-6 text-center text-sm text-slate-400">Yuklanmoqda…</p>}
-        {!loading && list.length === 0 && <p className="p-6 text-center text-sm text-slate-400">Suhbat topilmadi.</p>}
+        {loading && rooms.length === 0 && <p className="p-6 text-center text-sm text-slate-400">{tr('Yuklanmoqda…')}</p>}
+        {!loading && list.length === 0 && <p className="p-6 text-center text-sm text-slate-400">{tr('Suhbat topilmadi.')}</p>}
         {list.map((r) => {
           const typing = typingByRoom[r.id];
           const lm = r.lastMessage;
           const preview = typing
-            ? `${typing} yozmoqda…`
+            ? tr('{0} yozmoqda…', typing)
             : lm
-              ? `${lm.senderId === me.id ? 'Siz: ' : r.type !== 'DIRECT' && lm.type !== 'SYSTEM' && lm.senderName ? `${lm.senderName.split(' ')[0]}: ` : ''}${previewText(lm)}`
+              ? `${lm.senderId === me.id ? (tr('Siz:') + ' ') : r.type !== 'DIRECT' && lm.type !== 'SYSTEM' && lm.senderName ? `${lm.senderName.split(' ')[0]}: ` : ''}${previewText(lm)}`
               : r.type === 'DIRECT'
-                ? 'Suhbatni boshlang'
+                ? tr('Suhbatni boshlang')
                 : '';
           return (
             <button

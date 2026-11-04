@@ -1,14 +1,15 @@
+import { tr } from '../../../i18n/tr.js';
 // Shared labels/styles for the test journal (Hisobot) — enums mirror the
 // backend (prisma TestDirection / JournalResult / JournalPayment).
 
 export const RESULT_LABELS = {
-  MOS: 'Mos',
-  MOS_EMAS: 'Mos emas',
-  QISMAN_MOS_EMAS: 'Qisman mos emas',
-  NAMUNA_TAQDIM_ETILMADI: 'Namuna taqdim etilmadi',
-  BEKOR_QILINDI: 'Bekor qilindi',
-  KUTILMOQDA: 'Natija kutilmoqda',
-  KORIB_CHIQISH: "Ko'rib chiqish kerak",
+  MOS: tr('Mos'),
+  MOS_EMAS: tr('Mos emas'),
+  QISMAN_MOS_EMAS: tr('Qisman mos emas'),
+  NAMUNA_TAQDIM_ETILMADI: tr('Namuna taqdim etilmadi'),
+  BEKOR_QILINDI: tr('Bekor qilindi'),
+  KUTILMOQDA: tr('Natija kutilmoqda'),
+  KORIB_CHIQISH: tr("Ko'rib chiqish kerak"),
 };
 
 export const RESULT_STYLES = {
@@ -22,17 +23,17 @@ export const RESULT_STYLES = {
 };
 
 export const DIRECTIONS = [
-  { value: 'XAVFSIZLIK', short: 'BZ', label: 'Xavfsizlik (BZ)' },
-  { value: 'EMC', short: 'EMM', label: 'Elektromagnit moslashuvchanlik (EMM)' },
-  { value: 'ENERGIYA', short: 'EE', label: 'Energiya samaradorligi (EE)' },
-  { value: 'SHOVQIN', short: 'Shovqin', label: 'Shovqin darajasi' },
+  { value: 'XAVFSIZLIK', short: 'BZ', label: tr('Xavfsizlik (BZ)') },
+  { value: 'EMC', short: 'EMM', label: tr('Elektromagnit moslashuvchanlik (EMM)') },
+  { value: 'ENERGIYA', short: 'EE', label: tr('Energiya samaradorligi (EE)') },
+  { value: 'SHOVQIN', short: tr('Shovqin'), label: tr('Shovqin darajasi') },
 ];
 
 export const DIRECTION_SHORT = Object.fromEntries(DIRECTIONS.map((d) => [d.value, d.short]));
 
-export const PAYMENT_LABELS = { TOLANGAN: "To'langan", TOLANMAGAN: "To'lanmagan" };
+export const PAYMENT_LABELS = { TOLANGAN: tr("To'langan"), TOLANMAGAN: tr("To'lanmagan") };
 
-export const CANCELLED_BY_LABELS = { ARIZACHI: 'Ariza beruvchi', ORGAN: 'Organ' };
+export const CANCELLED_BY_LABELS = { ARIZACHI: tr('Ariza beruvchi'), ORGAN: tr('Organ') };
 
 export const formatMoney = (value) =>
   value === null || value === undefined ? '—' : Number(value).toLocaleString('ru-RU', { maximumFractionDigits: 2 });
@@ -64,30 +65,30 @@ export function findUnitPrice(prices, { productTypeId, directions, actDate }) {
 
 // Field names shown in the change history.
 export const FIELD_LABELS = {
-  journalYear: 'Jurnal yili',
-  productTypeId: 'Mahsulot turi',
-  certificationBodyId: 'Buyurtmachi',
-  actNo: 'Akt ID',
-  actDate: 'Akt sanasi',
-  executorName: 'Ijrochi',
-  sampleReceivedDate: 'Namuna kelgan sana',
-  sampleReceivedTime: 'Namuna kelgan vaqt',
-  sampleCount: 'Namunalar soni',
-  cancelledSampleCount: 'Bekor qilingan namunalar',
-  weightNote: "Og'irlik",
-  protocolDate: 'Bayonnoma sanasi',
-  directions: "Yo'nalishlar",
-  result: 'Natija',
-  nonconformingCount: 'Mos emas namunalar',
-  cancelledBy: 'Bekor qilgan tomon',
-  brand: 'Marka',
-  locationId: 'Joy',
-  isRepeat: 'Takroriy',
-  contractNo: 'Shartnoma',
-  contractDate: 'Shartnoma sanasi',
-  amount: 'Summa',
-  paymentStatus: "To'lov",
-  notes: 'Izohlar',
-  needsReview: 'Tekshirish kerak',
-  reviewReasons: 'Tekshirish sabablari',
+  journalYear: tr('Jurnal yili'),
+  productTypeId: tr('Mahsulot turi'),
+  certificationBodyId: tr('Buyurtmachi'),
+  actNo: tr('Akt ID'),
+  actDate: tr('Akt sanasi'),
+  executorName: tr('Ijrochi'),
+  sampleReceivedDate: tr('Namuna kelgan sana'),
+  sampleReceivedTime: tr('Namuna kelgan vaqt'),
+  sampleCount: tr('Namunalar soni'),
+  cancelledSampleCount: tr('Bekor qilingan namunalar'),
+  weightNote: tr("Og'irlik"),
+  protocolDate: tr('Bayonnoma sanasi'),
+  directions: tr("Yo'nalishlar"),
+  result: tr('Natija'),
+  nonconformingCount: tr('Mos emas namunalar'),
+  cancelledBy: tr('Bekor qilgan tomon'),
+  brand: tr('Marka'),
+  locationId: tr('Joy'),
+  isRepeat: tr('Takroriy'),
+  contractNo: tr('Shartnoma'),
+  contractDate: tr('Shartnoma sanasi'),
+  amount: tr('Summa'),
+  paymentStatus: tr("To'lov"),
+  notes: tr('Izohlar'),
+  needsReview: tr('Tekshirish kerak'),
+  reviewReasons: tr('Tekshirish sabablari'),
 };

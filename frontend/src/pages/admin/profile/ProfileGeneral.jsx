@@ -5,10 +5,11 @@ import Avatar from '../../../components/Avatar.jsx';
 import { Modal } from '../../../components/Modal.jsx';
 import { adminProfile } from '../../../services/adminApi';
 import { roleLabel } from '../../../utils/roles';
+import { tr, dateLocale, trServer } from '../../../i18n/tr.js';
 
-export const apiErr = (err) => err?.response?.data?.error || 'Xatolik yuz berdi.';
-export const fmtDateTime = (v) => (v ? new Date(v).toLocaleString('uz-UZ', { dateStyle: 'medium', timeStyle: 'short' }) : '—');
-const fmtDate = (v) => (v ? new Date(v).toLocaleDateString('uz-UZ', { dateStyle: 'medium' }) : '—');
+export const apiErr = (err) => err?.response?.data?.error || tr('Xatolik yuz berdi.');
+export const fmtDateTime = (v) => (v ? new Date(v).toLocaleString(dateLocale(), { dateStyle: 'medium', timeStyle: 'short' }) : '—');
+const fmtDate = (v) => (v ? new Date(v).toLocaleDateString(dateLocale(), { dateStyle: 'medium' }) : '—');
 
 // Rasmni klientda kvadratga kesish (markazdan) va 512 px ga siqish.
 async function squareJpeg(file) {
@@ -17,7 +18,7 @@ async function squareJpeg(file) {
     const img = await new Promise((resolve, reject) => {
       const i = new Image();
       i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error("Rasmni o'qib bo'lmadi."));
+      i.onerror = () => reject(new Error(tr("Rasmni o'qib bo'lmadi.")));
       i.src = url;
     });
     const side = Math.min(img.naturalWidth, img.naturalHeight);
@@ -80,7 +81,7 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
       setPhone(next.phone || '');
       setTelegram(next.telegram || '');
       onChange(next);
-      toast('Saqlandi.', 'success');
+      toast(tr('Saqlandi.'), 'success');
     } catch (err) {
       toast(apiErr(err), 'error');
     } finally {
@@ -90,14 +91,14 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
 
   const upload = async (file) => {
     if (!file) return;
-    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return toast('Faqat JPG, PNG yoki WEBP rasm.', 'error');
-    if (file.size > 15 * 1024 * 1024) return toast('Rasm juda katta.', 'error');
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return toast(tr('Faqat JPG, PNG yoki WEBP rasm.'), 'error');
+    if (file.size > 15 * 1024 * 1024) return toast(tr('Rasm juda katta.'), 'error');
     setBusy(true);
     try {
       const prepared = await squareJpeg(file);
-      if (prepared.size > 2 * 1024 * 1024) throw new Error('Rasm 2 MB dan katta.');
+      if (prepared.size > 2 * 1024 * 1024) throw new Error(tr('Rasm 2 MB dan katta.'));
       onChange(await adminProfile.uploadAvatar(prepared));
-      toast('Rasm yangilandi.', 'success');
+      toast(tr('Rasm yangilandi.'), 'success');
     } catch (err) {
       toast(err?.response ? apiErr(err) : err.message, 'error');
     } finally {
@@ -109,7 +110,7 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
     setBusy(true);
     try {
       onChange(await adminProfile.deleteAvatar());
-      toast("Rasm o'chirildi.", 'success');
+      toast(tr("Rasm o'chirildi."), 'success');
     } catch (err) {
       toast(apiErr(err), 'error');
     } finally {
@@ -120,16 +121,16 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
   const copyLogin = async () => {
     try {
       await navigator.clipboard.writeText(profile.email);
-      toast('Login nusxalandi.', 'success');
+      toast(tr('Login nusxalandi.'), 'success');
     } catch {
-      toast("Nusxalab bo'lmadi.", 'error');
+      toast(tr("Nusxalab bo'lmadi."), 'error');
     }
   };
 
   const sendCorrection = async () => {
     try {
       await adminProfile.correctionRequest(message.trim());
-      toast("So'rov administratorga yuborildi.", 'success');
+      toast(tr("So'rov administratorga yuborildi."), 'success');
       setCorrection(false);
       setMessage('');
     } catch (err) {
@@ -150,15 +151,15 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
           <span className="mt-2 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">{roleLabel(profile.role)}</span>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <button type="button" disabled={busy} onClick={() => fileInput.current?.click()} className="btn-primary !px-4 !py-2">
-              <Camera className="h-4 w-4" /> {busy ? 'Yuklanmoqda…' : 'Rasm yuklash'}
+              <Camera className="h-4 w-4" /> {busy ? tr('Yuklanmoqda…') : tr('Rasm yuklash')}
             </button>
             {profile.avatarUrl && (
               <button type="button" disabled={busy} onClick={removeAvatar} className="btn-secondary !px-4 !py-2">
-                <Trash2 className="h-4 w-4" /> O'chirish
+                <Trash2 className="h-4 w-4" /> {tr("O'chirish")}
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-slate-400">JPG, PNG yoki WEBP. Kvadratga kesiladi (512 px).</p>
+          <p className="mt-2 text-xs text-slate-400">{tr('JPG, PNG yoki WEBP. Kvadratga kesiladi (512 px).')}</p>
           <input
             ref={fileInput}
             type="file"
@@ -174,17 +175,17 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
 
         <div className="card p-5">
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-sm font-semibold text-ink">Profil to'liqligi</p>
+            <p className="text-sm font-semibold text-ink">{tr("Profil to'liqligi")}</p>
             <span className="text-sm font-bold text-primary">{completeness.percent}%</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-bg-light">
             <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${completeness.percent}%` }} />
           </div>
           {completeness.missing.length ? (
-            <p className="mt-2 text-xs text-slate-500">Yetishmaydi: {completeness.missing.map((m) => m.label).join(', ')}</p>
+            <p className="mt-2 text-xs text-slate-500">{tr('Yetishmaydi:')} {completeness.missing.map((m) => trServer(m.label)).join(', ')}</p>
           ) : (
             <p className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
-              <CheckCircle2 className="h-3.5 w-3.5" /> Profil to'liq
+              <CheckCircle2 className="h-3.5 w-3.5" /> {tr("Profil to'liq")}
             </p>
           )}
         </div>
@@ -192,39 +193,39 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
 
       <div className="space-y-5 lg:col-span-2">
         <div className="card p-6">
-          <Row label="F.I.Sh.">{profile.fullName}</Row>
-          <Row label="Lavozim">{profile.position}</Row>
-          <Row label="Laboratoriya">{profile.labName}</Row>
-          <Row label="Rol">{roleLabel(profile.role)}</Row>
-          <Row label="Login">
+          <Row label={tr('F.I.Sh.')}>{profile.fullName}</Row>
+          <Row label={tr('Lavozim')}>{profile.position}</Row>
+          <Row label={tr('Laboratoriya')}>{profile.labName}</Row>
+          <Row label={tr('Rol')}>{roleLabel(profile.role)}</Row>
+          <Row label={tr('Login')}>
             <span className="inline-flex items-center gap-2">
               <span className="font-mono text-xs">{profile.email}</span>
-              <button type="button" onClick={copyLogin} className="rounded p-1 text-slate-400 hover:text-primary" title="Nusxalash">
+              <button type="button" onClick={copyLogin} className="rounded p-1 text-slate-400 hover:text-primary" title={tr('Nusxalash')}>
                 <Copy className="h-3.5 w-3.5" />
               </button>
             </span>
           </Row>
-          <Row label="Hisob yaratilgan">{fmtDate(profile.createdAt)}</Row>
-          <Row label="Oxirgi kirish">{fmtDateTime(profile.lastLoginAt)}</Row>
+          <Row label={tr('Hisob yaratilgan')}>{fmtDate(profile.createdAt)}</Row>
+          <Row label={tr('Oxirgi kirish')}>{fmtDateTime(profile.lastLoginAt)}</Row>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             {profile.canRequestCorrection && (
               <button type="button" onClick={() => setCorrection(true)} className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline">
-                <MessageSquareWarning className="h-4 w-4" /> F.I.Sh. yoki lavozimda xato bormi? Tuzatishni so'rash
+                <MessageSquareWarning className="h-4 w-4" /> {tr("F.I.Sh. yoki lavozimda xato bormi? Tuzatishni so'rash")}
               </button>
             )}
             {profile.staffCard && (
               <a href={profile.staffCard.publicUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary">
-                <ExternalLink className="h-4 w-4" /> Saytdagi mutaxassis sahifasi
+                <ExternalLink className="h-4 w-4" /> {tr('Saytdagi mutaxassis sahifasi')}
               </a>
             )}
           </div>
         </div>
 
         <form onSubmit={save} className="card space-y-4 p-6">
-          <p className="text-sm font-semibold text-ink">Kontaktlar</p>
+          <p className="text-sm font-semibold text-ink">{tr('Kontaktlar')}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm">
-              <span className="mb-1.5 block font-medium text-ink">Telefon</span>
+              <span className="mb-1.5 block font-medium text-ink">{tr('Telefon')}</span>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+998 90 123 45 67" inputMode="tel" maxLength={30} className="input-field" />
             </label>
             <label className="block text-sm">
@@ -233,34 +234,34 @@ export default function ProfileGeneral({ profile, onChange, toast }) {
             </label>
           </div>
           <button type="submit" disabled={saving || !dirty} className="btn-primary !py-2">
-            <Save className="h-4 w-4" /> {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+            <Save className="h-4 w-4" /> {saving ? tr('Saqlanmoqda…') : tr('Saqlash')}
           </button>
         </form>
 
         <div className="card p-6">
-          <p className="mb-3 text-sm font-semibold text-ink">Mening xulosam</p>
+          <p className="mb-3 text-sm font-semibold text-ink">{tr('Mening xulosam')}</p>
           {summary ? (
             <div className="grid gap-3 sm:grid-cols-2">
-              <Stat to="/admin/vazifalar" icon={ListChecks} label="Ochiq vazifalar" value={summary.tasks.open} />
-              <Stat to="/admin/vazifalar" icon={AlertTriangle} label="Muddati o'tgan" value={summary.tasks.overdue} tone={summary.tasks.overdue ? 'text-red-600' : 'text-slate-400'} />
-              <Stat to="/admin/vazifalar" icon={CheckCircle2} label="Shu oy bajarilgan" value={summary.tasks.doneThisMonth} tone="text-emerald-600" />
-              <Stat to="/admin/mening-profilim?tab=faoliyat" icon={Bell} label="O'qilmagan bildirishnomalar" value={summary.notifications.unread} tone="text-amber-600" />
+              <Stat to="/admin/vazifalar" icon={ListChecks} label={tr('Ochiq vazifalar')} value={summary.tasks.open} />
+              <Stat to="/admin/vazifalar" icon={AlertTriangle} label={tr("Muddati o'tgan")} value={summary.tasks.overdue} tone={summary.tasks.overdue ? 'text-red-600' : 'text-slate-400'} />
+              <Stat to="/admin/vazifalar" icon={CheckCircle2} label={tr('Shu oy bajarilgan')} value={summary.tasks.doneThisMonth} tone="text-emerald-600" />
+              <Stat to="/admin/mening-profilim?tab=faoliyat" icon={Bell} label={tr("O'qilmagan bildirishnomalar")} value={summary.notifications.unread} tone="text-amber-600" />
             </div>
           ) : (
-            <p className="text-sm text-slate-400">Xulosani yuklab bo'lmadi.</p>
+            <p className="text-sm text-slate-400">{tr("Xulosani yuklab bo'lmadi.")}</p>
           )}
         </div>
       </div>
 
-      <Modal open={correction} onClose={() => setCorrection(false)} title="Ma'lumotni tuzatish so'rovi" size="md">
-        <p className="mb-3 text-sm text-slate-600">F.I.Sh., lavozim yoki laboratoriyani faqat administrator o'zgartiradi. Nima noto'g'ri ekanini va to'g'risini yozing — administratorga vazifa bo'lib boradi.</p>
-        <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} maxLength={2000} className="input-field" placeholder="Masalan: lavozimim «katta muhandis» bo'lishi kerak." />
+      <Modal open={correction} onClose={() => setCorrection(false)} title={tr("Ma'lumotni tuzatish so'rovi")} size="md">
+        <p className="mb-3 text-sm text-slate-600">{tr("F.I.Sh., lavozim yoki laboratoriyani faqat administrator o'zgartiradi. Nima noto'g'ri ekanini va to'g'risini yozing — administratorga vazifa bo'lib boradi.")}</p>
+        <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} maxLength={2000} className="input-field" placeholder={tr("Masalan: lavozimim «katta muhandis» bo'lishi kerak.")} />
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" onClick={() => setCorrection(false)} className="btn-secondary !py-2">
-            Bekor qilish
+            {tr('Bekor qilish')}
           </button>
           <button type="button" disabled={message.trim().length < 5} onClick={sendCorrection} className="btn-primary !py-2">
-            Yuborish
+            {tr('Yuborish')}
           </button>
         </div>
       </Modal>

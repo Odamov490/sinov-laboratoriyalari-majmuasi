@@ -9,24 +9,25 @@ import TestJournalTab from './TestJournalTab.jsx';
 import TestJournalSummaryTab from './TestJournalSummaryTab.jsx';
 import JournalImportCard from './JournalImportCard.jsx';
 import { FINANCE_ROLES, formatMoney, formatDate } from './journalConstants';
+import { tr } from '../../../i18n/tr.js';
 
-const activeColumn = { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") };
+const activeColumn = { key: 'isActive', label: tr('Faol'), render: (i) => (i.isActive ? tr('Ha') : tr("Yo'q")) };
 
 const PRICE_CONFIG = {
   path: 'test-journal-prices',
-  title: 'Narxlar (bir namuna uchun)',
+  title: tr('Narxlar (bir namuna uchun)'),
   searchable: false,
   columns: [
-    { key: 'productType', label: 'Mahsulot turi', render: (i) => i.productType?.nameUz || '—' },
-    { key: 'direction', label: 'Sinov turi', render: (i) => (i.direction === 'SHOVQIN' ? 'Shovqin' : 'Asosiy (BZ/EMM/EE)') },
-    { key: 'unitPrice', label: "Narx, so'm", render: (i) => formatMoney(i.unitPrice) },
-    { key: 'validFrom', label: 'Amal qiladi', render: (i) => `${formatDate(i.validFrom)} dan` },
-    { key: 'note', label: 'Izoh', render: (i) => i.note || '—' },
+    { key: 'productType', label: tr('Mahsulot turi'), render: (i) => i.productType?.nameUz || '—' },
+    { key: 'direction', label: tr('Sinov turi'), render: (i) => (i.direction === 'SHOVQIN' ? tr('Shovqin') : tr('Asosiy (BZ/EMM/EE)')) },
+    { key: 'unitPrice', label: tr("Narx, so'm"), render: (i) => formatMoney(i.unitPrice) },
+    { key: 'validFrom', label: tr('Amal qiladi'), render: (i) => tr('{0} dan', formatDate(i.validFrom)) },
+    { key: 'note', label: tr('Izoh'), render: (i) => i.note || '—' },
   ],
   fields: [
     {
       name: 'productTypeId',
-      label: 'Mahsulot turi',
+      label: tr('Mahsulot turi'),
       type: 'async-select',
       optionsResource: 'test-product-types',
       optionsLabel: (item) => item.nameUz,
@@ -34,58 +35,58 @@ const PRICE_CONFIG = {
     },
     {
       name: 'direction',
-      label: "Sinov turi (bo'sh = asosiy BZ/EMM/EE)",
+      label: tr("Sinov turi (bo'sh = asosiy BZ/EMM/EE)"),
       type: 'select',
-      options: [{ value: 'SHOVQIN', label: 'Shovqin' }],
+      options: [{ value: 'SHOVQIN', label: tr('Shovqin') }],
     },
-    { name: 'unitPrice', label: "Bir namuna narxi, so'm", type: 'number', required: true },
-    { name: 'validFrom', label: 'Qaysi sanadan amal qiladi', type: 'date', required: true },
-    { name: 'note', label: 'Izoh (masalan: 8 kg gacha)', fullWidth: true },
+    { name: 'unitPrice', label: tr("Bir namuna narxi, so'm"), type: 'number', required: true },
+    { name: 'validFrom', label: tr('Qaysi sanadan amal qiladi'), type: 'date', required: true },
+    { name: 'note', label: tr('Izoh (masalan: 8 kg gacha)'), fullWidth: true },
   ],
 };
 
 const DICTIONARY_CONFIGS = [
   {
     path: 'test-product-types',
-    title: 'Mahsulot turlari',
+    title: tr('Mahsulot turlari'),
     searchable: false,
-    columns: [{ key: 'code', label: 'Kod' }, { key: 'nameUz', label: 'Nomi' }, activeColumn],
+    columns: [{ key: 'code', label: tr('Kod') }, { key: 'nameUz', label: tr('Nomi') }, activeColumn],
     fields: [
-      { name: 'code', label: 'Kod (masalan MUZLATKICH)', required: true },
-      { name: 'nameUz', label: 'Nomi', required: true },
-      { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
+      { name: 'code', label: tr('Kod (masalan MUZLATKICH)'), required: true },
+      { name: 'nameUz', label: tr('Nomi'), required: true },
+      { name: 'isActive', label: tr('Faol'), type: 'checkbox', default: true },
     ],
   },
   {
     path: 'test-locations',
-    title: 'Sinov joylari',
+    title: tr('Sinov joylari'),
     searchable: false,
-    columns: [{ key: 'code', label: 'Kod' }, { key: 'nameUz', label: 'Nomi' }, activeColumn],
+    columns: [{ key: 'code', label: tr('Kod') }, { key: 'nameUz', label: tr('Nomi') }, activeColumn],
     fields: [
-      { name: 'code', label: 'Kod (masalan PSKENT)', required: true },
-      { name: 'nameUz', label: 'Nomi', required: true },
-      { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
+      { name: 'code', label: tr('Kod (masalan PSKENT)'), required: true },
+      { name: 'nameUz', label: tr('Nomi'), required: true },
+      { name: 'isActive', label: tr('Faol'), type: 'checkbox', default: true },
     ],
   },
   {
     path: 'certification-bodies',
-    title: 'Buyurtmachilar (sertifikatlashtirish idoralari)',
+    title: tr('Buyurtmachilar (sertifikatlashtirish idoralari)'),
     columns: [
-      { key: 'name', label: 'Nomi' },
-      { key: 'aliases', label: 'Boshqa yozilishlari', render: (i) => (i.aliases || []).join(', ') || '—' },
+      { key: 'name', label: tr('Nomi') },
+      { key: 'aliases', label: tr('Boshqa yozilishlari'), render: (i) => (i.aliases || []).join(', ') || '—' },
       activeColumn,
     ],
     fields: [
-      { name: 'name', label: 'Nomi', required: true, fullWidth: true },
-      { name: 'isActive', label: 'Faol', type: 'checkbox', default: true },
+      { name: 'name', label: tr('Nomi'), required: true, fullWidth: true },
+      { name: 'isActive', label: tr('Faol'), type: 'checkbox', default: true },
     ],
   },
 ];
 
 const TABS = [
-  { key: 'jurnal', label: 'Jurnal', icon: BookOpen },
-  { key: 'hisobot', label: 'Umumiy hisobot', icon: PieChart },
-  { key: 'spravochniklar', label: 'Spravochniklar', icon: ListTree, superAdminOnly: true },
+  { key: 'jurnal', label: tr('Jurnal'), icon: BookOpen },
+  { key: 'hisobot', label: tr('Umumiy hisobot'), icon: PieChart },
+  { key: 'spravochniklar', label: tr('Spravochniklar'), icon: ListTree, superAdminOnly: true },
 ];
 
 const listAll = (path) =>
@@ -141,8 +142,8 @@ export default function AdminReports() {
   return (
     <div>
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-ink">Hisobot</h1>
-        <p className="text-sm text-slate-500">Sinovlar jurnali va umumiy hisobot</p>
+        <h1 className="text-2xl font-bold text-ink">{tr('Hisobot')}</h1>
+        <p className="text-sm text-slate-500">{tr('Sinovlar jurnali va umumiy hisobot')}</p>
       </div>
 
       <div className="mb-5 flex flex-wrap gap-2 border-b border-border">

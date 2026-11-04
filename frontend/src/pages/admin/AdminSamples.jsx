@@ -24,6 +24,7 @@ import QuickTransferMenu from '../../components/samples/QuickTransferMenu.jsx';
 import RowActionsMenu from '../../components/samples/RowActionsMenu.jsx';
 import PendingReceiptsPanel from '../../components/samples/PendingReceiptsPanel.jsx';
 import { STATUS_OPTIONS, isOverdue } from '../../components/samples/sampleConstants';
+import { tr, locName } from '../../i18n/tr.js';
 
 const PAGE_SIZE = 20;
 
@@ -98,7 +99,7 @@ export default function AdminSamples() {
 
   const createSample = async () => {
     if (!form.productName || !form.originLabId) {
-      showToast('Mahsulot nomi va laboratoriyani kiriting.', 'error');
+      showToast(tr('Mahsulot nomi va laboratoriyani kiriting.'), 'error');
       return;
     }
     setSaving(true);
@@ -107,12 +108,12 @@ export default function AdminSamples() {
         ...form,
         dueDate: form.dueDate ? new Date(form.dueDate).toISOString() : null,
       });
-      showToast(`Namuna ro'yxatga olindi: ${sample.code}`, 'success');
+      showToast(tr("Namuna ro'yxatga olindi: {0}", sample.code), 'success');
       setCreateOpen(false);
       load();
       setQrItem(sample);
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -124,12 +125,12 @@ export default function AdminSamples() {
     setBusyId(sample.id);
     try {
       await adminSamples.action(sample.id, { action: 'CHIQARISH', toLabId });
-      showToast(`${sample.code} yuborildi.`, 'success');
+      showToast(tr('{0} yuborildi.', sample.code), 'success');
       flash(sample.id);
       load();
       loadPending();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setBusyId(null);
     }
@@ -139,11 +140,11 @@ export default function AdminSamples() {
     setBusyId(sample.id);
     try {
       await adminSamples.action(sample.id, { action: 'YAKUNLASH' });
-      showToast(`${sample.code} yakunlandi.`, 'success');
+      showToast(tr('{0} yakunlandi.', sample.code), 'success');
       flash(sample.id);
       load();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setBusyId(null);
     }
@@ -153,12 +154,12 @@ export default function AdminSamples() {
     setBusyId(sample.id);
     try {
       await adminSamples.action(sample.id, { action: 'QABUL_QILISH', toLabId });
-      showToast(`${sample.code} qabul qilindi.`, 'success');
+      showToast(tr('{0} qabul qilindi.', sample.code), 'success');
       flash(sample.id);
       load();
       loadPending();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setBusyId(null);
     }
@@ -166,11 +167,11 @@ export default function AdminSamples() {
 
   const rowActions = (s) => {
     const menuItems = [
-      { label: "QR ko'rish", icon: QrCode, onClick: () => setQrItem(s) },
-      { label: 'Batafsil', icon: Eye, to: `/admin/namunalar/${s.id}` },
+      { label: tr("QR ko'rish"), icon: QrCode, onClick: () => setQrItem(s) },
+      { label: tr('Batafsil'), icon: Eye, to: `/admin/namunalar/${s.id}` },
     ];
     if (s.status === 'LABORATORIYADA') {
-      menuItems.unshift({ label: 'Yakunlash', icon: CheckCircle2, onClick: () => finishSample(s) });
+      menuItems.unshift({ label: tr('Yakunlash'), icon: CheckCircle2, onClick: () => finishSample(s) });
     }
     return (
       <div className="flex items-center justify-end gap-1.5">
@@ -186,7 +187,7 @@ export default function AdminSamples() {
           <QuickTransferMenu
             labs={labs}
             busy={busyId === s.id}
-            label="Qabul qilish"
+            label={tr('Qabul qilish')}
             onSelect={(labId) => receiveSample(s, labId)}
           />
         )}
@@ -200,15 +201,13 @@ export default function AdminSamples() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
-        <h1 className="text-2xl font-bold text-ink">Namunalar</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr('Namunalar')}</h1>
         <button onClick={openCreate} className="btn-primary !py-2.5">
-          <Plus className="h-4 w-4" /> Yangi namuna ro'yxatga olish
+          <Plus className="h-4 w-4" /> {tr("Yangi namuna ro'yxatga olish")}
         </button>
       </div>
       <p className="text-sm text-slate-500 mb-6">
-        Namunani ro'yxatga oling, QR yorliqni chop eting va namunaga yopishtiring. Boshqa laboratoriyaga
-        yuborish uchun qatordagi "Yuborish" tugmasidan foydalaning — laboratoriyani tanlashingiz bilan
-        darhol jo'natiladi.
+        {tr("Namunani ro'yxatga oling, QR yorliqni chop eting va namunaga yopishtiring. Boshqa laboratoriyaga yuborish uchun qatordagi \"Yuborish\" tugmasidan foydalaning — laboratoriyani tanlashingiz bilan darhol jo'natiladi.")}
       </p>
 
       <PendingReceiptsPanel items={pending} myLabId={myLabId} onReceive={receiveSample} busyId={busyId} />
@@ -219,7 +218,7 @@ export default function AdminSamples() {
           className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-ink"
         >
           <span className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-primary" /> Statistika
+            <BarChart3 className="h-4 w-4 text-primary" /> {tr('Statistika')}
           </span>
           {statsOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
         </button>
@@ -243,8 +242,8 @@ export default function AdminSamples() {
                       {stats.inTransitCount}
                     </div>
                     <div>
-                      <p className="font-semibold text-ink">Tashilmoqda</p>
-                      <p className="text-xs text-slate-500">Hozir yo'lda bo'lgan namunalar</p>
+                      <p className="font-semibold text-ink">{tr('Tashilmoqda')}</p>
+                      <p className="text-xs text-slate-500">{tr("Hozir yo'lda bo'lgan namunalar")}</p>
                     </div>
                   </div>
                   <div className="rounded-lg border border-border p-4 flex items-center gap-4">
@@ -252,14 +251,14 @@ export default function AdminSamples() {
                       {stats.overdueCount}
                     </div>
                     <div>
-                      <p className="font-semibold text-ink">Muddati o'tgan</p>
-                      <p className="text-xs text-slate-500">Belgilangan muddatdan kechikkan</p>
+                      <p className="font-semibold text-ink">{tr("Muddati o'tgan")}</p>
+                      <p className="text-xs text-slate-500">{tr('Belgilangan muddatdan kechikkan')}</p>
                     </div>
                   </div>
                 </div>
                 {stats.last30Days.length > 0 && (
                   <div>
-                    <p className="text-sm font-semibold text-ink mb-3">Oxirgi 30 kun: kirim / chiqim</p>
+                    <p className="text-sm font-semibold text-ink mb-3">{tr('Oxirgi 30 kun: kirim / chiqim')}</p>
                     <ResponsiveContainer width="100%" height={200}>
                       <LineChart data={stats.last30Days}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -280,13 +279,13 @@ export default function AdminSamples() {
 
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="w-full sm:w-64">
-          <SearchBar value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder="Kod yoki mahsulot bo'yicha qidirish" />
+          <SearchBar value={q} onChange={(v) => { setQ(v); setPage(1); }} placeholder={tr("Kod yoki mahsulot bo'yicha qidirish")} />
         </div>
         <div className="w-full sm:w-56">
           <Select
             value={status}
             onChange={(v) => { setStatus(v); setPage(1); }}
-            placeholder="Barcha holatlar"
+            placeholder={tr('Barcha holatlar')}
             options={STATUS_OPTIONS}
           />
         </div>
@@ -299,18 +298,18 @@ export default function AdminSamples() {
           <Loading />
         ) : data.items.length === 0 ? (
           <div className="p-10 text-center">
-            <EmptyState message="Hali namuna ro'yxatga olinmagan." />
+            <EmptyState message={tr("Hali namuna ro'yxatga olinmagan.")} />
           </div>
         ) : (
           <table className="w-full text-sm min-w-[820px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-3">Kod</th>
-                <th className="px-4 py-3">Mahsulot</th>
-                <th className="px-4 py-3">Joylashuvi</th>
-                <th className="px-4 py-3">Holat</th>
-                <th className="px-4 py-3">Muddat</th>
-                <th className="px-4 py-3 text-right">Amallar</th>
+                <th className="px-4 py-3">{tr('Kod')}</th>
+                <th className="px-4 py-3">{tr('Mahsulot')}</th>
+                <th className="px-4 py-3">{tr('Joylashuvi')}</th>
+                <th className="px-4 py-3">{tr('Holat')}</th>
+                <th className="px-4 py-3">{tr('Muddat')}</th>
+                <th className="px-4 py-3 text-right">{tr('Amallar')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -327,9 +326,9 @@ export default function AdminSamples() {
                     <td className="px-4 py-3 font-medium text-ink">{s.productName}</td>
                     <td className="px-4 py-3 text-slate-600">
                       {s.status === 'TASHILMOQDA' ? (
-                        <span className="italic text-slate-400">Yo'lda</span>
+                        <span className="italic text-slate-400">{tr("Yo'lda")}</span>
                       ) : (
-                        s.currentLab?.nameUz || s.originLab?.nameUz || '—'
+                        locName(s.currentLab) || locName(s.originLab) || '—'
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -361,7 +360,7 @@ export default function AdminSamples() {
           <div className="card"><Loading /></div>
         ) : data.items.length === 0 ? (
           <div className="card p-10 text-center">
-            <EmptyState message="Hali namuna ro'yxatga olinmagan." />
+            <EmptyState message={tr("Hali namuna ro'yxatga olinmagan.")} />
           </div>
         ) : (
           data.items.map((s) => {
@@ -381,15 +380,15 @@ export default function AdminSamples() {
                   <SampleStatusBadge status={s.status} />
                 </div>
                 <p className="text-xs text-slate-500 mb-1">
-                  Joylashuvi:{' '}
+                  {tr('Joylashuvi:')}{' '}
                   <span className="text-ink font-medium">
-                    {s.status === 'TASHILMOQDA' ? "Yo'lda" : s.currentLab?.nameUz || s.originLab?.nameUz || '—'}
+                    {s.status === 'TASHILMOQDA' ? tr("Yo'lda") : locName(s.currentLab) || locName(s.originLab) || '—'}
                   </span>
                 </p>
                 {s.dueDate && (
                   <p className={`text-xs mb-3 flex items-center gap-1 ${overdue ? 'text-red-600 font-semibold' : 'text-slate-500'}`}>
                     {overdue && <AlertTriangle className="h-3.5 w-3.5" />}
-                    Muddat: {formatDate(s.dueDate)}
+                    {tr('Muddat:')} {formatDate(s.dueDate)}
                   </p>
                 )}
                 <div className="flex justify-end pt-1 border-t border-border mt-2">{rowActions(s)}</div>
@@ -401,28 +400,28 @@ export default function AdminSamples() {
 
       {data && <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onChange={setPage} />}
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi namuna" size="sm">
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title={tr('Yangi namuna')} size="sm">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Mahsulot nomi</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Mahsulot nomi')}</label>
             <input
               value={form.productName}
               onChange={(e) => setForm({ ...form, productName: e.target.value })}
               className="input-field"
-              placeholder="Masalan: Elektr kabel namunasi"
+              placeholder={tr('Masalan: Elektr kabel namunasi')}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Laboratoriya (qayerdan kelgan)</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Laboratoriya (qayerdan kelgan)')}</label>
             <Select
               value={form.originLabId}
               onChange={(v) => setForm({ ...form, originLabId: v })}
-              placeholder="Laboratoriyani tanlang"
-              options={labs.map((l) => ({ value: l.id, label: l.nameUz }))}
+              placeholder={tr('Laboratoriyani tanlang')}
+              options={labs.map((l) => ({ value: l.id, label: locName(l) }))}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Kutilayotgan yakunlash sanasi (ixtiyoriy)</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Kutilayotgan yakunlash sanasi (ixtiyoriy)')}</label>
             <input
               type="date"
               value={form.dueDate}
@@ -431,7 +430,7 @@ export default function AdminSamples() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Izoh (ixtiyoriy)</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Izoh (ixtiyoriy)')}</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -440,12 +439,12 @@ export default function AdminSamples() {
             />
           </div>
           <button onClick={createSample} disabled={saving} className="btn-primary w-full">
-            {saving ? 'Saqlanmoqda...' : "Ro'yxatga olish"}
+            {saving ? tr('Saqlanmoqda...') : tr("Ro'yxatga olish")}
           </button>
         </div>
       </Modal>
 
-      <Modal open={!!qrItem} onClose={() => setQrItem(null)} title="QR yorliq" size="sm">
+      <Modal open={!!qrItem} onClose={() => setQrItem(null)} title={tr('QR yorliq')} size="sm">
         {qrItem && (
           <div className="text-center">
             <div id="qr-print-area" className="inline-block p-6 border border-border rounded-xl">
@@ -454,7 +453,7 @@ export default function AdminSamples() {
               <p className="text-sm text-slate-500">{qrItem.productName}</p>
             </div>
             <button onClick={printQr} className="btn-primary w-full mt-6">
-              <Printer className="h-4 w-4" /> Chop etish
+              <Printer className="h-4 w-4" /> {tr('Chop etish')}
             </button>
           </div>
         )}

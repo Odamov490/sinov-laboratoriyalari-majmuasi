@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { renderText, bigEmojiCount, formatTime, initials, avatarColor } from '../../../chat/format';
 import { ImageGrid, VideoAttachment, FileAttachment, VoicePlayer, VideoNote, ExpiredMedia } from './Attachments.jsx';
+import { tr } from '../../../i18n/tr.js';
 
 export const QUICK_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
@@ -42,9 +43,9 @@ function ReplyQuote({ reply, mine, onJump }) {
       onClick={() => onJump(reply.id)}
       className={`mb-1 block w-full rounded-md border-l-[3px] px-2 py-1 text-left text-xs ${mine ? 'border-white/70 bg-white/15' : 'border-primary bg-primary/5'}`}
     >
-      <span className={`block font-semibold ${mine ? 'text-white' : 'text-primary'}`}>{reply.senderName || 'Foydalanuvchi'}</span>
+      <span className={`block font-semibold ${mine ? 'text-white' : 'text-primary'}`}>{reply.senderName || tr('Foydalanuvchi')}</span>
       <span className={`line-clamp-2 ${mine ? 'text-white/80' : 'text-slate-600'}`}>
-        {reply.deleted ? "Xabar o'chirildi" : reply.body || { IMAGE: 'Rasm', VIDEO: 'Video', VOICE: 'Ovozli xabar', VIDEO_NOTE: 'Video xabar', FILE: 'Fayl', STICKER: 'Stiker' }[reply.type] || ''}
+        {reply.deleted ? tr("Xabar o'chirildi") : reply.body || { IMAGE: tr('Rasm'), VIDEO: tr('Video'), VOICE: tr('Ovozli xabar'), VIDEO_NOTE: tr('Video xabar'), FILE: tr('Fayl'), STICKER: tr('Stiker') }[reply.type] || ''}
       </span>
     </button>
   );
@@ -55,7 +56,7 @@ function Status({ message, pending, readCount, isDirect, mine }) {
   if (pending?.status === 'failed') return <AlertCircle className="h-3.5 w-3.5 text-red-300" />;
   if (pending) return <Clock className="h-3 w-3" />;
   if (isDirect) return readCount > 0 ? <CheckCheck className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />;
-  return readCount > 0 ? <span className="text-[10px]">Ko'rdi: {readCount}</span> : <Check className="h-3.5 w-3.5" />;
+  return readCount > 0 ? <span className="text-[10px]">{tr("Ko'rdi:")} {readCount}</span> : <Check className="h-3.5 w-3.5" />;
 }
 
 function MenuButton({ icon: Icon, label, onClick, danger }) {
@@ -120,12 +121,12 @@ function MessageItem({
   };
 
   const content = deleted ? (
-    <span className="text-sm italic opacity-70">Xabar o'chirildi</span>
+    <span className="text-sm italic opacity-70">{tr("Xabar o'chirildi")}</span>
   ) : (
     <>
       {m.meta?.forwardedFrom && (
         <div className={`mb-1 flex items-center gap-1 text-xs ${mine ? 'text-white/80' : 'text-primary/80'}`}>
-          <Forward className="h-3 w-3" /> Ulashildi{m.meta.forwardedFrom.senderName ? `: ${m.meta.forwardedFrom.senderName}` : ''}
+          <Forward className="h-3 w-3" /> {tr('Ulashildi')}{m.meta.forwardedFrom.senderName ? `: ${m.meta.forwardedFrom.senderName}` : ''}
         </div>
       )}
       {m.replyTo && <ReplyQuote reply={m.replyTo} mine={mine} onJump={onJump} />}
@@ -162,7 +163,7 @@ function MessageItem({
             type="button"
             onClick={() => onAction('react', m, r.emoji)}
             className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${minePick ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-white text-slate-600'}`}
-            title={minePick ? 'Reaksiyani olib tashlash' : 'Reaksiya qo\'shish'}
+            title={minePick ? tr('Reaksiyani olib tashlash') : tr("Reaksiya qo'shish")}
           >
             <span className="text-sm leading-none">{r.emoji}</span> {r.count}
           </button>
@@ -173,7 +174,7 @@ function MessageItem({
 
   const footer = (
     <span className={`ml-2 inline-flex translate-y-1 items-center gap-1 whitespace-nowrap align-bottom text-[10px] ${mine && !bubbleless ? 'text-white/75' : 'text-slate-400'}`}>
-      {m.editedAt && !deleted && <span>tahrirlangan</span>}
+      {m.editedAt && !deleted && <span>{tr('tahrirlangan')}</span>}
       {time}
       <Status message={m} pending={pending} readCount={readCount} isDirect={isDirect} mine={mine} />
     </span>
@@ -196,9 +197,9 @@ function MessageItem({
             {showSender && !mine && <span className="mb-0.5 text-xs font-semibold text-primary">{m.sender?.fullName}</span>}
             {m.type === 'STICKER' &&
               (sticker ? (
-                <img src={sticker.url} alt={sticker.emoji || 'Stiker'} className="h-32 w-32 object-contain" loading="lazy" />
+                <img src={sticker.url} alt={sticker.emoji || tr('Stiker')} className="h-32 w-32 object-contain" loading="lazy" />
               ) : (
-                <span className="flex h-32 w-32 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">Stiker</span>
+                <span className="flex h-32 w-32 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">{tr('Stiker')}</span>
               ))}
             {m.type === 'VIDEO_NOTE' && <VideoNote att={m.attachments?.[0]} meta={m.meta} />}
             {big > 0 && <span className={big === 1 ? 'text-6xl' : big === 2 ? 'text-5xl' : 'text-4xl'}>{m.body}</span>}
@@ -216,12 +217,12 @@ function MessageItem({
         {reactions}
         {pending?.status === 'failed' && (
           <div className="mt-1 flex items-center gap-2 text-xs text-red-600">
-            {pending.error || 'Yuborilmadi'}
+            {pending.error || tr('Yuborilmadi')}
             <button type="button" onClick={() => onAction('retry', m)} className="inline-flex items-center gap-1 font-semibold hover:underline">
-              <RotateCw className="h-3 w-3" /> Qayta
+              <RotateCw className="h-3 w-3" /> {tr('Qayta')}
             </button>
             <button type="button" onClick={() => onAction('discard', m)} className="inline-flex items-center gap-1 hover:underline">
-              <X className="h-3 w-3" /> Bekor
+              <X className="h-3 w-3" /> {tr('Bekor')}
             </button>
           </div>
         )}
@@ -229,7 +230,7 @@ function MessageItem({
 
       {!pending && !deleted && (
         <div className={`relative self-center ${menu ? '' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'}`}>
-          <button type="button" onClick={(e) => setMenu(!menu, e.currentTarget)} className="rounded-full p-1 text-slate-400 hover:bg-white hover:text-slate-600" title="Amallar">
+          <button type="button" onClick={(e) => setMenu(!menu, e.currentTarget)} className="rounded-full p-1 text-slate-400 hover:bg-white hover:text-slate-600" title={tr('Amallar')}>
             <MoreHorizontal className="h-4 w-4" />
           </button>
           {menu &&
@@ -251,21 +252,21 @@ function MessageItem({
                           {e}
                         </button>
                       ))}
-                      <button type="button" onClick={() => act('react-more')} className="rounded-full p-1 text-slate-500 hover:bg-bg-light" title="Boshqa">
+                      <button type="button" onClick={() => act('react-more')} className="rounded-full p-1 text-slate-500 hover:bg-bg-light" title={tr('Boshqa')}>
                         <SmilePlus className="h-4 w-4" />
                       </button>
                     </div>
                   )}
-                  {perms.canWrite && <MenuButton icon={CornerUpLeft} label="Javob berish" onClick={() => act('reply')} />}
-                  {m.body && <MenuButton icon={Copy} label="Nusxa olish" onClick={() => act('copy')} />}
-                  <MenuButton icon={Forward} label="Ulashish" onClick={() => act('forward')} />
+                  {perms.canWrite && <MenuButton icon={CornerUpLeft} label={tr('Javob berish')} onClick={() => act('reply')} />}
+                  {m.body && <MenuButton icon={Copy} label={tr('Nusxa olish')} onClick={() => act('copy')} />}
+                  <MenuButton icon={Forward} label={tr('Ulashish')} onClick={() => act('forward')} />
                   {perms.canPin && (
-                    <MenuButton icon={perms.pinned ? PinOff : Pin} label={perms.pinned ? 'Qadashni olib tashlash' : 'Qadash'} onClick={() => act(perms.pinned ? 'unpin' : 'pin')} />
+                    <MenuButton icon={perms.pinned ? PinOff : Pin} label={perms.pinned ? tr('Qadashni olib tashlash') : tr('Qadash')} onClick={() => act(perms.pinned ? 'unpin' : 'pin')} />
                   )}
-                  {perms.canEdit && <MenuButton icon={Pencil} label="Tahrirlash" onClick={() => act('edit')} />}
-                  <MenuButton icon={ListPlus} label="Vazifa qilish" onClick={() => act('task')} />
-                  <MenuButton icon={Info} label="Ma'lumot" onClick={() => act('info')} />
-                  <MenuButton icon={Trash2} label="O'chirish" onClick={() => act('delete')} danger />
+                  {perms.canEdit && <MenuButton icon={Pencil} label={tr('Tahrirlash')} onClick={() => act('edit')} />}
+                  <MenuButton icon={ListPlus} label={tr('Vazifa qilish')} onClick={() => act('task')} />
+                  <MenuButton icon={Info} label={tr("Ma'lumot")} onClick={() => act('info')} />
+                  <MenuButton icon={Trash2} label={tr("O'chirish")} onClick={() => act('delete')} danger />
                 </div>
               </>,
               document.body

@@ -2,6 +2,7 @@ import { io } from 'socket.io-client';
 import apiClient, { getAccessToken, onAccessToken, setAccessToken } from '../api/client';
 import chatApi from './chatApi';
 import { alertFor } from '../utils/notifyPrefs';
+import { tr, trServer } from '../i18n/tr.js';
 
 // Chatning global holati: bitta Socket.IO ulanishi, o'qilmaganlar soni,
 // onlayn foydalanuvchilar, yuborilmagan xabarlar navbati (offline queue),
@@ -148,7 +149,7 @@ export const isConnected = () => Boolean(socket?.connected);
 function emitAck(event, payload, timeout = 10000) {
   return new Promise((resolve) => {
     if (!socket?.connected) return resolve({ ok: false, offline: true });
-    socket.timeout(timeout).emit(event, payload, (err, res) => resolve(err ? { ok: false, offline: true } : res));
+    socket.timeout(timeout).emit(event, payload, (err, res) => resolve(err ? { ok: false, offline: true } : res && res.error ? { ...res, error: trServer(res.error) } : res));
     return undefined;
   });
 }
@@ -161,8 +162,8 @@ async function call(event, payload, rest) {
   try {
     return { ok: true, ...(await rest()) };
   } catch (err) {
-    throw Object.assign(new Error(err?.response?.data?.error || 'Xatolik'), {
-      error: err?.response?.data?.error || "Ulanish yo'q. Keyinroq urinib ko'ring.",
+    throw Object.assign(new Error(err?.response?.data?.error || tr('Xatolik')), {
+      error: err?.response?.data?.error || tr("Ulanish yo'q. Keyinroq urinib ko'ring."),
       status: err?.response?.status,
       offline: !err?.response,
     });
@@ -256,8 +257,8 @@ function loadRoomMeta() {
 }
 
 export const previewText = (m) => {
-  if (m.deletedAt) return "Xabar o'chirildi";
-  const labels = { IMAGE: '🖼 Rasm', VIDEO: '🎬 Video', VIDEO_NOTE: '⏺ Video xabar', VOICE: '🎤 Ovozli xabar', FILE: '📎 Fayl', STICKER: '🙂 Stiker' };
+  if (m.deletedAt) return tr("Xabar o'chirildi");
+  const labels = { IMAGE: tr('🖼 Rasm'), VIDEO: tr('🎬 Video'), VIDEO_NOTE: tr('⏺ Video xabar'), VOICE: tr('🎤 Ovozli xabar'), FILE: tr('📎 Fayl'), STICKER: tr('🙂 Stiker') };
   if (m.type === 'TEXT' || m.type === 'SYSTEM') return m.body || m.preview || '';
   return m.body || m.preview ? `${labels[m.type]}: ${m.body || m.preview}` : labels[m.type] || '';
 };
@@ -274,7 +275,7 @@ function notify(m) {
   if (mutedRooms.has(m.roomId)) return;
   if (!roomTypes.has(m.roomId)) loadRoomMeta();
   alertFor(chatEvent(m), {
-    title: m.sender?.fullName || 'Yangi xabar',
+    title: m.sender?.fullName || tr('Yangi xabar'),
     body: previewText(m),
     tag: m.roomId,
     onClick: () => {
@@ -332,7 +333,7 @@ async function trySend(item) {
   }
   if (!res.offline) {
     item.status = 'failed';
-    item.error = res.error || 'Yuborilmadi';
+    item.error = res.error || tr('Yuborilmadi');
   }
   persistOutbox();
   fire('outbox', { clientId: item.payload.clientId });

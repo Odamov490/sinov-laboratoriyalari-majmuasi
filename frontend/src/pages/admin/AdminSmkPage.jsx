@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { adminResource } from '../../services/adminApi';
 import { Loading, EmptyState } from '../../components/StateViews.jsx';
 import AdminCrudPage from './AdminCrudPage.jsx';
+import { tr, locName } from '../../i18n/tr.js';
 
 // The lab a user is confined to (mirrors backend crudFactory: a
 // non-SUPER_ADMIN user with a labId only works with that lab's SMK).
@@ -38,10 +39,10 @@ export default function AdminSmkPage({ config }) {
   }
 
   const lab = labs.find((l) => l.slug === labSlug);
-  if (!lab) return <EmptyState message="Laboratoriya topilmadi." />;
+  if (!lab) return <EmptyState message={tr('Laboratoriya topilmadi.')} />;
 
   // Keyed by lab so switching labs starts from a clean list/form state.
-  return <AdminCrudPage key={labSlug} config={config} labScope={{ id: lab.id, name: lab.nameUz }} />;
+  return <AdminCrudPage key={labSlug} config={config} labScope={{ id: lab.id, name: locName(lab) }} />;
 }
 
 // Old /admin/smk/<module> links (before the per-lab split) land on the same
@@ -54,6 +55,6 @@ export function AdminSmkLegacyRedirect() {
   if (labs === null) return <Loading />;
   const confinedId = smkConfinedLabId(user);
   const lab = (confinedId && labs.find((l) => l.id === confinedId)) || labs[0];
-  if (!lab) return <EmptyState message="Laboratoriya topilmadi." />;
+  if (!lab) return <EmptyState message={tr('Laboratoriya topilmadi.')} />;
   return <Navigate to={`/admin/smk/${lab.slug}/${module}`} replace />;
 }

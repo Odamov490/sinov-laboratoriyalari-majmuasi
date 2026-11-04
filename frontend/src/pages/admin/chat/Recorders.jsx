@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Send, Trash2, Square, X } from 'lucide-react';
 import { startVoice, startVideoNote, mediaError } from '../../../chat/recorders';
 import { formatDuration } from '../../../chat/format';
+import { tr } from '../../../i18n/tr.js';
 
 // Ovoz yozish paneli (composer o'rnida). Ruxsat tugma bosilganda so'raladi.
 export function VoiceRecorder({ maxSeconds, onSend, onCancel, onError }) {
@@ -22,7 +23,7 @@ export function VoiceRecorder({ maxSeconds, onSend, onCancel, onError }) {
     }
     const result = await r.stop();
     if (result.duration < 0.7) {
-      onError('Ovozli xabar juda qisqa.');
+      onError(tr('Ovozli xabar juda qisqa.'));
       onCancel();
       return;
     }
@@ -70,7 +71,7 @@ export function VoiceRecorder({ maxSeconds, onSend, onCancel, onError }) {
 
   return (
     <div className="flex flex-1 items-center gap-3 rounded-xl bg-bg-light px-3 py-2">
-      <button type="button" onClick={() => finish(false)} className="rounded-full p-2 text-slate-500 hover:bg-white hover:text-red-600" title="Bekor qilish">
+      <button type="button" onClick={() => finish(false)} className="rounded-full p-2 text-slate-500 hover:bg-white hover:text-red-600" title={tr('Bekor qilish')}>
         <Trash2 className="h-5 w-5" />
       </button>
       <span className="flex items-center gap-2 text-sm font-medium tabular-nums text-ink">
@@ -78,7 +79,7 @@ export function VoiceRecorder({ maxSeconds, onSend, onCancel, onError }) {
         {formatDuration(sec)} / {formatDuration(maxSeconds)}
       </span>
       <canvas ref={canvas} width={240} height={32} className="h-8 min-w-0 flex-1" />
-      <button type="button" disabled={!ready} onClick={() => finish(true)} className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-light disabled:opacity-50" title="Yuborish">
+      <button type="button" disabled={!ready} onClick={() => finish(true)} className="rounded-full bg-primary p-2.5 text-white hover:bg-primary-light disabled:opacity-50" title={tr('Yuborish')}>
         <Send className="h-4 w-4" />
       </button>
     </div>
@@ -103,7 +104,7 @@ export function VideoNoteRecorder({ maxSeconds, onSend, onCancel, onError }) {
     }
     const result = await r.stop();
     if (result.duration < 1) {
-      onError('Video xabar juda qisqa.');
+      onError(tr('Video xabar juda qisqa.'));
       onCancel();
       return;
     }
@@ -148,10 +149,10 @@ export function VideoNoteRecorder({ maxSeconds, onSend, onCancel, onError }) {
         {formatDuration(sec)} / {formatDuration(maxSeconds)}
       </div>
       <div className="flex items-center gap-4">
-        <button type="button" onClick={() => finish(false)} className="rounded-full bg-white/10 p-3 text-white hover:bg-white/20" title="Bekor qilish">
+        <button type="button" onClick={() => finish(false)} className="rounded-full bg-white/10 p-3 text-white hover:bg-white/20" title={tr('Bekor qilish')}>
           <X className="h-6 w-6" />
         </button>
-        <button type="button" disabled={!ready} onClick={() => finish(true)} className="rounded-full bg-red-500 p-4 text-white hover:bg-red-600 disabled:opacity-50" title="To'xtatish va yuborish">
+        <button type="button" disabled={!ready} onClick={() => finish(true)} className="rounded-full bg-red-500 p-4 text-white hover:bg-red-600 disabled:opacity-50" title={tr("To'xtatish va yuborish")}>
           <Square className="h-6 w-6 fill-current" />
         </button>
       </div>

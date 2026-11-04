@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Save, Star, Home, Rows3, ListOrdered } from 'lucide-react';
 import { adminProfile } from '../../../services/adminApi';
 import { apiErr } from './ProfileGeneral.jsx';
+import { tr, trServer } from '../../../i18n/tr.js';
 
 // Variantlar serverdan (profile.menuOptions) — faqat shu rolga ruxsat
 // etilgan bo'limlar; server ham qayta tekshiradi.
@@ -22,7 +23,7 @@ export default function ProfileSettings({ profile, onChange, toast }) {
     try {
       const next = await adminProfile.update({ preferences: { landingPage: landingPage || null, favorites, density, pageSize } });
       onChange(next);
-      toast('Sozlamalar saqlandi.', 'success');
+      toast(tr('Sozlamalar saqlandi.'), 'success');
     } catch (err) {
       toast(apiErr(err), 'error');
     } finally {
@@ -35,15 +36,15 @@ export default function ProfileSettings({ profile, onChange, toast }) {
       <div className="card p-6">
         <label className="block text-sm">
           <span className="mb-1.5 flex items-center gap-2 font-semibold text-ink">
-            <Home className="h-4 w-4 text-primary" /> Kirgandan keyin ochiladigan sahifa
+            <Home className="h-4 w-4 text-primary" /> {tr('Kirgandan keyin ochiladigan sahifa')}
           </span>
           <select value={landingPage} onChange={(e) => setLandingPage(e.target.value)} className="input-field sm:max-w-sm">
-            <option value="">Dashboard (sukut)</option>
+            <option value="">{tr('Dashboard (sukut)')}</option>
             {options
               .filter((o) => o.key !== 'dashboard')
               .map((o) => (
                 <option key={o.key} value={o.key}>
-                  {o.label}
+                  {trServer(o.label)}
                 </option>
               ))}
           </select>
@@ -52,9 +53,9 @@ export default function ProfileSettings({ profile, onChange, toast }) {
 
       <div className="card p-6">
         <p className="mb-1 flex items-center gap-2 text-sm font-semibold text-ink">
-          <Star className="h-4 w-4 text-primary" /> Sevimli bo'limlar
+          <Star className="h-4 w-4 text-primary" /> {tr("Sevimli bo'limlar")}
         </p>
-        <p className="mb-3 text-xs text-slate-500">Yon menyuning tepasida va Dashboard'da tezkor havola bo'lib chiqadi. Ko'pi bilan 6 ta ({favorites.length}/6).</p>
+        <p className="mb-3 text-xs text-slate-500">{tr("Yon menyuning tepasida va Dashboard'da tezkor havola bo'lib chiqadi. Ko'pi bilan 6 ta (")}{favorites.length}/6).</p>
         <div className="flex flex-wrap gap-2">
           {options.map((o) => {
             const on = favorites.includes(o.key);
@@ -70,7 +71,7 @@ export default function ProfileSettings({ profile, onChange, toast }) {
                 }`}
                 aria-pressed={on}
               >
-                <Star className={`h-3.5 w-3.5 ${on ? 'fill-current' : ''}`} /> {o.label}
+                <Star className={`h-3.5 w-3.5 ${on ? 'fill-current' : ''}`} /> {trServer(o.label)}
               </button>
             );
           })}
@@ -80,12 +81,12 @@ export default function ProfileSettings({ profile, onChange, toast }) {
       <div className="card grid gap-5 p-6 sm:grid-cols-2">
         <div>
           <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
-            <Rows3 className="h-4 w-4 text-primary" /> Ko'rinish zichligi
+            <Rows3 className="h-4 w-4 text-primary" /> {tr("Ko'rinish zichligi")}
           </p>
           <div className="inline-flex rounded-lg bg-bg-light p-1">
             {[
-              ['normal', 'Oddiy'],
-              ['compact', 'Ixcham'],
+              ['normal', tr('Oddiy')],
+              ['compact', tr('Ixcham')],
             ].map(([k, l]) => (
               <button key={k} type="button" onClick={() => setDensity(k)} className={`rounded-md px-4 py-1.5 text-sm font-medium ${density === k ? 'bg-white text-primary shadow-sm' : 'text-slate-500'}`}>
                 {l}
@@ -95,7 +96,7 @@ export default function ProfileSettings({ profile, onChange, toast }) {
         </div>
         <div>
           <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
-            <ListOrdered className="h-4 w-4 text-primary" /> Jadvallarda sahifadagi qatorlar
+            <ListOrdered className="h-4 w-4 text-primary" /> {tr('Jadvallarda sahifadagi qatorlar')}
           </p>
           <div className="inline-flex rounded-lg bg-bg-light p-1">
             {[15, 50, 100].map((n) => (
@@ -109,7 +110,7 @@ export default function ProfileSettings({ profile, onChange, toast }) {
 
       <div className="flex justify-end">
         <button type="button" onClick={save} disabled={saving} className="btn-primary !py-2">
-          <Save className="h-4 w-4" /> {saving ? 'Saqlanmoqda…' : 'Saqlash'}
+          <Save className="h-4 w-4" /> {saving ? tr('Saqlanmoqda…') : tr('Saqlash')}
         </button>
       </div>
     </div>

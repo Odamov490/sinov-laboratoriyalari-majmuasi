@@ -10,15 +10,16 @@ import ProfileSecurity from './profile/ProfileSecurity.jsx';
 import ProfileNotifications from './profile/ProfileNotifications.jsx';
 import ProfileSettings from './profile/ProfileSettings.jsx';
 import ProfileActivity from './profile/ProfileActivity.jsx';
+import { tr } from '../../i18n/tr.js';
 
 // Shaxsiy kabinet: har kim faqat o'z ma'lumotini ko'radi va o'zgartiradi.
 // Yorliq havolada: ?tab=umumiy|xavfsizlik|bildirishnomalar|sozlamalar|faoliyat
 const TABS = [
-  { key: 'umumiy', label: 'Umumiy', icon: UserCircle },
-  { key: 'xavfsizlik', label: 'Xavfsizlik', icon: ShieldCheck },
-  { key: 'bildirishnomalar', label: 'Bildirishnomalar', icon: Bell },
-  { key: 'sozlamalar', label: 'Sozlamalar', icon: SlidersHorizontal },
-  { key: 'faoliyat', label: 'Faoliyatim', icon: Activity },
+  { key: 'umumiy', label: tr('Umumiy'), icon: UserCircle },
+  { key: 'xavfsizlik', label: tr('Xavfsizlik'), icon: ShieldCheck },
+  { key: 'bildirishnomalar', label: tr('Bildirishnomalar'), icon: Bell },
+  { key: 'sozlamalar', label: tr('Sozlamalar'), icon: SlidersHorizontal },
+  { key: 'faoliyat', label: tr('Faoliyatim'), icon: Activity },
 ];
 
 export default function AdminProfile() {
@@ -34,7 +35,7 @@ export default function AdminProfile() {
     adminProfile
       .get()
       .then(setProfile)
-      .catch((err) => setError(err?.response?.data?.error || "Profilni yuklab bo'lmadi."));
+      .catch((err) => setError(err?.response?.data?.error || tr("Profilni yuklab bo'lmadi.")));
   }, []);
   useEffect(load, [load]);
 
@@ -53,7 +54,7 @@ export default function AdminProfile() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
-      <h1 className="text-2xl font-bold text-ink">Mening profilim</h1>
+      <h1 className="text-2xl font-bold text-ink">{tr('Mening profilim')}</h1>
 
       <div className="-mx-1 overflow-x-auto border-b border-border" role="tablist">
         <div className="flex min-w-max gap-1 px-1">

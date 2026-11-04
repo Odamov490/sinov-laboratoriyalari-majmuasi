@@ -1,3 +1,4 @@
+import { tr } from '../i18n/tr.js';
 // Klient tomonida media tayyorlash (serverda ffmpeg/sharp yo'q):
 //  - rasm: eng uzun tomoni 1920 px, JPEG/WebP ~0.85; GIF siqilmaydi;
 //    shaffof PNG shaffofligi saqlanadi (WebP yoki asl PNG);
@@ -14,7 +15,7 @@ const loadImage = (file) =>
     img.onload = () => resolve({ img, url });
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Rasmni o\'qib bo\'lmadi'));
+      reject(new Error(tr("Rasmni o'qib bo'lmadi")));
     };
     img.src = url;
   });

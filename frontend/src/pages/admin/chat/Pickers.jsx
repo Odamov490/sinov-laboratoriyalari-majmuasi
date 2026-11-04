@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { tr } from '../../../i18n/tr.js';
 
 // Emoji tanlagich faqat ochilganda yuklanadi (dinamik import). Rasmlar
 // CDN'dan emas — tizim emoji shriftidan (emojiStyle="native").
@@ -18,7 +19,7 @@ export function EmojiPicker({ onPick, onClose, inline }) {
   }, [mod]);
 
   const body = failed ? (
-          <div className="rounded-xl border border-border bg-white p-4 text-sm text-slate-500 shadow-xl">Emoji ro'yxatini yuklab bo'lmadi.</div>
+          <div className="rounded-xl border border-border bg-white p-4 text-sm text-slate-500 shadow-xl">{tr("Emoji ro'yxatini yuklab bo'lmadi.")}</div>
         ) : !mod ? (
           <div className="flex h-24 w-72 items-center justify-center rounded-xl border border-border bg-white shadow-xl">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -28,21 +29,21 @@ export function EmojiPicker({ onPick, onClose, inline }) {
             onEmojiClick={(d) => onPick(d.emoji)}
             emojiStyle={mod.EmojiStyle.NATIVE}
             lazyLoadEmojis
-            searchPlaceholder="Qidirish"
+            searchPlaceholder={tr('Qidirish')}
             previewConfig={{ showPreview: false }}
             skinTonesDisabled
             width={320}
             height={380}
             categories={[
-              { category: 'suggested', name: "So'nggi" },
-              { category: 'smileys_people', name: 'Yuzlar va odamlar' },
-              { category: 'animals_nature', name: 'Tabiat' },
-              { category: 'food_drink', name: 'Taom' },
-              { category: 'travel_places', name: 'Joylar' },
-              { category: 'activities', name: 'Faoliyat' },
-              { category: 'objects', name: 'Buyumlar' },
-              { category: 'symbols', name: 'Belgilar' },
-              { category: 'flags', name: 'Bayroqlar' },
+              { category: 'suggested', name: tr("So'nggi") },
+              { category: 'smileys_people', name: tr('Yuzlar va odamlar') },
+              { category: 'animals_nature', name: tr('Tabiat') },
+              { category: 'food_drink', name: tr('Taom') },
+              { category: 'travel_places', name: tr('Joylar') },
+              { category: 'activities', name: tr('Faoliyat') },
+              { category: 'objects', name: tr('Buyumlar') },
+              { category: 'symbols', name: tr('Belgilar') },
+              { category: 'flags', name: tr('Bayroqlar') },
             ]}
           />
         );
@@ -82,7 +83,7 @@ export function StickerPicker({ packs, onPick, onClose }) {
       <div className="absolute bottom-full left-0 z-50 mb-2 w-[320px] max-w-[90vw] overflow-hidden rounded-xl border border-border bg-white shadow-xl">
         <div className="flex gap-1 overflow-x-auto border-b border-border p-1.5">
           <button type="button" onClick={() => setTab('recent')} className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-medium ${tab === 'recent' ? 'bg-primary text-white' : 'text-slate-600 hover:bg-bg-light'}`}>
-            So'nggi
+            {tr("So'nggi")}
           </button>
           {packs.map((p) => (
             <button
@@ -96,10 +97,10 @@ export function StickerPicker({ packs, onPick, onClose }) {
           ))}
         </div>
         <div className="grid h-64 grid-cols-4 gap-1 overflow-y-auto p-2">
-          {list.length === 0 && <p className="col-span-4 p-4 text-center text-sm text-slate-400">{tab === 'recent' ? "Hali stiker yuborilmagan." : "To'plam bo'sh."}</p>}
+          {list.length === 0 && <p className="col-span-4 p-4 text-center text-sm text-slate-400">{tab === 'recent' ? tr('Hali stiker yuborilmagan.') : tr("To'plam bo'sh.")}</p>}
           {list.map((s) => (
             <button key={s.id} type="button" onClick={() => onPick(s)} className="rounded-lg p-1 hover:bg-bg-light" title={s.emoji || ''}>
-              <img src={s.url} alt={s.emoji || 'Stiker'} className="h-16 w-16 object-contain" loading="lazy" />
+              <img src={s.url} alt={s.emoji || tr('Stiker')} className="h-16 w-16 object-contain" loading="lazy" />
             </button>
           ))}
         </div>

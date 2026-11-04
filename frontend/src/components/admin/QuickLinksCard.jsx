@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Star, Settings2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { menuItemsForRole } from '../../layouts/AdminLayout.jsx';
+import { tr } from '../../i18n/tr.js';
 
 // Dashboard: profildagi "Sevimli bo'limlar" (hamma rol, STAFF ham).
 export default function QuickLinksCard() {
@@ -13,14 +14,14 @@ export default function QuickLinksCard() {
     <div className="card p-6">
       <div className="mb-3 flex items-center justify-between">
         <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-          <Star className="h-4 w-4 text-primary" /> Tezkor havolalar
+          <Star className="h-4 w-4 text-primary" /> {tr('Tezkor havolalar')}
         </p>
         <Link to="/admin/mening-profilim?tab=sozlamalar" className="inline-flex items-center gap-1 text-xs text-slate-500 hover:text-primary">
-          <Settings2 className="h-3.5 w-3.5" /> Sozlash
+          <Settings2 className="h-3.5 w-3.5" /> {tr('Sozlash')}
         </Link>
       </div>
       {favorites.length === 0 ? (
-        <p className="text-sm text-slate-400">Sevimli bo'limlarni profil sozlamalarida tanlang — ular shu yerda va yon menyuning tepasida chiqadi.</p>
+        <p className="text-sm text-slate-400">{tr("Sevimli bo'limlarni profil sozlamalarida tanlang — ular shu yerda va yon menyuning tepasida chiqadi.")}</p>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {favorites.map((f) => (

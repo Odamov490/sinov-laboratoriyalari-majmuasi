@@ -3,15 +3,16 @@ import { getSettings } from '../../services/publicApi';
 import { updateSettings } from '../../services/adminApi';
 import { Loading } from '../../components/StateViews.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { tr } from '../../i18n/tr.js';
 
 const FIELDS = [
-  { key: 'org_name', label: 'Tashkilot nomi' },
-  { key: 'phone', label: 'Telefon' },
+  { key: 'org_name', label: tr('Tashkilot nomi') },
+  { key: 'phone', label: tr('Telefon') },
   { key: 'email', label: 'Email' },
-  { key: 'address', label: 'Manzil' },
-  { key: 'working_hours', label: 'Ish vaqti' },
-  { key: 'telegram', label: 'Telegram havolasi' },
-  { key: 'instagram', label: 'Instagram havolasi' },
+  { key: 'address', label: tr('Manzil') },
+  { key: 'working_hours', label: tr('Ish vaqti') },
+  { key: 'telegram', label: tr('Telegram havolasi') },
+  { key: 'instagram', label: tr('Instagram havolasi') },
 ];
 
 export default function AdminSettings() {
@@ -27,9 +28,9 @@ export default function AdminSettings() {
     setSaving(true);
     try {
       await updateSettings(values);
-      showToast('Sozlamalar saqlandi.', 'success');
+      showToast(tr('Sozlamalar saqlandi.'), 'success');
     } catch {
-      showToast('Xatolik yuz berdi.', 'error');
+      showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -39,7 +40,7 @@ export default function AdminSettings() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-ink mb-6">Sozlamalar</h1>
+      <h1 className="text-2xl font-bold text-ink mb-6">{tr('Sozlamalar')}</h1>
       <div className="card p-6 space-y-4">
         {FIELDS.map((f) => (
           <div key={f.key}>
@@ -52,7 +53,7 @@ export default function AdminSettings() {
           </div>
         ))}
         <button onClick={save} disabled={saving} className="btn-primary w-full">
-          {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+          {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
         </button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { Select, Pagination } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { formatDate } from '../../utils/localize';
+import { tr, locName } from '../../i18n/tr.js';
 
 const PAGE_SIZE_OPTIONS = [15, 25, 50, 100, 200, 500];
 
@@ -45,7 +46,7 @@ export default function AdminPrices() {
 
   const createPrice = async () => {
     if (!newServiceId) {
-      showToast('Xizmatni tanlang.', 'error');
+      showToast(tr('Xizmatni tanlang.'), 'error');
       return;
     }
     setSaving(true);
@@ -54,11 +55,11 @@ export default function AdminPrices() {
         serviceId: newServiceId,
         amount: newAmount === '' ? null : Number(newAmount),
       });
-      showToast("Narx qo'shildi.", 'success');
+      showToast(tr("Narx qo'shildi."), 'success');
       setCreateOpen(false);
       load();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -73,11 +74,11 @@ export default function AdminPrices() {
     setSaving(true);
     try {
       await adminPrices.update(editing.id, { amount: amount === '' ? null : Number(amount) });
-      showToast('Narx yangilandi. Eski narx tarixga saqlandi.', 'success');
+      showToast(tr('Narx yangilandi. Eski narx tarixga saqlandi.'), 'success');
       setEditing(null);
       load();
     } catch {
-      showToast('Xatolik yuz berdi.', 'error');
+      showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -86,27 +87,27 @@ export default function AdminPrices() {
   const removePrice = async (id) => {
     try {
       await adminPrices.remove(id);
-      showToast("O'chirildi.", 'success');
+      showToast(tr("O'chirildi."), 'success');
       load();
     } catch (err) {
-      showToast(err?.response?.data?.error || "O'chirishda xatolik.", 'error');
+      showToast(err?.response?.data?.error || tr("O'chirishda xatolik."), 'error');
     }
   };
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
-        <h1 className="text-2xl font-bold text-ink">Narxlar</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr('Narxlar')}</h1>
         <button onClick={openCreate} className="btn-primary !py-2.5">
-          <Plus className="h-4 w-4" /> Yangi narx qo'shish
+          <Plus className="h-4 w-4" /> {tr("Yangi narx qo'shish")}
         </button>
       </div>
-      <p className="text-sm text-slate-500 mb-4">Eski narxlar avtomatik ravishda tarixga saqlanadi va o'chirilmaydi.</p>
+      <p className="text-sm text-slate-500 mb-4">{tr("Eski narxlar avtomatik ravishda tarixga saqlanadi va o'chirilmaydi.")}</p>
 
       {data && data.items.length > 0 && (
         <div className="flex justify-end mb-3">
           <label className="flex items-center gap-2 text-sm text-slate-500">
-            Qatorlar:
+            {tr('Qatorlar:')}
             <select
               value={pageSize}
               onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
@@ -127,39 +128,39 @@ export default function AdminPrices() {
           <Loading />
         ) : data.items.length === 0 ? (
           <div className="p-10 text-center">
-            <EmptyState message="Hali narx qo'shilmagan. Avval 'Xizmatlar' bo'limida xizmat yarating, so'ng shu yerda 'Yangi narx qo'shish' tugmasini bosing." />
+            <EmptyState message={tr("Hali narx qo'shilmagan. Avval 'Xizmatlar' bo'limida xizmat yarating, so'ng shu yerda 'Yangi narx qo'shish' tugmasini bosing.")} />
           </div>
         ) : (
           <table className="w-full text-sm min-w-[850px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-3">Xizmat</th>
-                <th className="px-4 py-3">Laboratoriya</th>
-                <th className="px-4 py-3">Narx</th>
-                <th className="px-4 py-3">Sana</th>
-                <th className="px-4 py-3 text-right">Amallar</th>
+                <th className="px-4 py-3">{tr('Xizmat')}</th>
+                <th className="px-4 py-3">{tr('Laboratoriya')}</th>
+                <th className="px-4 py-3">{tr('Narx')}</th>
+                <th className="px-4 py-3">{tr('Sana')}</th>
+                <th className="px-4 py-3 text-right">{tr('Amallar')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {data.items.slice((page - 1) * pageSize, page * pageSize).map((p) => (
                 <tr key={p.id} className="hover:bg-bg-light/60">
-                  <td className="px-4 py-3 font-medium text-ink">{p.service?.nameUz}</td>
-                  <td className="px-4 py-3">{p.service?.laboratory?.nameUz}</td>
+                  <td className="px-4 py-3 font-medium text-ink">{locName(p.service)}</td>
+                  <td className="px-4 py-3">{locName(p.service?.laboratory)}</td>
                   <td className="px-4 py-3 font-semibold text-primary">
-                    {p.amount ? `${Number(p.amount).toLocaleString('uz-UZ')} ${p.currency}` : "Ma'lumot yangilanmoqda"}
+                    {p.amount ? `${Number(p.amount).toLocaleString('uz-UZ')} ${p.currency}` : tr("Ma'lumot yangilanmoqda")}
                   </td>
                   <td className="px-4 py-3 text-slate-500">{formatDate(p.updatedAt)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       {p.history?.length > 0 && (
-                        <button onClick={() => setHistoryItem(p)} className="p-2 rounded-lg hover:bg-bg-light text-slate-500" title="Tarix">
+                        <button onClick={() => setHistoryItem(p)} className="p-2 rounded-lg hover:bg-bg-light text-slate-500" title={tr('Tarix')}>
                           <History className="h-4 w-4" />
                         </button>
                       )}
                       <button onClick={() => openEdit(p)} className="text-sm font-medium text-primary px-2">
-                        Tahrirlash
+                        {tr('Tahrirlash')}
                       </button>
-                      <button onClick={() => setConfirmDelete(p.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500" title="O'chirish">
+                      <button onClick={() => setConfirmDelete(p.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500" title={tr("O'chirish")}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -174,41 +175,41 @@ export default function AdminPrices() {
         <Pagination page={page} pageSize={pageSize} total={data.items.length} onChange={setPage} />
       )}
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi narx qo'shish" size="sm">
-        <label className="block text-sm font-medium text-ink mb-1.5">Xizmat</label>
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title={tr("Yangi narx qo'shish")} size="sm">
+        <label className="block text-sm font-medium text-ink mb-1.5">{tr('Xizmat')}</label>
         <Select
           value={newServiceId}
           onChange={setNewServiceId}
-          placeholder="Xizmatni tanlang"
-          options={services.map((s) => ({ value: s.id, label: `${s.nameUz} (${s.laboratory?.nameUz || ''})` }))}
+          placeholder={tr('Xizmatni tanlang')}
+          options={services.map((s) => ({ value: s.id, label: `${locName(s)} (${locName(s.laboratory) || ''})` }))}
         />
         {services.length === 0 && (
           <p className="text-xs text-slate-400 mt-2">
-            Hali birorta xizmat yaratilmagan. Avval "Xizmatlar" bo'limida xizmat yarating.
+            {tr("Hali birorta xizmat yaratilmagan. Avval \"Xizmatlar\" bo'limida xizmat yarating.")}
           </p>
         )}
-        <label className="block text-sm font-medium text-ink mb-1.5 mt-4">Narx (UZS)</label>
+        <label className="block text-sm font-medium text-ink mb-1.5 mt-4">{tr('Narx (UZS)')}</label>
         <input
           type="number"
           value={newAmount}
           onChange={(e) => setNewAmount(e.target.value)}
-          placeholder="Masalan: 250000"
+          placeholder={tr('Masalan: 250000')}
           className="input-field"
         />
         <button onClick={createPrice} disabled={saving || services.length === 0} className="btn-primary w-full mt-6">
-          {saving ? 'Saqlanmoqda...' : "Qo'shish"}
+          {saving ? tr('Saqlanmoqda...') : tr("Qo'shish")}
         </button>
       </Modal>
 
-      <Modal open={!!editing} onClose={() => setEditing(null)} title="Narxni tahrirlash" size="sm">
-        <label className="block text-sm font-medium text-ink mb-1.5">Narx (UZS)</label>
+      <Modal open={!!editing} onClose={() => setEditing(null)} title={tr('Narxni tahrirlash')} size="sm">
+        <label className="block text-sm font-medium text-ink mb-1.5">{tr('Narx (UZS)')}</label>
         <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="input-field" />
         <button onClick={save} disabled={saving} className="btn-primary w-full mt-6">
-          {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+          {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
         </button>
       </Modal>
 
-      <Modal open={!!historyItem} onClose={() => setHistoryItem(null)} title="Narxlar tarixi" size="sm">
+      <Modal open={!!historyItem} onClose={() => setHistoryItem(null)} title={tr('Narxlar tarixi')} size="sm">
         <ul className="space-y-2">
           {historyItem?.history?.map((h) => (
             <li key={h.id} className="flex justify-between text-sm border-b border-border pb-2">
@@ -225,7 +226,7 @@ export default function AdminPrices() {
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => removePrice(confirmDelete)}
-        message="Ushbu narxni o'chirmoqchimisiz? Uning tarixi ham birga o'chadi. Bu amalni bekor qilib bo'lmaydi."
+        message={tr("Ushbu narxni o'chirmoqchimisiz? Uning tarixi ham birga o'chadi. Bu amalni bekor qilib bo'lmaydi.")}
       />
     </div>
   );

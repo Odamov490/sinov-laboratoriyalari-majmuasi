@@ -1,4 +1,5 @@
 import React from 'react';
+import { tr, currentLang, dateLocale } from '../i18n/tr.js';
 
 // Xabar matnini React elementlariga aylantirish (dangerouslySetInnerHTML'siz):
 // havolalar, @eslatmalar, *qalin*, _kursiv_, `kod`.
@@ -92,10 +93,11 @@ const startOfDay = (d) => {
 };
 export function dayLabel(d) {
   const diff = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000);
-  if (diff === 0) return 'Bugun';
-  if (diff === 1) return 'Kecha';
+  if (diff === 0) return tr('Bugun');
+  if (diff === 1) return tr('Kecha');
   const x = new Date(d);
   const sameYear = x.getFullYear() === new Date().getFullYear();
+  if (currentLang() !== 'uz') return x.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'long', ...(sameYear ? {} : { year: 'numeric' }) });
   return `${x.getDate()}-${MONTHS[x.getMonth()]}${sameYear ? '' : `, ${x.getFullYear()}`}`;
 }
 export const sameDay = (a, b) => startOfDay(a) === startOfDay(b);
@@ -109,13 +111,13 @@ export function shortStamp(d) {
 }
 
 export function lastSeenText(online, lastSeenAt) {
-  if (online) return 'onlayn';
-  if (!lastSeenAt) return 'yaqinda bo\'lmagan';
+  if (online) return tr('onlayn');
+  if (!lastSeenAt) return tr("yaqinda bo'lmagan");
   const mins = Math.round((Date.now() - new Date(lastSeenAt).getTime()) / 60000);
-  if (mins < 1) return 'hozirgina edi';
-  if (mins < 60) return `${mins} daqiqa oldin edi`;
-  if (sameDay(lastSeenAt, new Date())) return `bugun ${formatTime(lastSeenAt)} da edi`;
-  return `${dayLabel(lastSeenAt).toLowerCase()} ${formatTime(lastSeenAt)} da edi`;
+  if (mins < 1) return tr('hozirgina edi');
+  if (mins < 60) return tr('{0} daqiqa oldin edi', mins);
+  if (sameDay(lastSeenAt, new Date())) return tr('bugun {0} da edi', formatTime(lastSeenAt));
+  return tr('{0} {1} da edi', dayLabel(lastSeenAt).toLowerCase(), formatTime(lastSeenAt));
 }
 
 export function formatSize(bytes) {

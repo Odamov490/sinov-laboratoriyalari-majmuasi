@@ -11,6 +11,7 @@ import { EmojiPicker, pushRecentSticker } from './Pickers.jsx';
 import { ForwardDialog, MessageInfoDialog, PinnedDialog, DeleteDialog, SearchDialog, RoomSettingsDialog } from './Dialogs.jsx';
 import TaskModal from '../../../components/admin/TaskModal.jsx';
 import { Modal } from '../../../components/Modal.jsx';
+import { tr } from '../../../i18n/tr.js';
 
 const PAGE = 40;
 const EDITABLE = ['TEXT', 'IMAGE', 'VIDEO', 'FILE'];
@@ -114,7 +115,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
         setHasNewer(r.hasNewer);
         setTimeout(() => scrollToMessage(id), 50);
       } catch {
-        toast('Xabar topilmadi.', 'error');
+        toast(tr('Xabar topilmadi.'), 'error');
       }
     },
     [roomId, toast]
@@ -348,7 +349,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
       const r = await store.editMessage(m.id, body);
       if (r.message) setMessages((prev) => upsert(prev, { ...r.message, attachments: m.attachments }));
     } catch (err) {
-      toast(err.error || 'Tahrirlab bo\'lmadi.', 'error');
+      toast(err.error || tr("Tahrirlab bo'lmadi."), 'error');
     }
   };
 
@@ -426,13 +427,13 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
 
   const sendVoice = (r) => {
     const file = new File([r.blob], r.name, { type: r.mime });
-    if (file.size > (limits?.maxAudioMB || 20) * 1024 * 1024) return toast('Ovozli xabar juda katta.', 'error');
+    if (file.size > (limits?.maxAudioMB || 20) * 1024 * 1024) return toast(tr('Ovozli xabar juda katta.'), 'error');
     return queueUpload('VOICE', [{ file, purpose: 'voice', durationSec: r.duration }], { meta: { duration: r.duration, waveform: r.waveform } });
   };
 
   const sendVideoNote = async (r) => {
     const file = new File([r.blob], r.name, { type: r.mime });
-    if (file.size > (limits?.maxVideoMB || 95) * 1024 * 1024) return toast('Video xabar juda katta.', 'error');
+    if (file.size > (limits?.maxVideoMB || 95) * 1024 * 1024) return toast(tr('Video xabar juda katta.'), 'error');
     const thumb = await videoThumbFromBlob(r.blob).catch(() => null);
     return queueUpload('VIDEO_NOTE', [{ file, purpose: 'video_note', durationSec: r.duration, thumb }], { meta: { duration: r.duration } });
   };
@@ -470,7 +471,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
           break;
         case 'copy':
           await navigator.clipboard?.writeText(m.body || '');
-          toast('Nusxa olindi.', 'success');
+          toast(tr('Nusxa olindi.'), 'success');
           break;
         case 'forward':
         case 'info':
@@ -510,7 +511,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
       );
       onRoomsChanged();
     } catch (err) {
-      toast(err.error || "O'chirib bo'lmadi.", 'error');
+      toast(err.error || tr("O'chirib bo'lmadi."), 'error');
     }
   };
 
@@ -550,14 +551,14 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
   const mentionNamesOf = (m) => (m.meta?.mentions || []).map((id) => membersById.get(id)?.fullName).filter(Boolean);
   const typingNames = Object.values(typing).map((t) => t.name);
   const subtitle = typingNames.length
-    ? `${typingNames.slice(0, 2).join(', ')}${typingNames.length > 2 ? ' va boshqalar' : ''} yozmoqda…`
+    ? tr('{0}{1} yozmoqda…', typingNames.slice(0, 2).join(', '), typingNames.length > 2 ? (' ' + tr('va boshqalar')) : '')
     : isDirect
       ? peer
         ? peer.active === false
-          ? 'faol emas'
+          ? tr('faol emas')
           : lastSeenText(store.getState().online.has(peer.id), peer.lastSeenAt)
         : ''
-      : `${detail?.memberCount ?? room.memberCount} a'zo${room.type === 'GROUP' && members.length ? `, ${members.filter((m) => store.getState().online.has(m.id)).length} onlayn` : ''}`;
+      : tr("{0} a'zo{1}", detail?.memberCount ?? room.memberCount, room.type === 'GROUP' && members.length ? tr(', {0} onlayn', members.filter((m) => store.getState().online.has(m.id)).length) : '');
 
   const topPin = pins[0];
 
@@ -581,7 +582,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
     >
       {/* Sarlavha */}
       <div className="flex items-center gap-3 border-b border-border bg-white px-3 py-2.5">
-        <button type="button" onClick={onBack} className="rounded-full p-1.5 text-slate-500 hover:bg-bg-light md:hidden" title="Orqaga">
+        <button type="button" onClick={onBack} className="rounded-full p-1.5 text-slate-500 hover:bg-bg-light md:hidden" title={tr('Orqaga')}>
           <ArrowLeft className="h-5 w-5" />
         </button>
         <button type="button" onClick={() => setDialog({ kind: 'settings' })} className="flex min-w-0 flex-1 items-center gap-3 text-left">
@@ -593,10 +594,10 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
             <span className={`block truncate text-xs ${typingNames.length ? 'text-primary' : 'text-slate-500'}`}>{subtitle}</span>
           </span>
         </button>
-        <button type="button" onClick={() => setDialog({ kind: 'search' })} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Shu suhbatda qidirish">
+        <button type="button" onClick={() => setDialog({ kind: 'search' })} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr('Shu suhbatda qidirish')}>
           <Search className="h-5 w-5" />
         </button>
-        <button type="button" onClick={() => setDialog({ kind: 'settings' })} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title="Ma'lumot">
+        <button type="button" onClick={() => setDialog({ kind: 'settings' })} className="rounded-full p-2 text-slate-500 hover:bg-bg-light hover:text-primary" title={tr("Ma'lumot")}>
           <Info className="h-5 w-5" />
         </button>
       </div>
@@ -605,11 +606,11 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
         <div className="flex items-center gap-2 border-b border-border bg-white px-4 py-1.5">
           <Pin className="h-4 w-4 shrink-0 text-primary" />
           <button type="button" onClick={() => jump(topPin.message.id)} className="min-w-0 flex-1 text-left">
-            <span className="block text-xs font-semibold text-primary">Qadalgan xabar{pins.length > 1 ? ` (${pins.length})` : ''}</span>
+            <span className="block text-xs font-semibold text-primary">{tr('Qadalgan xabar')}{pins.length > 1 ? ` (${pins.length})` : ''}</span>
             <span className="block truncate text-xs text-slate-600">{store.previewText(topPin.message)}</span>
           </button>
           <button type="button" onClick={() => setDialog({ kind: 'pins' })} className="text-xs font-medium text-primary hover:underline">
-            Hammasi
+            {tr('Hammasi')}
           </button>
         </div>
       )}
@@ -625,7 +626,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
           <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-slate-500">
             {error}
             <button type="button" onClick={() => window.location.reload()} className="text-primary hover:underline">
-              Qayta yuklash
+              {tr('Qayta yuklash')}
             </button>
           </div>
         )}
@@ -636,7 +637,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
               </div>
             )}
-            {!hasMore && all.length === 0 && <p className="mt-10 text-center text-sm text-slate-400">Hali xabar yo'q. Birinchi bo'lib yozing!</p>}
+            {!hasMore && all.length === 0 && <p className="mt-10 text-center text-sm text-slate-400">{tr("Hali xabar yo'q. Birinchi bo'lib yozing!")}</p>}
             {all.map((m, i) => {
               const prev = all[i - 1];
               const next = all[i + 1];
@@ -654,7 +655,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
                   {m.id === firstUnreadId.current && (
                     <div id="chat-unread-divider" className="my-2 flex items-center gap-3 px-4">
                       <span className="h-px flex-1 bg-primary/30" />
-                      <span className="text-xs font-semibold text-primary">O'qilmagan xabarlar</span>
+                      <span className="text-xs font-semibold text-primary">{tr("O'qilmagan xabarlar")}</span>
                       <span className="h-px flex-1 bg-primary/30" />
                     </div>
                   )}
@@ -693,10 +694,10 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
                     <div className="flex items-center gap-2 text-sm">
                       <Upload className="h-4 w-4 shrink-0" />
                       <span className="min-w-0 flex-1 truncate">
-                        {u.files.length > 1 ? `${u.files.length} ta fayl` : u.files[0].file.name} · {formatSize(u.files.reduce((s, f) => s + f.file.size, 0))}
+                        {u.files.length > 1 ? tr('{0} ta fayl', u.files.length) : u.files[0].file.name} · {formatSize(u.files.reduce((s, f) => s + f.file.size, 0))}
                       </span>
                       {u.status === 'failed' ? (
-                        <button type="button" onClick={() => runUpload(u)} className="rounded p-1 hover:bg-white/20" title="Qayta urinish">
+                        <button type="button" onClick={() => runUpload(u)} className="rounded p-1 hover:bg-white/20" title={tr('Qayta urinish')}>
                           <RotateCw className="h-4 w-4" />
                         </button>
                       ) : null}
@@ -707,7 +708,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
                           setUploads((list) => list.filter((x) => x.id !== u.id));
                         }}
                         className="rounded p-1 hover:bg-white/20"
-                        title="Bekor qilish"
+                        title={tr('Bekor qilish')}
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -736,7 +737,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
             setNewBelow(0);
           }}
           className="absolute bottom-24 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-lg hover:bg-bg-light"
-          title="Pastga"
+          title={tr('Pastga')}
         >
           <ArrowDown className="h-5 w-5" />
           {newBelow > 0 && <span className="absolute -top-1.5 -right-1 rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">{newBelow}</span>}
@@ -746,7 +747,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
       {dragOver && (
         <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-primary/10 backdrop-blur-[1px]">
           <div className="rounded-2xl border-2 border-dashed border-primary bg-white/90 px-8 py-6 text-center text-primary">
-            <Paperclip className="mx-auto mb-2 h-8 w-8" /> Fayllarni shu yerga tashlang
+            <Paperclip className="mx-auto mb-2 h-8 w-8" /> {tr('Fayllarni shu yerga tashlang')}
           </div>
         </div>
       )}
@@ -782,7 +783,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
       )}
       {lightbox && <Lightbox items={lightbox.items} index={lightbox.index} onClose={() => setLightbox(null)} />}
       {dialog?.kind === 'react' && (
-        <Modal open onClose={() => setDialog(null)} title="Reaksiya" size="sm">
+        <Modal open onClose={() => setDialog(null)} title={tr('Reaksiya')} size="sm">
           <div className="flex justify-center">
             <EmojiPicker
               inline
@@ -804,7 +805,7 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
           onError={(e) => toast(e, 'error')}
           onDone={(n) => {
             setDialog(null);
-            toast(`${n} ta suhbatga ulashildi.`, 'success');
+            toast(tr('{0} ta suhbatga ulashildi.', n), 'success');
             onRoomsChanged();
           }}
         />
@@ -857,12 +858,12 @@ export default function Conversation({ room, me, limits, stickerPacks, stickerMa
           taskId={null}
           onClose={() => setDialog(null)}
           initial={{
-            title: (dialog.message.body || store.previewText(dialog.message) || 'Chat xabari').split('\n')[0].slice(0, 120),
+            title: (dialog.message.body || store.previewText(dialog.message) || tr('Chat xabari')).split('\n')[0].slice(0, 120),
             description: `${dialog.message.body || store.previewText(dialog.message)}\n\n— ${dialog.message.sender?.fullName || ''}, ${dayLabel(dialog.message.createdAt)} (${room.title})`,
             relatedType: 'BOSHQA',
-            relatedLabel: `Chat: ${room.title}`.slice(0, 300),
+            relatedLabel: tr('Chat: {0}', room.title).slice(0, 300),
           }}
-          onChanged={() => toast('Vazifa yaratildi.', 'success')}
+          onChanged={() => toast(tr('Vazifa yaratildi.'), 'success')}
         />
       )}
     </div>

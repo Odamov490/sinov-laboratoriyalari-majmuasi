@@ -1,3 +1,4 @@
+import { tr } from '../i18n/tr.js';
 // Ovozli xabar va dumaloq video-xabar yozish (MediaRecorder). Ruxsat faqat
 // tugma bosilganda so'raladi. Format: brauzer qo'llaganidan birinchisi.
 const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
@@ -7,19 +8,19 @@ const pickType = (list) =>
   typeof MediaRecorder !== 'undefined' ? list.find((t) => MediaRecorder.isTypeSupported?.(t)) || '' : '';
 
 export function mediaError(err, what = 'mikrofon') {
-  if (typeof window !== 'undefined' && !window.isSecureContext) return 'Yozib olish faqat HTTPS orqali ishlaydi.';
-  if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) return 'Brauzeringiz yozib olishni qo\'llab-quvvatlamaydi.';
+  if (typeof window !== 'undefined' && !window.isSecureContext) return tr('Yozib olish faqat HTTPS orqali ishlaydi.');
+  if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) return tr("Brauzeringiz yozib olishni qo'llab-quvvatlamaydi.");
   switch (err?.name) {
     case 'NotAllowedError':
     case 'SecurityError':
-      return `${what === 'kamera' ? 'Kamera va mikrofon' : 'Mikrofon'}ga ruxsat berilmagan. Brauzer manzil satridagi qulf belgisidan ruxsat bering.`;
+      return tr('{0}ga ruxsat berilmagan. Brauzer manzil satridagi qulf belgisidan ruxsat bering.', what === 'kamera' ? tr('Kamera va mikrofon') : tr('Mikrofon'));
     case 'NotFoundError':
     case 'OverconstrainedError':
-      return `${what === 'kamera' ? 'Kamera' : 'Mikrofon'} topilmadi.`;
+      return tr('{0} topilmadi.', what === 'kamera' ? tr('Kamera') : tr('Mikrofon'));
     case 'NotReadableError':
-      return `${what === 'kamera' ? 'Kamera' : 'Mikrofon'} boshqa dastur tomonidan band.`;
+      return tr('{0} boshqa dastur tomonidan band.', what === 'kamera' ? tr('Kamera') : tr('Mikrofon'));
     default:
-      return 'Yozib olishni boshlab bo\'lmadi.';
+      return tr("Yozib olishni boshlab bo'lmadi.");
   }
 }
 

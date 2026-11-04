@@ -6,6 +6,7 @@ import { Navigate } from 'react-router-dom';
 import { ConfirmDialog } from '../../../components/Modal.jsx';
 import { Loading } from '../../../components/StateViews.jsx';
 import chatApi, { apiError } from '../../../chat/chatApi';
+import { tr } from '../../../i18n/tr.js';
 
 // /admin/stikerlar (SUPER_ADMIN): to'plamlar va stikerlar.
 // PNG/WebP/GIF/SVG, har biri <= 512 KB. Xavfli SVG server tomonidan rad etiladi.
@@ -31,7 +32,7 @@ function PackCard({ pack, onChanged, toast }) {
 
   const upload = async (files) => {
     const good = files.filter((f) => f.size <= MAX);
-    if (good.length < files.length) toast(`${files.length - good.length} ta fayl 512 KB dan katta — o'tkazib yuborildi.`, 'error');
+    if (good.length < files.length) toast(tr("{0} ta fayl 512 KB dan katta — o'tkazib yuborildi.", files.length - good.length), 'error');
     if (!good.length) return;
     const form = new FormData();
     good.forEach((f) => form.append('files', f, f.name));
@@ -39,7 +40,7 @@ function PackCard({ pack, onChanged, toast }) {
     setBusy(true);
     try {
       const r = await chatApi.addStickers(pack.id, form);
-      toast(`${r.added.length} ta stiker qo'shildi${r.rejected.length ? `, ${r.rejected.length} ta rad etildi (${r.rejected[0].reason})` : ''}.`, r.rejected.length ? 'error' : 'success');
+      toast(tr("{0} ta stiker qo'shildi{1}.", r.added.length, r.rejected.length ? tr(', {0} ta rad etildi ({1})', r.rejected.length, r.rejected[0].reason) : ''), r.rejected.length ? 'error' : 'success');
       onChanged();
     } catch (err) {
       toast(apiError(err), 'error');
@@ -53,8 +54,8 @@ function PackCard({ pack, onChanged, toast }) {
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} className="input-field !w-auto flex-1 !py-2" />
         {title !== pack.title && (
-          <button type="button" onClick={() => run(() => chatApi.updatePack(pack.id, { title }), 'Saqlandi.')} className="btn-primary !px-3 !py-2">
-            Saqlash
+          <button type="button" onClick={() => run(() => chatApi.updatePack(pack.id, { title }), tr('Saqlandi.'))} className="btn-primary !px-3 !py-2">
+            {tr('Saqlash')}
           </button>
         )}
         <button
@@ -62,9 +63,9 @@ function PackCard({ pack, onChanged, toast }) {
           onClick={() => run(() => chatApi.updatePack(pack.id, { isActive: !pack.isActive }))}
           className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${pack.isActive ? 'border-emerald-300 text-emerald-700' : 'border-slate-300 text-slate-500'}`}
         >
-          {pack.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />} {pack.isActive ? 'Faol' : 'Yashirin'}
+          {pack.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />} {pack.isActive ? tr('Faol') : tr('Yashirin')}
         </button>
-        <button type="button" onClick={() => setConfirm({ kind: 'pack' })} className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50" title="To'plamni o'chirish">
+        <button type="button" onClick={() => setConfirm({ kind: 'pack' })} className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50" title={tr("To'plamni o'chirish")}>
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
@@ -84,7 +85,7 @@ function PackCard({ pack, onChanged, toast }) {
               type="button"
               onClick={() => setConfirm({ kind: 'sticker', id: s.id })}
               className="absolute right-1 top-1 rounded bg-white/90 p-1 text-red-600 opacity-0 shadow group-hover:opacity-100"
-              title="O'chirish"
+              title={tr("O'chirish")}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -96,13 +97,13 @@ function PackCard({ pack, onChanged, toast }) {
           onClick={() => input.current?.click()}
           className="flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-slate-300 text-xs text-slate-500 hover:border-primary hover:text-primary"
         >
-          <Upload className="h-5 w-5" /> {busy ? 'Yuklanmoqda…' : 'Qo\'shish'}
+          <Upload className="h-5 w-5" /> {busy ? tr('Yuklanmoqda…') : tr("Qo'shish")}
         </button>
       </div>
       <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-        <Smile className="h-4 w-4" /> Yangi stikerlar uchun emoji (ixtiyoriy):
+        <Smile className="h-4 w-4" /> {tr('Yangi stikerlar uchun emoji (ixtiyoriy):')}
         <input value={emoji} onChange={(e) => setEmoji(e.target.value)} maxLength={16} className="w-16 rounded border border-border px-1 py-0.5 text-center" />
-        <span>· PNG, WebP, GIF, SVG — har biri ko'pi bilan 512 KB</span>
+        <span>{tr("· PNG, WebP, GIF, SVG — har biri ko'pi bilan 512 KB")}</span>
       </div>
       <input
         ref={input}
@@ -119,9 +120,9 @@ function PackCard({ pack, onChanged, toast }) {
       <ConfirmDialog
         open={Boolean(confirm)}
         onClose={() => setConfirm(null)}
-        title="O'chirish"
-        message={confirm?.kind === 'pack' ? "To'plam va undagi barcha stikerlar o'chiriladi. Yuborilgan stikerli xabarlar bo'sh ko'rinadi." : "Stiker o'chiriladi."}
-        onConfirm={() => run(() => (confirm.kind === 'pack' ? chatApi.deletePack(pack.id) : chatApi.deleteSticker(confirm.id)), "O'chirildi.")}
+        title={tr("O'chirish")}
+        message={confirm?.kind === 'pack' ? tr("To'plam va undagi barcha stikerlar o'chiriladi. Yuborilgan stikerli xabarlar bo'sh ko'rinadi.") : tr("Stiker o'chiriladi.")}
+        onConfirm={() => run(() => (confirm.kind === 'pack' ? chatApi.deletePack(pack.id) : chatApi.deleteSticker(confirm.id)), tr("O'chirildi."))}
       />
     </div>
   );
@@ -152,8 +153,8 @@ export default function AdminStickers() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink">Stikerlar</h1>
-          <p className="text-sm text-slate-500">Chatdagi stiker to'plamlari. Yashirin to'plam foydalanuvchilarga ko'rinmaydi.</p>
+          <h1 className="text-2xl font-bold text-ink">{tr('Stikerlar')}</h1>
+          <p className="text-sm text-slate-500">{tr("Chatdagi stiker to'plamlari. Yashirin to'plam foydalanuvchilarga ko'rinmaydi.")}</p>
         </div>
         <form
           className="flex gap-2"
@@ -168,13 +169,13 @@ export default function AdminStickers() {
             }
           }}
         >
-          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder="Yangi to'plam nomi" className="input-field !py-2" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={100} placeholder={tr("Yangi to'plam nomi")} className="input-field !py-2" />
           <button className="btn-primary !py-2" disabled={!title.trim()}>
-            <Plus className="h-4 w-4" /> Yaratish
+            <Plus className="h-4 w-4" /> {tr('Yaratish')}
           </button>
         </form>
       </div>
-      {!packs ? <Loading /> : packs.length === 0 ? <p className="text-sm text-slate-500">To'plam yo'q.</p> : packs.map((p) => <PackCard key={p.id} pack={p} onChanged={load} toast={showToast} />)}
+      {!packs ? <Loading /> : packs.length === 0 ? <p className="text-sm text-slate-500">{tr("To'plam yo'q.")}</p> : packs.map((p) => <PackCard key={p.id} pack={p} onChanged={load} toast={showToast} />)}
     </div>
   );
 }

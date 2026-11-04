@@ -6,10 +6,11 @@ import { SearchBar, Pagination, Select } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { tr, locName } from '../../i18n/tr.js';
 
 const MONTH_NAMES_UZ = [
-  'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
-  'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr',
+  tr('Yanvar'), tr('Fevral'), tr('Mart'), tr('Aprel'), tr('May'), tr('Iyun'),
+  tr('Iyul'), tr('Avgust'), tr('Sentabr'), tr('Oktabr'), tr('Noyabr'), tr('Dekabr'),
 ];
 
 const PAGE_SIZE_OPTIONS = [15, 25, 50, 100, 200, 500];
@@ -145,9 +146,9 @@ export default function AdminCrudPage({ config, labScope }) {
     try {
       const res = await uploadFiles(fileList);
       handleChange(name, res.files[0].url);
-      showToast('Fayl yuklandi.', 'success');
+      showToast(tr('Fayl yuklandi.'), 'success');
     } catch {
-      showToast('Fayl yuklashda xatolik.', 'error');
+      showToast(tr('Fayl yuklashda xatolik.'), 'error');
     } finally {
       setUploadingField(null);
     }
@@ -164,9 +165,9 @@ export default function AdminCrudPage({ config, labScope }) {
         .map((s) => s.trim())
         .filter(Boolean);
       handleChange(name, [...existing, ...newUrls].join(','));
-      showToast(`${newUrls.length} ta fayl yuklandi.`, 'success');
+      showToast(tr('{0} ta fayl yuklandi.', newUrls.length), 'success');
     } catch {
-      showToast('Fayl yuklashda xatolik.', 'error');
+      showToast(tr('Fayl yuklashda xatolik.'), 'error');
     } finally {
       setUploadingField(null);
     }
@@ -203,15 +204,15 @@ export default function AdminCrudPage({ config, labScope }) {
 
       if (editing) {
         await resource.update(editing.id, payload);
-        showToast('Yangilandi.', 'success');
+        showToast(tr('Yangilandi.'), 'success');
       } else {
         await resource.create(payload);
-        showToast('Yaratildi.', 'success');
+        showToast(tr('Yaratildi.'), 'success');
       }
       setModalOpen(false);
       load();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -220,10 +221,10 @@ export default function AdminCrudPage({ config, labScope }) {
   const remove = async (id) => {
     try {
       await resource.remove(id);
-      showToast("O'chirildi.", 'success');
+      showToast(tr("O'chirildi."), 'success');
       load();
     } catch {
-      showToast("O'chirishda xatolik.", 'error');
+      showToast(tr("O'chirishda xatolik."), 'error');
     }
   };
 
@@ -286,11 +287,11 @@ export default function AdminCrudPage({ config, labScope }) {
     load();
     if (successCount > 0) {
       showToast(
-        `${successCount} ta fayl yuklandi.${failCount ? ` ${failCount} tasi xato bilan tugadi.` : ''}`,
+        tr('{0} ta fayl yuklandi.{1}', successCount, failCount ? (' ' + tr('{0} tasi xato bilan tugadi.', failCount)) : ''),
         failCount ? 'error' : 'success'
       );
     } else if (failCount > 0) {
-      showToast('Fayllarni yuklashda xatolik yuz berdi.', 'error');
+      showToast(tr('Fayllarni yuklashda xatolik yuz berdi.'), 'error');
     }
     if (failCount === 0 && successCount > 0) setBulkOpen(false);
   };
@@ -321,7 +322,7 @@ export default function AdminCrudPage({ config, labScope }) {
       XLSX.utils.book_append_sheet(wb, ws, config.title.slice(0, 31));
       XLSX.writeFile(wb, `${config.path}-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch {
-      showToast('Excel export xatolik yuz berdi.', 'error');
+      showToast(tr('Excel export xatolik yuz berdi.'), 'error');
     } finally {
       setExportingExcel(false);
     }
@@ -338,7 +339,7 @@ export default function AdminCrudPage({ config, labScope }) {
       container.innerHTML = '';
 
       const title = document.createElement('h2');
-      title.textContent = config.exportTitle || `${config.title} — Sinov Laboratoriyalari Majmuasi`;
+      title.textContent = config.exportTitle || tr('{0} — Sinov Laboratoriyalari Majmuasi', config.title);
       title.style.cssText = 'font-size:16px;font-weight:700;margin-bottom:12px;color:#0B3A63;font-family:Arial,sans-serif;';
       container.appendChild(title);
 
@@ -396,7 +397,7 @@ export default function AdminCrudPage({ config, labScope }) {
       pdf.save(`${config.path}-${new Date().toISOString().slice(0, 10)}.pdf`);
       container.innerHTML = '';
     } catch {
-      showToast('PDF export xatolik yuz berdi.', 'error');
+      showToast(tr('PDF export xatolik yuz berdi.'), 'error');
     } finally {
       setExportingPdf(false);
     }
@@ -413,20 +414,20 @@ export default function AdminCrudPage({ config, labScope }) {
           {config.exportable && (
             <>
               <button onClick={handleExportExcel} disabled={exportingExcel} className="btn-secondary !py-2.5">
-                <FileSpreadsheet className="h-4 w-4" /> {exportingExcel ? 'Tayyorlanmoqda...' : 'Excel'}
+                <FileSpreadsheet className="h-4 w-4" /> {exportingExcel ? tr('Tayyorlanmoqda...') : 'Excel'}
               </button>
               <button onClick={handleExportPdf} disabled={exportingPdf} className="btn-secondary !py-2.5">
-                <Download className="h-4 w-4" /> {exportingPdf ? 'Tayyorlanmoqda...' : 'PDF'}
+                <Download className="h-4 w-4" /> {exportingPdf ? tr('Tayyorlanmoqda...') : 'PDF'}
               </button>
             </>
           )}
           {config.bulkUpload && (
             <button onClick={openBulk} className="btn-secondary !py-2.5">
-              <Upload className="h-4 w-4" /> Ko'p fayl yuklash
+              <Upload className="h-4 w-4" /> {tr("Ko'p fayl yuklash")}
             </button>
           )}
           <button onClick={openCreate} className="btn-primary !py-2.5">
-            <Plus className="h-4 w-4" /> Qo'shish
+            <Plus className="h-4 w-4" /> {tr("Qo'shish")}
           </button>
         </div>
       </div>
@@ -446,7 +447,7 @@ export default function AdminCrudPage({ config, labScope }) {
                 <span className="block truncate font-medium text-ink text-sm">{item.fullName}</span>
                 <span className="block text-xs text-slate-500">
                   {MONTH_NAMES_UZ[month]} {day} —{' '}
-                  {daysUntil === 0 ? 'Bugun!' : daysUntil === 1 ? 'Ertaga' : `${daysUntil} kun qoldi`}
+                  {daysUntil === 0 ? tr('Bugun!') : daysUntil === 1 ? tr('Ertaga') : tr('{0} kun qoldi', daysUntil)}
                 </span>
               </span>
             </button>
@@ -461,7 +462,7 @@ export default function AdminCrudPage({ config, labScope }) {
           </div>
         )}
         <label className="flex items-center gap-2 text-sm text-slate-500 shrink-0">
-          Qatorlar:
+          {tr('Qatorlar:')}
           <select
             value={pageSize}
             onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
@@ -488,7 +489,7 @@ export default function AdminCrudPage({ config, labScope }) {
                 {config.columns.map((c) => (
                   <th key={c.key} className="px-4 py-3">{c.label}</th>
                 ))}
-                <th className="px-4 py-3 text-right">Amallar</th>
+                <th className="px-4 py-3 text-right">{tr('Amallar')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -517,7 +518,7 @@ export default function AdminCrudPage({ config, labScope }) {
       </div>
       {data && <Pagination page={page} pageSize={pageSize} total={data.total} onChange={setPage} />}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Tahrirlash' : "Qo'shish"} size="lg">
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? tr('Tahrirlash') : tr("Qo'shish")} size="lg">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {fields.map((f) => (
             <div key={f.name} className={f.fullWidth ? 'sm:col-span-2' : ''}>
@@ -538,26 +539,26 @@ export default function AdminCrudPage({ config, labScope }) {
                     value={form[f.name] ?? ''}
                     onChange={(v) => handleChange(f.name, v)}
                     placeholder={
-                      asyncOptions[f.name] === undefined ? 'Yuklanmoqda...' : `${f.label} tanlang`
+                      asyncOptions[f.name] === undefined ? tr('Yuklanmoqda...') : tr('{0} tanlang', f.label)
                     }
                     options={(asyncOptions[f.name] || []).map((item) => ({
                       value: item.id,
-                      label: f.optionsLabel ? f.optionsLabel(item) : item.nameUz || item.name || item.id,
+                      label: f.optionsLabel ? f.optionsLabel(item) : locName(item) || item.name || item.id,
                     }))}
                   />
                   {asyncOptions[f.name] && asyncOptions[f.name].length === 0 && (
                     <p className="text-xs text-slate-400 mt-1">
-                      Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.
+                      {tr("Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.")}
                     </p>
                   )}
                 </div>
               ) : f.type === 'async-multi-select' ? (
                 <div className="max-h-48 overflow-y-auto rounded-lg border border-border p-2 space-y-1">
                   {asyncOptions[f.name] === undefined ? (
-                    <p className="text-xs text-slate-400 px-1 py-1">Yuklanmoqda...</p>
+                    <p className="text-xs text-slate-400 px-1 py-1">{tr('Yuklanmoqda...')}</p>
                   ) : asyncOptions[f.name].length === 0 ? (
                     <p className="text-xs text-slate-400 px-1 py-1">
-                      Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.
+                      {tr("Hozircha ro'yxat bo'sh. Avval tegishli bo'limda yozuv yarating.")}
                     </p>
                   ) : (
                     asyncOptions[f.name].map((item) => {
@@ -576,7 +577,7 @@ export default function AdminCrudPage({ config, labScope }) {
                             }}
                             className="h-4 w-4 rounded border-border text-primary"
                           />
-                          {f.optionsLabel ? f.optionsLabel(item) : item.nameUz || item.name || item.id}
+                          {f.optionsLabel ? f.optionsLabel(item) : locName(item) || item.name || item.id}
                         </label>
                       );
                     })
@@ -610,7 +611,7 @@ export default function AdminCrudPage({ config, labScope }) {
                     className="text-sm"
                   />
                   {uploadingField === f.name && (
-                    <p className="text-xs text-primary mt-1">Yuklanmoqda, biroz kuting...</p>
+                    <p className="text-xs text-primary mt-1">{tr('Yuklanmoqda, biroz kuting...')}</p>
                   )}
                   {(form[f.name] || '')
                     .split(',')
@@ -649,7 +650,7 @@ export default function AdminCrudPage({ config, labScope }) {
                     className="text-sm"
                   />
                   {uploadingField === f.name && (
-                    <p className="text-xs text-primary mt-1">Yuklanmoqda, biroz kuting...</p>
+                    <p className="text-xs text-primary mt-1">{tr('Yuklanmoqda, biroz kuting...')}</p>
                   )}
                   {form[f.name] && uploadingField !== f.name && (
                     <p className="text-xs text-slate-400 mt-1 truncate">{form[f.name]}</p>
@@ -668,9 +669,9 @@ export default function AdminCrudPage({ config, labScope }) {
           ))}
         </div>
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={() => setModalOpen(false)} className="btn-secondary">Bekor qilish</button>
+          <button onClick={() => setModalOpen(false)} className="btn-secondary">{tr('Bekor qilish')}</button>
           <button onClick={save} disabled={saving || !!uploadingField} className="btn-primary">
-            {uploadingField ? 'Fayl yuklanmoqda...' : saving ? 'Saqlanmoqda...' : 'Saqlash'}
+            {uploadingField ? tr('Fayl yuklanmoqda...') : saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
           </button>
         </div>
       </Modal>
@@ -679,19 +680,19 @@ export default function AdminCrudPage({ config, labScope }) {
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => remove(confirmDelete)}
-        message="Ushbu yozuvni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi."
+        message={tr("Ushbu yozuvni o'chirmoqchimisiz? Bu amalni bekor qilib bo'lmaydi.")}
       />
 
       {config.bulkUpload && (
         <Modal
           open={bulkOpen}
           onClose={() => !bulkSaving && setBulkOpen(false)}
-          title="Bir nechta fayl yuklash"
+          title={tr('Bir nechta fayl yuklash')}
           size="lg"
         >
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Fayllar</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Fayllar')}</label>
               <input
                 type="file"
                 multiple
@@ -703,7 +704,7 @@ export default function AdminCrudPage({ config, labScope }) {
                 className="text-sm"
               />
               <p className="text-xs text-slate-400 mt-1">
-                Fayllar bir martada 5 tadan qilib partiyalarga bo'lib yuklanadi.
+                {tr("Fayllar bir martada 5 tadan qilib partiyalarga bo'lib yuklanadi.")}
               </p>
             </div>
 
@@ -717,11 +718,11 @@ export default function AdminCrudPage({ config, labScope }) {
                     value={bulkShared[name] ?? ''}
                     onChange={(v) => setBulkShared((s) => ({ ...s, [name]: v }))}
                     placeholder={
-                      asyncOptions[name] === undefined ? 'Yuklanmoqda...' : `${field.label} tanlang (barchasi uchun)`
+                      asyncOptions[name] === undefined ? tr('Yuklanmoqda...') : tr('{0} tanlang (barchasi uchun)', field.label)
                     }
                     options={(asyncOptions[name] || []).map((item) => ({
                       value: item.id,
-                      label: field.optionsLabel ? field.optionsLabel(item) : item.nameUz || item.name || item.id,
+                      label: field.optionsLabel ? field.optionsLabel(item) : locName(item) || item.name || item.id,
                     }))}
                   />
                 </div>
@@ -734,7 +735,7 @@ export default function AdminCrudPage({ config, labScope }) {
                   <div key={idx} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
                     <span className="truncate text-ink">{f.file.name}</span>
                     <span className="flex items-center gap-2 shrink-0">
-                      {f.status === 'pending' && <span className="text-xs text-slate-400">Kutilmoqda</span>}
+                      {f.status === 'pending' && <span className="text-xs text-slate-400">{tr('Kutilmoqda')}</span>}
                       {f.status === 'uploading' && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
                       {f.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
                       {f.status === 'error' && <AlertCircle className="h-4 w-4 text-red-500" />}
@@ -756,14 +757,14 @@ export default function AdminCrudPage({ config, labScope }) {
 
           <div className="mt-6 flex justify-end gap-3">
             <button onClick={() => setBulkOpen(false)} disabled={bulkSaving} className="btn-secondary">
-              Yopish
+              {tr('Yopish')}
             </button>
             <button
               onClick={runBulkUpload}
               disabled={bulkSaving || bulkFiles.length === 0 || bulkFiles.every((f) => f.status === 'done')}
               className="btn-primary"
             >
-              {bulkSaving ? 'Yuklanmoqda...' : 'Yuklash'}
+              {bulkSaving ? tr('Yuklanmoqda...') : tr('Yuklash')}
             </button>
           </div>
         </Modal>

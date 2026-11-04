@@ -9,6 +9,7 @@ import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journa
 import { ROW_COLORS, resolveColumns } from './journalColumns.jsx';
 import ColumnSettingsModal from './ColumnSettingsModal.jsx';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
+import { tr } from '../../../i18n/tr.js';
 
 const PAGE_SIZES = [25, 50, 100, 200];
 const EXPORT_PAGE_SIZE = 500;
@@ -67,7 +68,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
   const [savingCell, setSavingCell] = useState(null);
 
   const sheetProduct = dictionaries.productTypes.find((p) => p.id === sheet);
-  const brandLabel = sheet === SHOVQIN_SHEET ? 'Muzlatkich markasi' : sheetProduct ? `${sheetProduct.nameUz} markasi` : 'Marka';
+  const brandLabel = sheet === SHOVQIN_SHEET ? tr('Muzlatkich markasi') : sheetProduct ? tr('{0} markasi', sheetProduct.nameUz) : tr('Marka');
   const ctx = { brandLabel, saveCell: null, savingCell };
 
   // Shared layout (order, hidden, extra columns) set by SUPER_ADMIN; money
@@ -112,7 +113,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
       const updated = await adminTestJournal.update(record.id, { [field]: value || null });
       setData((d) => ({ ...d, items: d.items.map((i) => (i.id === record.id ? { ...i, ...updated } : i)) }));
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Saqlashda xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Saqlashda xatolik yuz berdi.'), 'error');
     } finally {
       setSavingCell(null);
     }
@@ -162,14 +163,14 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
             'JAMI',
             ...columns.map((c, i) => {
               if (c.sum) return records.reduce((acc, r) => acc + Number(c.text(r) || 0), 0);
-              return i === 0 ? `${records.length} ta yozuv` : '';
+              return i === 0 ? tr('{0} ta yozuv', records.length) : '';
             }),
           ],
         });
       });
-      await downloadWorkbook(wb, `sinovlar-jurnali_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      await downloadWorkbook(wb, tr('sinovlar-jurnali_{0}.xlsx', new Date().toISOString().slice(0, 10)));
     } catch {
-      showToast('Excel eksportda xatolik yuz berdi.', 'error');
+      showToast(tr('Excel eksportda xatolik yuz berdi.'), 'error');
     } finally {
       setExporting(false);
     }
@@ -190,16 +191,16 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
     locations: dictionaries.locations.map((l) => ({ value: l.id, label: l.nameUz })),
     results: Object.entries(RESULT_LABELS).map(([value, label]) => ({ value, label })),
     directions: DIRECTIONS.map((d) => ({ value: d.value, label: d.short })),
-    payments: [...Object.entries(PAYMENT_LABELS).map(([value, label]) => ({ value, label })), { value: 'none', label: 'Kuzatilmagan' }],
+    payments: [...Object.entries(PAYMENT_LABELS).map(([value, label]) => ({ value, label })), { value: 'none', label: tr('Kuzatilmagan') }],
   };
   const thisYear = new Date().getFullYear();
   const years = [thisYear - 1, thisYear, thisYear + 1].map((y) => ({ value: String(y), label: String(y) }));
   const hasFilters = Object.entries(filters).some(([k, v]) => (k === 'needsReview' ? v : v !== ''));
 
   const sheets = [
-    { key: ALL_SHEET, label: 'Hammasi' },
+    { key: ALL_SHEET, label: tr('Hammasi') },
     ...dictionaries.productTypes.filter((p) => p.isActive !== false).map((p) => ({ key: p.id, label: p.nameUz })),
-    { key: SHOVQIN_SHEET, label: 'Shovqin' },
+    { key: SHOVQIN_SHEET, label: tr('Shovqin') },
   ];
 
   const cell = 'border border-slate-300 px-2 py-1 align-middle';
@@ -229,7 +230,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
       <div className="card p-4 mb-4 space-y-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex-1 min-w-[220px] max-w-md">
-            <SearchBar value={filters.q} onChange={(v) => setFilter('q', v)} placeholder="Akt ID, marka yoki shartnoma..." />
+            <SearchBar value={filters.q} onChange={(v) => setFilter('q', v)} placeholder={tr('Akt ID, marka yoki shartnoma...')} />
           </div>
           <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
             <input
@@ -238,7 +239,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
               onChange={(e) => setFilter('needsReview', e.target.checked)}
               className="h-4 w-4 rounded border-border text-primary"
             />
-            <AlertTriangle className="h-4 w-4 text-amber-500" /> Tekshirish kerak
+            <AlertTriangle className="h-4 w-4 text-amber-500" /> {tr('Tekshirish kerak')}
           </label>
           {hasFilters && (
             <button
@@ -249,42 +250,42 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
               }}
               className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-ink"
             >
-              <XIcon className="h-3.5 w-3.5" /> Filtrlarni tozalash
+              <XIcon className="h-3.5 w-3.5" /> {tr('Filtrlarni tozalash')}
             </button>
           )}
           <div className="ml-auto flex flex-wrap gap-2">
             {canEditLayout && (
               <button onClick={() => setLayoutOpen(true)} className="btn-secondary !py-2">
-                <Columns3 className="h-4 w-4" /> Ustunlar
+                <Columns3 className="h-4 w-4" /> {tr('Ustunlar')}
               </button>
             )}
             <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2">
-              <FileSpreadsheet className="h-4 w-4" /> {exporting ? 'Tayyorlanmoqda...' : 'Excel'}
+              <FileSpreadsheet className="h-4 w-4" /> {exporting ? tr('Tayyorlanmoqda...') : 'Excel'}
             </button>
             <button onClick={() => setModal({ open: true, record: null, copyFrom: null })} className="btn-primary !py-2">
-              <Plus className="h-4 w-4" /> Yangi yozuv
+              <Plus className="h-4 w-4" /> {tr('Yangi yozuv')}
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-          <FilterSelect value={filters.year} onChange={(v) => setFilter('year', v)} placeholder="Yil: hammasi" options={years} />
+          <FilterSelect value={filters.year} onChange={(v) => setFilter('year', v)} placeholder={tr('Yil: hammasi')} options={years} />
           <label className="flex items-center gap-1.5 text-xs text-slate-500">
-            Kelgan:
+            {tr('Kelgan:')}
             <input type="date" value={filters.from} max={filters.to || undefined} onChange={(e) => setFilter('from', e.target.value)} className="input-field !py-2 text-sm" />
           </label>
           <label className="flex items-center gap-1.5 text-xs text-slate-500">
             —
             <input type="date" value={filters.to} min={filters.from || undefined} onChange={(e) => setFilter('to', e.target.value)} className="input-field !py-2 text-sm" />
           </label>
-          <FilterSelect value={filters.certificationBodyId} onChange={(v) => setFilter('certificationBodyId', v)} placeholder="Idora" options={options.bodies} />
-          <FilterSelect value={filters.result} onChange={(v) => setFilter('result', v)} placeholder="Natija" options={options.results} />
+          <FilterSelect value={filters.certificationBodyId} onChange={(v) => setFilter('certificationBodyId', v)} placeholder={tr('Idora')} options={options.bodies} />
+          <FilterSelect value={filters.result} onChange={(v) => setFilter('result', v)} placeholder={tr('Natija')} options={options.results} />
           {sheet !== SHOVQIN_SHEET && (
-            <FilterSelect value={filters.direction} onChange={(v) => setFilter('direction', v)} placeholder="Yo'nalish" options={options.directions} />
+            <FilterSelect value={filters.direction} onChange={(v) => setFilter('direction', v)} placeholder={tr("Yo'nalish")} options={options.directions} />
           )}
-          <FilterSelect value={filters.locationId} onChange={(v) => setFilter('locationId', v)} placeholder="Manzil" options={options.locations} />
+          <FilterSelect value={filters.locationId} onChange={(v) => setFilter('locationId', v)} placeholder={tr('Manzil')} options={options.locations} />
           {showFinance && (
-            <FilterSelect value={filters.paymentStatus} onChange={(v) => setFilter('paymentStatus', v)} placeholder="To'lov" options={options.payments} />
+            <FilterSelect value={filters.paymentStatus} onChange={(v) => setFilter('paymentStatus', v)} placeholder={tr("To'lov")} options={options.payments} />
           )}
         </div>
       </div>
@@ -298,7 +299,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
         ) : data === null ? (
           <Loading />
         ) : data.items.length === 0 ? (
-          <EmptyState message="Bu varaqda filtr bo'yicha yozuv topilmadi." />
+          <EmptyState message={tr("Bu varaqda filtr bo'yicha yozuv topilmadi.")} />
         ) : (
           <table className="w-full border-collapse text-[13px] text-ink">
             <thead>
@@ -329,7 +330,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                     <span className="inline-flex items-center gap-1">
                       {(data.page - 1) * data.pageSize + idx + 1}
                       {r.needsReview && (
-                        <span title={`Tekshirish kerak: ${(r.reviewReasons || []).join('; ')}`}>
+                        <span title={tr('Tekshirish kerak: {0}', (r.reviewReasons || []).join('; '))}>
                           <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                         </span>
                       )}
@@ -351,7 +352,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
             </tbody>
             <tfoot>
               <tr className="bg-[#dbe5f1] font-semibold">
-                <td className={`${cell} text-center`}>Jami</td>
+                <td className={`${cell} text-center`}>{tr('Jami')}</td>
                 {columns.map((c, i) => (
                   <td key={c.key} className={`${cell} ${c.right ? 'text-right tabular-nums whitespace-nowrap' : c.center ? 'text-center' : ''}`}>
                     {c.key === 'sampleCount'
@@ -359,7 +360,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                       : c.key === 'amount'
                         ? formatMoney(data.totals.amount)
                         : i === 0
-                          ? `${data.totals.records} ta yozuv`
+                          ? tr('{0} ta yozuv', data.totals.records)
                           : ''}
                   </td>
                 ))}
@@ -373,7 +374,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Pagination page={page} pageSize={pageSize} total={data.total} onChange={setPage} />
           <label className="mt-8 flex items-center gap-2 text-sm text-slate-500">
-            Qatorlar:
+            {tr('Qatorlar:')}
             <select
               value={pageSize}
               onChange={(e) => {

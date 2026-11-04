@@ -4,12 +4,13 @@ import { ListChecks, Package, BookOpen, LogIn, CheckCircle2 } from 'lucide-react
 import { adminProfile } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { fmtDateTime } from './ProfileGeneral.jsx';
+import { tr, trServer } from '../../../i18n/tr.js';
 
 const TYPES = {
-  task: { label: 'Vazifalar', icon: ListChecks, tone: 'bg-primary/10 text-primary' },
-  sample: { label: 'Namunalar', icon: Package, tone: 'bg-amber-50 text-amber-700' },
-  journal: { label: 'Sinov jurnali', icon: BookOpen, tone: 'bg-violet-50 text-violet-700' },
-  login: { label: 'Kirishlar', icon: LogIn, tone: 'bg-slate-100 text-slate-600' },
+  task: { label: tr('Vazifalar'), icon: ListChecks, tone: 'bg-primary/10 text-primary' },
+  sample: { label: tr('Namunalar'), icon: Package, tone: 'bg-amber-50 text-amber-700' },
+  journal: { label: tr('Sinov jurnali'), icon: BookOpen, tone: 'bg-violet-50 text-violet-700' },
+  login: { label: tr('Kirishlar'), icon: LogIn, tone: 'bg-slate-100 text-slate-600' },
 };
 
 // Faqat o'zim bajargan harakatlar (server req.user.sub bo'yicha).
@@ -57,21 +58,21 @@ export default function ProfileActivity() {
             <CheckCircle2 className="h-6 w-6 text-emerald-600" />
             <div>
               <p className="text-xl font-bold text-ink">{month.doneTasks}</p>
-              <p className="text-xs text-slate-500">Shu oy bajarilgan vazifalar</p>
+              <p className="text-xs text-slate-500">{tr('Shu oy bajarilgan vazifalar')}</p>
             </div>
           </div>
           <div className="card flex items-center gap-3 p-4">
             <Package className="h-6 w-6 text-amber-600" />
             <div>
               <p className="text-xl font-bold text-ink">{month.sampleMoves}</p>
-              <p className="text-xs text-slate-500">Shu oy namuna harakatlari</p>
+              <p className="text-xs text-slate-500">{tr('Shu oy namuna harakatlari')}</p>
             </div>
           </div>
         </div>
       )}
 
       <div className="flex flex-wrap gap-1.5">
-        {[['', 'Hammasi'], ...Object.entries(TYPES).map(([k, v]) => [k, v.label])].map(([k, l]) => (
+        {[['', tr('Hammasi')], ...Object.entries(TYPES).map(([k, v]) => [k, v.label])].map(([k, l]) => (
           <button
             key={k || 'all'}
             type="button"
@@ -89,7 +90,7 @@ export default function ProfileActivity() {
         ) : !items ? (
           <Loading />
         ) : items.length === 0 ? (
-          <EmptyState message="Hozircha harakatlar yo'q." />
+          <EmptyState message={tr("Hozircha harakatlar yo'q.")} />
         ) : (
           <ol className="relative space-y-4 border-l border-border pl-6">
             {items.map((i) => {
@@ -100,7 +101,7 @@ export default function ProfileActivity() {
                     <t.icon className="h-3.5 w-3.5" />
                   </span>
                   <p className="text-sm text-ink">
-                    {i.text}
+                    {trServer(i.text)}
                     {i.subject &&
                       (i.link ? (
                         <>
@@ -121,7 +122,7 @@ export default function ProfileActivity() {
         )}
         {items && hasMore && (
           <button type="button" onClick={more} disabled={loadingMore} className="mt-5 w-full rounded-lg border border-border py-2 text-sm font-medium text-primary hover:bg-bg-light">
-            {loadingMore ? 'Yuklanmoqda…' : 'Yana yuklash'}
+            {loadingMore ? tr('Yuklanmoqda…') : tr('Yana yuklash')}
           </button>
         )}
       </div>

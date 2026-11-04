@@ -5,6 +5,8 @@ import { LogIn } from 'lucide-react';
 import Logo from '../../components/Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { tr } from '../../i18n/tr.js';
+import LanguageSwitcher from '../../components/admin/LanguageSwitcher.jsx';
 
 export default function AdminLogin() {
   const { t } = useTranslation();
@@ -25,7 +27,7 @@ export default function AdminLogin() {
       // /admin — tanlangan boshlang'ich sahifaga yo'naltiradi (AdminLayout).
       navigate('/admin');
     } catch (err) {
-      showToast(err?.response?.data?.error || "Login yoki parol noto'g'ri.", 'error');
+      showToast(err?.response?.data?.error || tr("Login yoki parol noto'g'ri."), 'error');
     } finally {
       setLoading(false);
     }
@@ -34,6 +36,9 @@ export default function AdminLogin() {
   return (
     <div className="min-h-screen bg-bg-light flex items-center justify-center p-4">
       <div className="w-full max-w-sm card p-8">
+        <div className="-mr-4 -mt-4 mb-2 flex justify-end">
+          <LanguageSwitcher />
+        </div>
         <div className="flex flex-col items-center mb-6">
           <Logo showTagline className="mb-4" />
           <h1 className="font-bold text-lg text-ink">{t('admin.login')}</h1>
@@ -43,7 +48,7 @@ export default function AdminLogin() {
               login domain by the server, so the full address is optional. */}
           <div>
             <label htmlFor="login" className="block text-sm font-medium text-ink mb-1.5">
-              Login
+              {tr('Login')}
             </label>
             <input
               id="login"

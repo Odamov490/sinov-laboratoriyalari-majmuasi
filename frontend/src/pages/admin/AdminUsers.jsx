@@ -7,26 +7,27 @@ import { Select, SearchBar } from '../../components/UI.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { passwordProblem } from '../../components/admin/ChangePasswordForm.jsx';
 import { ROLE_LABELS, roleLabel } from '../../utils/roles';
+import { tr, locName, trServer, dateLocale, currentLang } from '../../i18n/tr.js';
 
 const ROLES = ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'].map((value) => ({ value, label: ROLE_LABELS[value] }));
 // Mutaxassislardan ommaviy yaratishda Super admin berilmaydi.
 const BULK_ROLES = ['STAFF', 'EDITOR', 'MANAGER'].map((value) => ({ value, label: ROLE_LABELS[value] }));
 const ACTIVE_OPTIONS = [
-  { value: 'active', label: 'Faol' },
-  { value: 'inactive', label: 'Faol emas' },
+  { value: 'active', label: tr('Faol') },
+  { value: 'inactive', label: tr('Faol emas') },
 ];
 const ROW_STATUS = {
-  ok: { label: 'Tayyor', color: 'bg-emerald-100 text-emerald-700' },
-  review: { label: 'Tekshiring', color: 'bg-amber-100 text-amber-700' },
-  error: { label: 'Xato', color: 'bg-red-100 text-red-700' },
-  skipped: { label: "O'tkazildi", color: 'bg-slate-100 text-slate-500' },
+  ok: { label: tr('Tayyor'), color: 'bg-emerald-100 text-emerald-700' },
+  review: { label: tr('Tekshiring'), color: 'bg-amber-100 text-amber-700' },
+  error: { label: tr('Xato'), color: 'bg-red-100 text-red-700' },
+  skipped: { label: tr("O'tkazildi"), color: 'bg-slate-100 text-slate-500' },
 };
 
 const apiError = (err) => {
   const d = err?.response?.data;
-  return d?.details?.[0]?.message || d?.error || 'Xatolik yuz berdi.';
+  return d?.details?.[0]?.message || d?.error || tr('Xatolik yuz berdi.');
 };
-const formatDateTime = (v) => (v ? new Date(v).toLocaleString('uz-UZ', { dateStyle: 'short', timeStyle: 'short' }) : '—');
+const formatDateTime = (v) => (v ? new Date(v).toLocaleString(dateLocale(), { dateStyle: 'short', timeStyle: 'short' }) : '—');
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const loginUrl = () => `${window.location.origin}/admin/login`;
 
@@ -38,26 +39,26 @@ function CredentialsDialog({ result, onClose }) {
   const rows = result.items;
 
   const asText = () =>
-    rows.map((r) => `${r.fullName}${r.laboratoryName ? ` (${r.laboratoryName})` : ''}\nLogin: ${r.email}\nParol: ${r.password}`).join('\n\n') +
-    `\n\nKirish manzili: ${loginUrl()}`;
+    rows.map((r) => `${r.fullName}${r.laboratoryName ? ` (${r.laboratoryName})` : ''}\n${tr('Login')}: ${r.email}\n${tr('Parol')}: ${r.password}`).join('\n\n') +
+    ("\n\n" + tr('Kirish manzili: {0}', loginUrl()));
 
   const copyAll = async () => {
     try {
       await navigator.clipboard.writeText(asText());
-      showToast('Nusxa olindi.', 'success');
+      showToast(tr('Nusxa olindi.'), 'success');
     } catch {
-      showToast("Nusxa olib bo'lmadi — ma'lumotlarni qo'lda belgilang.", 'error');
+      showToast(tr("Nusxa olib bo'lmadi — ma'lumotlarni qo'lda belgilang."), 'error');
     }
   };
 
   const downloadCsv = () => {
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const lines = [['F.I.Sh.', 'Laboratoriya', 'Login', 'Vaqtinchalik parol'], ...rows.map((r) => [r.fullName, r.laboratoryName, r.email, r.password])];
+    const lines = [[tr('F.I.Sh.'), tr('Laboratoriya'), tr('Login'), tr('Vaqtinchalik parol')], ...rows.map((r) => [r.fullName, r.laboratoryName, r.email, r.password])];
     const csv = '﻿' + lines.map((l) => l.map(cell).join(';')).join('\r\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `hisoblar-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = tr('hisoblar-{0}.csv', new Date().toISOString().slice(0, 10));
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -66,7 +67,7 @@ function CredentialsDialog({ result, onClose }) {
   const print = () => {
     const w = window.open('', '_blank', 'width=800,height=900');
     if (!w) {
-      showToast("Chop etish oynasi bloklandi — brauzerda qalqib chiquvchi oynalarga ruxsat bering.", 'error');
+      showToast(tr('Chop etish oynasi bloklandi — brauzerda qalqib chiquvchi oynalarga ruxsat bering.'), 'error');
       return;
     }
     const slips = rows
@@ -75,15 +76,15 @@ function CredentialsDialog({ result, onClose }) {
   <h2>${escapeHtml(r.fullName)}</h2>
   ${r.laboratoryName ? `<p class="lab">${escapeHtml(r.laboratoryName)}</p>` : ''}
   <table>
-    <tr><td>Sayt</td><td><b>${escapeHtml(loginUrl())}</b></td></tr>
-    <tr><td>Login</td><td><b class="mono">${escapeHtml(r.email)}</b></td></tr>
-    <tr><td>Vaqtinchalik parol</td><td><b class="mono">${escapeHtml(r.password)}</b></td></tr>
+    <tr><td>${escapeHtml(tr('Sayt'))}</td><td><b>${escapeHtml(loginUrl())}</b></td></tr>
+    <tr><td>${escapeHtml(tr('Login'))}</td><td><b class="mono">${escapeHtml(r.email)}</b></td></tr>
+    <tr><td>${escapeHtml(tr('Vaqtinchalik parol'))}</td><td><b class="mono">${escapeHtml(r.password)}</b></td></tr>
   </table>
-  <p class="hint">Kirishda faqat ism yozsangiz ham bo'ladi (masalan: <b>${escapeHtml(r.email.split('@')[0])}</b>). Birinchi kirishda parolni almashtirasiz.</p>
+  <p class="hint">${escapeHtml(tr("Kirishda faqat ism yozsangiz ham bo'ladi (masalan: {0}). Birinchi kirishda parolni almashtirasiz.", '\u0000')).replace('\u0000', `<b>${escapeHtml(r.email.split('@')[0])}</b>`)}</p>
 </div>`
       )
       .join('');
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Kirish ma'lumotlari</title>
+    w.document.write(`<!doctype html><html lang="${currentLang()}"><head><meta charset="utf-8"><title>${escapeHtml(tr("Kirish ma'lumotlari"))}</title>
 <style>
 body{font-family:Arial,sans-serif;margin:16px;color:#111}
 .slip{border:1px dashed #555;padding:14px 18px;margin-bottom:14px;page-break-inside:avoid}
@@ -99,27 +100,27 @@ table{border-collapse:collapse;font-size:14px}td{padding:3px 12px 3px 0;vertical
       <div className="space-y-4">
         <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          Parollar oyna yopilgach qayta ko'rinmaydi. Hozir nusxa oling, yuklab oling yoki chop eting.
+          {tr("Parollar oyna yopilgach qayta ko'rinmaydi. Hozir nusxa oling, yuklab oling yoki chop eting.")}
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={copyAll} className="btn-secondary !py-2">
-            <Copy className="h-4 w-4" /> Hammasini nusxalash
+            <Copy className="h-4 w-4" /> {tr('Hammasini nusxalash')}
           </button>
           <button onClick={downloadCsv} className="btn-secondary !py-2">
-            <Download className="h-4 w-4" /> CSV yuklab olish
+            <Download className="h-4 w-4" /> {tr('CSV yuklab olish')}
           </button>
           <button onClick={print} className="btn-secondary !py-2">
-            <Printer className="h-4 w-4" /> Chop etish
+            <Printer className="h-4 w-4" /> {tr('Chop etish')}
           </button>
         </div>
         <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm">
             <thead className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-3 py-2">F.I.Sh.</th>
-                <th className="px-3 py-2">Laboratoriya</th>
-                <th className="px-3 py-2">Login</th>
-                <th className="px-3 py-2">Vaqtinchalik parol</th>
+                <th className="px-3 py-2">{tr('F.I.Sh.')}</th>
+                <th className="px-3 py-2">{tr('Laboratoriya')}</th>
+                <th className="px-3 py-2">{tr('Login')}</th>
+                <th className="px-3 py-2">{tr('Vaqtinchalik parol')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -136,11 +137,11 @@ table{border-collapse:collapse;font-size:14px}td{padding:3px 12px 3px 0;vertical
         </div>
         {result.notCreated?.length > 0 && (
           <div className="text-sm text-slate-600">
-            <p className="font-medium text-ink">Yaratilmaganlar ({result.notCreated.length}):</p>
+            <p className="font-medium text-ink">{tr('Yaratilmaganlar (')}{result.notCreated.length}):</p>
             <ul className="mt-1 list-disc pl-5">
               {result.notCreated.map((r) => (
                 <li key={r.staffId}>
-                  {r.fullName || r.staffId} — {r.message}
+                  {r.fullName || r.staffId} — {trServer(r.message)}
                 </li>
               ))}
             </ul>
@@ -148,7 +149,7 @@ table{border-collapse:collapse;font-size:14px}td{padding:3px 12px 3px 0;vertical
         )}
         <div className="flex justify-end">
           <button onClick={onClose} className="btn-primary">
-            Yopish
+            {tr('Yopish')}
           </button>
         </div>
       </div>
@@ -187,7 +188,7 @@ function FromStaffDialog({ open, onClose, onCreated }) {
 
   const labs = useMemo(() => {
     const m = new Map();
-    (staff || []).forEach((s) => m.set(s.laboratoryId || '', s.laboratoryName || 'Laboratoriyasiz'));
+    (staff || []).forEach((s) => m.set(s.laboratoryId || '', s.laboratoryName || tr('Laboratoriyasiz')));
     return [...m].map(([value, label]) => ({ value: value || '__none', label }));
   }, [staff]);
 
@@ -226,7 +227,7 @@ function FromStaffDialog({ open, onClose, onCreated }) {
     setBusy(true);
     try {
       const r = await adminAccounts.fromStaff({ items: itemsFromRows(), role, dryRun: false });
-      onCreated({ title: `Yaratilgan hisoblar (${r.created.length})`, items: r.created, notCreated: r.notCreated });
+      onCreated({ title: tr('Yaratilgan hisoblar ({0})', r.created.length), items: r.created, notCreated: r.notCreated });
     } catch (err) {
       showToast(apiError(err), 'error');
     } finally {
@@ -238,16 +239,16 @@ function FromStaffDialog({ open, onClose, onCreated }) {
   const problemCount = rows?.filter((r) => r.status === 'review' || r.status === 'error').length || 0;
 
   return (
-    <Modal open={open} onClose={onClose} title="Mutaxassislardan hisob yaratish" size="xl">
+    <Modal open={open} onClose={onClose} title={tr('Mutaxassislardan hisob yaratish')} size="xl">
       {staff === null ? (
         <Loading />
       ) : staff.length === 0 ? (
-        <EmptyState message="Hisobi yo'q faol mutaxassis qolmadi." />
+        <EmptyState message={tr("Hisobi yo'q faol mutaxassis qolmadi.")} />
       ) : !rows ? (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Beriladigan rol</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Beriladigan rol')}</label>
               <select value={role} onChange={(e) => setRole(e.target.value)} className="input-field">
                 {BULK_ROLES.map((r) => (
                   <option key={r.value} value={r.value}>
@@ -257,8 +258,8 @@ function FromStaffDialog({ open, onClose, onCreated }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Laboratoriya</label>
-              <Select value={labFilter} onChange={setLabFilter} options={labs} placeholder="Barchasi" />
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Laboratoriya')}</label>
+              <Select value={labFilter} onChange={setLabFilter} options={labs} placeholder={tr('Barchasi')} />
             </div>
           </div>
           <div className="max-h-[45vh] overflow-y-auto rounded-lg border border-border">
@@ -266,11 +267,11 @@ function FromStaffDialog({ open, onClose, onCreated }) {
               <thead className="sticky top-0 bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="w-10 px-3 py-2">
-                    <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} className="h-4 w-4" aria-label="Hammasini tanlash" />
+                    <input type="checkbox" checked={allVisibleSelected} onChange={toggleAll} className="h-4 w-4" aria-label={tr('Hammasini tanlash')} />
                   </th>
-                  <th className="px-3 py-2">F.I.Sh.</th>
-                  <th className="px-3 py-2">Lavozim</th>
-                  <th className="px-3 py-2">Laboratoriya</th>
+                  <th className="px-3 py-2">{tr('F.I.Sh.')}</th>
+                  <th className="px-3 py-2">{tr('Lavozim')}</th>
+                  <th className="px-3 py-2">{tr('Laboratoriya')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -288,30 +289,29 @@ function FromStaffDialog({ open, onClose, onCreated }) {
             </table>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-500">Tanlangan: {selected.size}</p>
+            <p className="text-sm text-slate-500">{tr('Tanlangan:')} {selected.size}</p>
             <button
               onClick={() => dryRun([...selected].map((staffId) => ({ staffId })))}
               disabled={busy || selected.size === 0}
               className="btn-primary"
             >
-              {busy ? 'Tekshirilmoqda...' : "Loginlarni ko'rish"}
+              {busy ? tr('Tekshirilmoqda...') : tr("Loginlarni ko'rish")}
             </button>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
           <p className="text-sm text-slate-600">
-            Taklif qilingan loginlarni tekshiring va kerak bo'lsa o'zgartiring (faqat ism yozsangiz, @-qismi avtomatik qo'shiladi). Bu manzillar haqiqiy pochta
-            emas — faqat kirish nomi.
+            {tr("Taklif qilingan loginlarni tekshiring va kerak bo'lsa o'zgartiring (faqat ism yozsangiz, @-qismi avtomatik qo'shiladi). Bu manzillar haqiqiy pochta emas — faqat kirish nomi.")}
           </p>
           <div className="max-h-[50vh] overflow-y-auto rounded-lg border border-border">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <tr>
-                  <th className="px-3 py-2">F.I.Sh.</th>
-                  <th className="px-3 py-2">Laboratoriya</th>
-                  <th className="px-3 py-2">Login</th>
-                  <th className="px-3 py-2">Holat</th>
+                  <th className="px-3 py-2">{tr('F.I.Sh.')}</th>
+                  <th className="px-3 py-2">{tr('Laboratoriya')}</th>
+                  <th className="px-3 py-2">{tr('Login')}</th>
+                  <th className="px-3 py-2">{tr('Holat')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -333,7 +333,7 @@ function FromStaffDialog({ open, onClose, onCreated }) {
                     </td>
                     <td className="px-3 py-2">
                       <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ROW_STATUS[r.status].color}`}>{ROW_STATUS[r.status].label}</span>
-                      {r.message && <p className="mt-1 text-xs text-slate-500">{r.message}</p>}
+                      {r.message && <p className="mt-1 text-xs text-slate-500">{trServer(r.message)}</p>}
                     </td>
                   </tr>
                 ))}
@@ -343,16 +343,16 @@ function FromStaffDialog({ open, onClose, onCreated }) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <button onClick={() => setRows(null)} className="btn-secondary !py-2">
-                Orqaga
+                {tr('Orqaga')}
               </button>
               <button onClick={() => dryRun(itemsFromRows())} disabled={busy} className="btn-secondary !py-2">
-                Qayta tekshirish
+                {tr('Qayta tekshirish')}
               </button>
             </div>
             <div className="flex items-center gap-3">
-              {problemCount > 0 && <span className="text-xs text-amber-700">{problemCount} ta qator yaratilmaydi</span>}
+              {problemCount > 0 && <span className="text-xs text-amber-700">{problemCount} {tr('ta qator yaratilmaydi')}</span>}
               <button onClick={create} disabled={busy || okCount === 0} className="btn-primary">
-                {busy ? 'Yaratilmoqda...' : `${okCount} ta hisob yaratish (${roleLabel(role)})`}
+                {busy ? tr('Yaratilmoqda...') : tr('{0} ta hisob yaratish ({1})', okCount, roleLabel(role))}
               </button>
             </div>
           </div>
@@ -410,7 +410,7 @@ export default function AdminUsers() {
     if (showNoAccount) loadNoAccount();
   }, [showNoAccount]);
 
-  const labOptions = labs.map((l) => ({ value: l.id, label: l.nameUz }));
+  const labOptions = labs.map((l) => ({ value: l.id, label: locName(l) }));
 
   const users = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -435,7 +435,7 @@ export default function AdminUsers() {
     try {
       const payload = { ...createForm, labId: createForm.role === 'SUPER_ADMIN' ? null : createForm.labId || null };
       await adminUsers.create(payload);
-      showToast('Foydalanuvchi yaratildi.', 'success');
+      showToast(tr('Foydalanuvchi yaratildi.'), 'success');
       setCreateOpen(false);
       load();
     } catch (err) {
@@ -461,7 +461,7 @@ export default function AdminUsers() {
       };
       if (editForm.password) payload.password = editForm.password;
       await adminUsers.update(editingUser.id, payload);
-      showToast('Yangilandi.', 'success');
+      showToast(tr('Yangilandi.'), 'success');
       setEditingUser(null);
       load();
     } catch (err) {
@@ -474,7 +474,7 @@ export default function AdminUsers() {
   const remove = async (id) => {
     try {
       await adminUsers.remove(id);
-      showToast("O'chirildi.", 'success');
+      showToast(tr("O'chirildi."), 'success');
       load();
     } catch (err) {
       showToast(apiError(err), 'error');
@@ -484,7 +484,7 @@ export default function AdminUsers() {
   const resetPassword = async (user) => {
     try {
       const r = await adminAccounts.resetPassword(user.id);
-      setCredentials({ title: 'Yangi vaqtinchalik parol', items: [r] });
+      setCredentials({ title: tr('Yangi vaqtinchalik parol'), items: [r] });
       load();
     } catch (err) {
       showToast(apiError(err), 'error');
@@ -494,18 +494,18 @@ export default function AdminUsers() {
   const labSelect = (form, setForm) =>
     form.role !== 'SUPER_ADMIN' && (
       <div>
-        <label className="block text-sm font-medium text-ink mb-1.5">Laboratoriya</label>
-        <Select value={form.labId} onChange={(v) => setForm({ ...form, labId: v })} placeholder="Mutaxassis kartasidagi / tanlanmagan" options={labOptions} />
+        <label className="block text-sm font-medium text-ink mb-1.5">{tr('Laboratoriya')}</label>
+        <Select value={form.labId} onChange={(v) => setForm({ ...form, labId: v })} placeholder={tr('Mutaxassis kartasidagi / tanlanmagan')} options={labOptions} />
       </div>
     );
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-2xl font-bold text-ink">Foydalanuvchilar</h1>
+        <h1 className="text-2xl font-bold text-ink">{tr('Foydalanuvchilar')}</h1>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setFromStaffOpen(true)} className="btn-secondary !py-2.5">
-            <UserPlus className="h-4 w-4" /> Mutaxassislardan hisob yaratish
+            <UserPlus className="h-4 w-4" /> {tr('Mutaxassislardan hisob yaratish')}
           </button>
           <button
             onClick={() => {
@@ -514,22 +514,22 @@ export default function AdminUsers() {
             }}
             className="btn-primary !py-2.5"
           >
-            <Plus className="h-4 w-4" /> Qo'shish
+            <Plus className="h-4 w-4" /> {tr("Qo'shish")}
           </button>
         </div>
       </div>
 
       <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <SearchBar value={q} onChange={setQ} placeholder="Ism yoki login bo'yicha qidirish..." />
+          <SearchBar value={q} onChange={setQ} placeholder={tr("Ism yoki login bo'yicha qidirish...")} />
         </div>
-        <Select value={labFilter} onChange={setLabFilter} options={labOptions} placeholder="Barcha laboratoriyalar" />
-        {!showNoAccount && <Select value={roleFilter} onChange={setRoleFilter} options={ROLES} placeholder="Barcha rollar" />}
-        {!showNoAccount && <Select value={activeFilter} onChange={setActiveFilter} options={ACTIVE_OPTIONS} placeholder="Faol va nofaol" />}
+        <Select value={labFilter} onChange={setLabFilter} options={labOptions} placeholder={tr('Barcha laboratoriyalar')} />
+        {!showNoAccount && <Select value={roleFilter} onChange={setRoleFilter} options={ROLES} placeholder={tr('Barcha rollar')} />}
+        {!showNoAccount && <Select value={activeFilter} onChange={setActiveFilter} options={ACTIVE_OPTIONS} placeholder={tr('Faol va nofaol')} />}
       </div>
       <label className="mb-4 inline-flex items-center gap-2 text-sm text-ink">
         <input type="checkbox" checked={showNoAccount} onChange={(e) => setShowNoAccount(e.target.checked)} className="h-4 w-4 rounded border-border" />
-        Hisobsiz mutaxassislar
+        {tr('Hisobsiz mutaxassislar')}
       </label>
 
       <div className="card overflow-x-auto">
@@ -537,14 +537,14 @@ export default function AdminUsers() {
           noAccount === null ? (
             <Loading />
           ) : noAccountRows.length === 0 ? (
-            <EmptyState message="Hisobi yo'q faol mutaxassis yo'q." />
+            <EmptyState message={tr("Hisobi yo'q faol mutaxassis yo'q.")} />
           ) : (
             <table className="w-full text-sm min-w-[600px]">
               <thead>
                 <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-4 py-3">F.I.Sh.</th>
-                  <th className="px-4 py-3">Lavozim</th>
-                  <th className="px-4 py-3">Laboratoriya</th>
+                  <th className="px-4 py-3">{tr('F.I.Sh.')}</th>
+                  <th className="px-4 py-3">{tr('Lavozim')}</th>
+                  <th className="px-4 py-3">{tr('Laboratoriya')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -570,15 +570,15 @@ export default function AdminUsers() {
           <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-3">F.I.Sh.</th>
-                <th className="px-4 py-3">Login</th>
-                <th className="px-4 py-3">Rol</th>
-                <th className="px-4 py-3">Laboratoriya</th>
-                <th className="px-4 py-3">Lavozim</th>
-                <th className="px-4 py-3">Oxirgi kirish</th>
-                <th className="px-4 py-3">Holat</th>
-                <th className="px-4 py-3">Chat</th>
-                <th className="px-4 py-3 text-right">Amallar</th>
+                <th className="px-4 py-3">{tr('F.I.Sh.')}</th>
+                <th className="px-4 py-3">{tr('Login')}</th>
+                <th className="px-4 py-3">{tr('Rol')}</th>
+                <th className="px-4 py-3">{tr('Laboratoriya')}</th>
+                <th className="px-4 py-3">{tr('Lavozim')}</th>
+                <th className="px-4 py-3">{tr('Oxirgi kirish')}</th>
+                <th className="px-4 py-3">{tr('Holat')}</th>
+                <th className="px-4 py-3">{tr('Chat')}</th>
+                <th className="px-4 py-3 text-right">{tr('Amallar')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -591,13 +591,13 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 text-slate-500">{u.position || '—'}</td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{formatDateTime(u.lastLoginAt)}</td>
                   <td className="px-4 py-3">
-                    <span className={`text-xs font-semibold ${u.isActive ? 'text-emerald-600' : 'text-red-500'}`}>{u.isActive ? 'Faol' : 'Faol emas'}</span>
+                    <span className={`text-xs font-semibold ${u.isActive ? 'text-emerald-600' : 'text-red-500'}`}>{u.isActive ? tr('Faol') : tr('Faol emas')}</span>
                     {u.locked && (
-                      <span className="ml-1 inline-flex items-center gap-0.5 text-xs text-amber-600" title="Ko'p noto'g'ri urinish — 15 daqiqaga bloklangan">
-                        <Lock className="h-3 w-3" /> bloklangan
+                      <span className="ml-1 inline-flex items-center gap-0.5 text-xs text-amber-600" title={tr("Ko'p noto'g'ri urinish — 15 daqiqaga bloklangan")}>
+                        <Lock className="h-3 w-3" /> {tr('bloklangan')}
                       </span>
                     )}
-                    {u.mustChangePassword && <p className="text-[11px] text-slate-400">parol almashtirilmagan</p>}
+                    {u.mustChangePassword && <p className="text-[11px] text-slate-400">{tr('parol almashtirilmagan')}</p>}
                   </td>
                   <td className="px-4 py-3">
                     <button
@@ -606,25 +606,25 @@ export default function AdminUsers() {
                           await adminUsers.update(u.id, { chatEnabled: u.chatEnabled === false });
                           load();
                         } catch {
-                          showToast("Chat holatini o'zgartirib bo'lmadi.", 'error');
+                          showToast(tr("Chat holatini o'zgartirib bo'lmadi."), 'error');
                         }
                       }}
                       className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium ${u.chatEnabled === false ? 'bg-slate-100 text-slate-500' : 'bg-emerald-50 text-emerald-700'}`}
-                      title={u.chatEnabled === false ? 'Chatni yoqish' : "Chatni o'chirish"}
+                      title={u.chatEnabled === false ? tr('Chatni yoqish') : tr("Chatni o'chirish")}
                     >
                       {u.chatEnabled === false ? <MessageCircleOff className="h-3.5 w-3.5" /> : <MessageCircle className="h-3.5 w-3.5" />}
-                      {u.chatEnabled === false ? "O'chirilgan" : 'Yoqilgan'}
+                      {u.chatEnabled === false ? tr("O'chirilgan") : tr('Yoqilgan')}
                     </button>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => setConfirmReset(u)} className="p-2 rounded-lg hover:bg-bg-light text-amber-600" title="Parolni tiklash">
+                      <button onClick={() => setConfirmReset(u)} className="p-2 rounded-lg hover:bg-bg-light text-amber-600" title={tr('Parolni tiklash')}>
                         <KeyRound className="h-4 w-4" />
                       </button>
-                      <button onClick={() => openEdit(u)} className="p-2 rounded-lg hover:bg-bg-light text-primary" title="Tahrirlash">
+                      <button onClick={() => openEdit(u)} className="p-2 rounded-lg hover:bg-bg-light text-primary" title={tr('Tahrirlash')}>
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button onClick={() => setConfirmDelete(u.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500" title="O'chirish">
+                      <button onClick={() => setConfirmDelete(u.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-500" title={tr("O'chirish")}>
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -636,9 +636,9 @@ export default function AdminUsers() {
         )}
       </div>
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Yangi foydalanuvchi" size="sm">
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title={tr('Yangi foydalanuvchi')} size="sm">
         <div className="space-y-4">
-          <input placeholder="F.I.Sh." value={createForm.fullName} onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })} className="input-field" />
+          <input placeholder={tr('F.I.Sh.')} value={createForm.fullName} onChange={(e) => setCreateForm({ ...createForm, fullName: e.target.value })} className="input-field" />
           <div>
             <input
               placeholder="ism@slm.uz"
@@ -647,40 +647,40 @@ export default function AdminUsers() {
               className="input-field"
               autoComplete="off"
             />
-            <p className="mt-1 text-xs text-slate-400">Login — haqiqiy pochta emas. Faqat ism yozsangiz, @-qismi avtomatik qo'shiladi.</p>
+            <p className="mt-1 text-xs text-slate-400">{tr("Login — haqiqiy pochta emas. Faqat ism yozsangiz, @-qismi avtomatik qo'shiladi.")}</p>
           </div>
           <div>
             <input
-              placeholder="Parol"
+              placeholder={tr('Parol')}
               type="password"
               value={createForm.password}
               onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
               className="input-field"
               autoComplete="new-password"
             />
-            <p className={`mt-1 text-xs ${createPwProblem ? 'text-red-600' : 'text-slate-400'}`}>{createPwProblem || "Kamida 10 belgi, harf va raqam bo'lishi kerak."}</p>
+            <p className={`mt-1 text-xs ${createPwProblem ? 'text-red-600' : 'text-slate-400'}`}>{createPwProblem || tr("Kamida 10 belgi, harf va raqam bo'lishi kerak.")}</p>
           </div>
-          <Select value={createForm.role} onChange={(v) => setCreateForm({ ...createForm, role: v || 'STAFF' })} placeholder="Rol" options={ROLES} />
+          <Select value={createForm.role} onChange={(v) => setCreateForm({ ...createForm, role: v || 'STAFF' })} placeholder={tr('Rol')} options={ROLES} />
           {labSelect(createForm, setCreateForm)}
           <button onClick={createUser} disabled={saving || Boolean(createPwProblem) || !createForm.password} className="btn-primary w-full">
-            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+            {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
           </button>
         </div>
       </Modal>
 
-      <Modal open={!!editingUser} onClose={() => setEditingUser(null)} title="Foydalanuvchini tahrirlash" size="sm">
+      <Modal open={!!editingUser} onClose={() => setEditingUser(null)} title={tr('Foydalanuvchini tahrirlash')} size="sm">
         <div className="space-y-4">
           <p className="text-sm text-slate-500">
-            Login: <span className="font-mono text-ink">{editingUser?.email}</span>
+            {tr('Login:')} <span className="font-mono text-ink">{editingUser?.email}</span>
             {editingUser?.position ? ` · ${editingUser.position}` : ''}
           </p>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">F.I.Sh.</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('F.I.Sh.')}</label>
             <input value={editForm.fullName} onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })} className="input-field" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Rol</label>
-            <Select value={editForm.role} onChange={(v) => setEditForm({ ...editForm, role: v || editForm.role })} placeholder="Rol" options={ROLES} />
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Rol')}</label>
+            <Select value={editForm.role} onChange={(v) => setEditForm({ ...editForm, role: v || editForm.role })} placeholder={tr('Rol')} options={ROLES} />
           </div>
           {labSelect(editForm, setEditForm)}
           <label className="flex items-center gap-2 text-sm text-ink">
@@ -690,23 +690,23 @@ export default function AdminUsers() {
               onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
               className="h-4 w-4 rounded border-border text-primary"
             />
-            Faol
+            {tr('Faol')}
           </label>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1.5">Yangi parol (ixtiyoriy)</label>
+            <label className="block text-sm font-medium text-ink mb-1.5">{tr('Yangi parol (ixtiyoriy)')}</label>
             <input
               type="password"
               value={editForm.password}
               onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
               className="input-field"
-              placeholder="Bo'sh qoldirsangiz o'zgarmaydi"
+              placeholder={tr("Bo'sh qoldirsangiz o'zgarmaydi")}
               autoComplete="new-password"
             />
             {editPwProblem && <p className="mt-1 text-xs text-red-600">{editPwProblem}</p>}
-            <p className="mt-1 text-xs text-slate-400">Xodimga vaqtinchalik parol berish uchun «Parolni tiklash» tugmasidan foydalaning.</p>
+            <p className="mt-1 text-xs text-slate-400">{tr('Xodimga vaqtinchalik parol berish uchun «Parolni tiklash» tugmasidan foydalaning.')}</p>
           </div>
           <button onClick={saveEdit} disabled={saving || Boolean(editPwProblem)} className="btn-primary w-full">
-            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+            {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
           </button>
         </div>
       </Modal>
@@ -728,16 +728,16 @@ export default function AdminUsers() {
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => remove(confirmDelete)}
-        message="Ushbu foydalanuvchini o'chirmoqchimisiz?"
+        message={tr("Ushbu foydalanuvchini o'chirmoqchimisiz?")}
       />
 
-      <Modal open={!!confirmReset} onClose={() => setConfirmReset(null)} title="Parolni tiklash" size="sm">
+      <Modal open={!!confirmReset} onClose={() => setConfirmReset(null)} title={tr('Parolni tiklash')} size="sm">
         <p className="text-sm text-slate-600">
-          <b>{confirmReset?.fullName}</b> uchun yangi vaqtinchalik parol yaratiladi. Eski parol ishlamay qoladi, xodim birinchi kirishda parolni almashtiradi.
+          <b>{confirmReset?.fullName}</b> {tr('uchun yangi vaqtinchalik parol yaratiladi. Eski parol ishlamay qoladi, xodim birinchi kirishda parolni almashtiradi.')}
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button onClick={() => setConfirmReset(null)} className="btn-secondary">
-            Bekor qilish
+            {tr('Bekor qilish')}
           </button>
           <button
             onClick={() => {
@@ -747,7 +747,7 @@ export default function AdminUsers() {
             }}
             className="btn-primary"
           >
-            Parolni tiklash
+            {tr('Parolni tiklash')}
           </button>
         </div>
       </Modal>

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, FileArchive, File as FileIcon, Pause, Play, X, Clock } from 'lucide-react';
 import { mediaUrl, claimPlayback } from '../../../chat/chatStore';
 import { formatDuration, formatSize } from '../../../chat/format';
+import { tr } from '../../../i18n/tr.js';
 
 // Imzolangan havola: muddati tugashidan oldin avtomatik yangilanadi.
 export function useMediaUrl(att) {
@@ -29,7 +30,7 @@ export function useMediaUrl(att) {
 
 export const downloadHref = (url) => (url ? `${url}&dl=1` : undefined);
 
-export function ExpiredMedia({ label = 'Fayl muddati tugagan' }) {
+export function ExpiredMedia({ label = tr('Fayl muddati tugagan') }) {
   return (
     <div className="flex items-center gap-2 rounded-lg bg-black/5 px-3 py-2 text-xs italic text-slate-500">
       <Clock className="h-4 w-4" /> {label}
@@ -101,14 +102,14 @@ export function Lightbox({ items, index, onClose }) {
   }, [items.length, onClose]);
   if (!att) return null;
   return (
-    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/90" onClick={onClose} role="dialog" aria-label="Rasm">
+    <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/90" onClick={onClose} role="dialog" aria-label={tr('Rasm')}>
       <div className="absolute right-3 top-3 flex gap-2" onClick={(e) => e.stopPropagation()}>
         {urls && (
-          <a href={downloadHref(urls.url)} className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20" title="Yuklab olish">
+          <a href={downloadHref(urls.url)} className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20" title={tr('Yuklab olish')}>
             <Download className="h-5 w-5" />
           </a>
         )}
-        <button onClick={onClose} className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20" title="Yopish">
+        <button onClick={onClose} className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20" title={tr('Yopish')}>
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -119,7 +120,7 @@ export function Lightbox({ items, index, onClose }) {
             e.stopPropagation();
             setI(i - 1);
           }}
-          title="Oldingi"
+          title={tr('Oldingi')}
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
@@ -134,7 +135,7 @@ export function Lightbox({ items, index, onClose }) {
             e.stopPropagation();
             setI(i + 1);
           }}
-          title="Keyingi"
+          title={tr('Keyingi')}
         >
           <ChevronRight className="h-6 w-6" />
         </button>
@@ -172,7 +173,7 @@ const fileIcon = (name = '') => {
 export function FileAttachment({ att, mine }) {
   const urls = useMediaUrl(att);
   const Icon = fileIcon(att.name);
-  if (att.expired) return <ExpiredMedia label={`${att.name} — fayl muddati tugagan`} />;
+  if (att.expired) return <ExpiredMedia label={tr('{0} — fayl muddati tugagan', att.name)} />;
   return (
     <a
       href={downloadHref(urls?.url)}
@@ -244,7 +245,7 @@ export function VoicePlayer({ att, meta, mine }) {
         type="button"
         onClick={toggle}
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${mine ? 'bg-white text-primary' : 'bg-primary text-white'}`}
-        title={playing ? 'Pauza' : 'Tinglash'}
+        title={playing ? tr('Pauza') : tr('Tinglash')}
       >
         {playing ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4" />}
       </button>
@@ -286,7 +287,7 @@ export function VideoNote({ att, meta }) {
   const C = 2 * Math.PI * 104;
   const duration = meta?.duration || att?.durationSec || 0;
   return (
-    <button type="button" onClick={toggle} className="relative h-52 w-52 shrink-0 rounded-full" title={playing ? 'Pauza' : 'Ko\'rish'}>
+    <button type="button" onClick={toggle} className="relative h-52 w-52 shrink-0 rounded-full" title={playing ? tr('Pauza') : tr("Ko'rish")}>
       <video
         ref={video}
         src={urls?.url}

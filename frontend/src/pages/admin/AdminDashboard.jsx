@@ -10,24 +10,25 @@ import MyTasksCard from '../../components/admin/MyTasksCard.jsx';
 import QuickLinksCard from '../../components/admin/QuickLinksCard.jsx';
 import { roleLabel } from '../../utils/roles';
 import { formatDate } from '../../utils/localize';
+import { tr, trServer } from '../../i18n/tr.js';
 
 // Toshkent vaqti bo'yicha (brauzer boshqa mintaqada bo'lsa ham).
 function greeting() {
   const h = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Tashkent', hour: '2-digit', hourCycle: 'h23' }).format(new Date()));
-  if (h >= 6 && h < 12) return 'Xayrli tong';
-  if (h >= 12 && h < 18) return 'Xayrli kun';
-  return 'Xayrli kech';
+  if (h >= 6 && h < 12) return tr('Xayrli tong');
+  if (h >= 12 && h < 18) return tr('Xayrli kun');
+  return tr('Xayrli kech');
 }
 
 function relativeTime(dateStr) {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diffMs / 60000);
   if (minutes < 1) return 'hozirgina';
-  if (minutes < 60) return `${minutes} daqiqa oldin`;
+  if (minutes < 60) return tr('{0} daqiqa oldin', minutes);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} soat oldin`;
+  if (hours < 24) return tr('{0} soat oldin', hours);
   const days = Math.floor(hours / 24);
-  return `${days} kun oldin`;
+  return tr('{0} kun oldin', days);
 }
 
 // Xodim (STAFF): faqat salomlashuv va o'z vazifalari — umumiy statistika
@@ -79,10 +80,10 @@ function RoleDashboard({ user }) {
   }, [user.role]);
 
   const cards = [
-    { label: 'Arizalar', value: stats?.applications, icon: Inbox, to: '/admin/arizalar' },
-    { label: 'Laboratoriyalar', value: stats?.laboratories, icon: FlaskConical, to: '/admin/laboratoriyalar' },
-    { label: 'Xizmatlar', value: stats?.services, icon: Wrench, to: '/admin/xizmatlar' },
-    { label: 'Yangiliklar', value: stats?.news, icon: Newspaper, to: '/admin/yangiliklar' },
+    { label: tr('Arizalar'), value: stats?.applications, icon: Inbox, to: '/admin/arizalar' },
+    { label: tr('Laboratoriyalar'), value: stats?.laboratories, icon: FlaskConical, to: '/admin/laboratoriyalar' },
+    { label: tr('Xizmatlar'), value: stats?.services, icon: Wrench, to: '/admin/xizmatlar' },
+    { label: tr('Yangiliklar'), value: stats?.news, icon: Newspaper, to: '/admin/yangiliklar' },
   ];
 
   return (
@@ -114,7 +115,7 @@ function RoleDashboard({ user }) {
       {user.role !== 'SUPER_ADMIN' && (
         <div>
           <h2 className="text-lg font-bold text-ink mb-4 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" /> Sizning faoliyatingiz
+            <TrendingUp className="h-5 w-5 text-primary" /> {tr('Sizning faoliyatingiz')}
           </h2>
 
           {myDashboard === null ? (
@@ -125,22 +126,22 @@ function RoleDashboard({ user }) {
                 {myDashboard.roleStats.map((s) => (
                   <div key={s.label} className="card p-6">
                     <p className="text-2xl font-bold text-ink">{s.value}</p>
-                    <p className="text-sm text-slate-500 mt-1">{s.label}</p>
+                    <p className="text-sm text-slate-500 mt-1">{trServer(s.label)}</p>
                   </div>
                 ))}
               </div>
 
               <div className="card p-6">
                 <p className="text-sm font-semibold text-ink mb-4 flex items-center gap-2">
-                  <Clock className="h-4 w-4" /> So'nggi faoliyat
+                  <Clock className="h-4 w-4" /> {tr("So'nggi faoliyat")}
                 </p>
                 {myDashboard.recentActivity.length === 0 ? (
-                  <p className="text-sm text-slate-400">Hali faoliyat qayd etilmagan.</p>
+                  <p className="text-sm text-slate-400">{tr('Hali faoliyat qayd etilmagan.')}</p>
                 ) : (
                   <div className="space-y-2">
                     {myDashboard.recentActivity.map((a) => (
                       <div key={a.id} className="flex items-center justify-between text-sm py-2 border-b border-border last:border-0">
-                        <span className="text-ink">Siz {a.text}</span>
+                        <span className="text-ink">{tr('Siz')} {trServer(a.text)}</span>
                         <span className="text-slate-400 text-xs shrink-0 ml-3">{relativeTime(a.createdAt)}</span>
                       </div>
                     ))}
@@ -160,14 +161,14 @@ function RoleDashboard({ user }) {
 
       {recent && recent.length > 0 && (
         <div className="mt-10 card overflow-x-auto">
-          <div className="px-5 py-4 border-b border-border font-semibold text-ink">So‘nggi arizalar</div>
+          <div className="px-5 py-4 border-b border-border font-semibold text-ink">{tr('So‘nggi arizalar')}</div>
           <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-4 py-3">Raqam</th>
-                <th className="px-4 py-3">Mijoz</th>
-                <th className="px-4 py-3">Sana</th>
-                <th className="px-4 py-3">Holat</th>
+                <th className="px-4 py-3">{tr('Raqam')}</th>
+                <th className="px-4 py-3">{tr('Mijoz')}</th>
+                <th className="px-4 py-3">{tr('Sana')}</th>
+                <th className="px-4 py-3">{tr('Holat')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">

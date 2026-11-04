@@ -14,6 +14,7 @@ import {
   notifyTasksChanged,
   apiError,
 } from '../../utils/tasks';
+import { tr } from '../../i18n/tr.js';
 
 const EMPTY = { title: '', description: '', priority: 'ORTACHA', dueDate: '', assigneeIds: [], relatedType: '', relatedLabel: '' };
 
@@ -33,28 +34,28 @@ function activityText(a, userName) {
   const m = a.meta || {};
   switch (a.action) {
     case 'CREATED':
-      return 'vazifani yaratdi';
+      return tr('vazifani yaratdi');
     case 'UPDATED':
-      return "ma'lumotlarni o'zgartirdi";
+      return tr("ma'lumotlarni o'zgartirdi");
     case 'STATUS':
-      return `holatni o'zgartirdi: ${STATUS_NAME(m.from)} → ${STATUS_NAME(m.to)}`;
+      return tr("holatni o'zgartirdi: {0} → {1}", STATUS_NAME(m.from), STATUS_NAME(m.to));
     case 'ASSIGNED': {
       const parts = [];
-      if (m.added?.length) parts.push(`qo'shdi: ${m.added.map(userName).join(', ')}`);
-      if (m.removed?.length) parts.push(`olib tashladi: ${m.removed.map(userName).join(', ')}`);
-      return `ijrochilarni ${parts.join('; ') || "o'zgartirdi"}`;
+      if (m.added?.length) parts.push(tr("qo'shdi: {0}", m.added.map(userName).join(', ')));
+      if (m.removed?.length) parts.push(tr('olib tashladi: {0}', m.removed.map(userName).join(', ')));
+      return tr('ijrochilarni {0}', parts.join('; ') || tr("o'zgartirdi"));
     }
     case 'COMMENT':
-      return 'izoh yozdi';
+      return tr('izoh yozdi');
     case 'CHECKLIST':
-      if (m.added) return `bandni qo'shdi: «${m.added}»`;
-      if (m.checked) return `bandni bajardi: «${m.checked}»`;
-      if (m.unchecked) return `bandni qaytardi: «${m.unchecked}»`;
-      return "ro'yxatni o'zgartirdi";
+      if (m.added) return tr("bandni qo'shdi: «{0}»", m.added);
+      if (m.checked) return tr('bandni bajardi: «{0}»', m.checked);
+      if (m.unchecked) return tr('bandni qaytardi: «{0}»', m.unchecked);
+      return tr("ro'yxatni o'zgartirdi");
     case 'ATTACHMENT':
-      return m.added ? `fayl qo'shdi: ${m.added}` : `faylni o'chirdi: ${m.removed}`;
+      return m.added ? tr("fayl qo'shdi: {0}", m.added) : tr("faylni o'chirdi: {0}", m.removed);
     case 'DELETED':
-      return "vazifani o'chirdi";
+      return tr("vazifani o'chirdi");
     default:
       return a.action;
   }
@@ -67,12 +68,12 @@ function AssigneePicker({ users, value, onChange, disabled }) {
   return (
     <div>
       <div className="flex flex-wrap gap-1.5">
-        {value.length === 0 && <span className="text-sm text-slate-400">Tayinlanmagan</span>}
+        {value.length === 0 && <span className="text-sm text-slate-400">{tr('Tayinlanmagan')}</span>}
         {value.map((id) => (
           <span key={id} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-            {byId[id]?.fullName || 'Foydalanuvchi'}
+            {byId[id]?.fullName || tr('Foydalanuvchi')}
             {!disabled && (
-              <button type="button" onClick={() => onChange(value.filter((x) => x !== id))} aria-label="Olib tashlash">
+              <button type="button" onClick={() => onChange(value.filter((x) => x !== id))} aria-label={tr('Olib tashlash')}>
                 <X className="h-3 w-3" />
               </button>
             )}
@@ -88,7 +89,7 @@ function AssigneePicker({ users, value, onChange, disabled }) {
           }}
           className="input-field mt-2"
         >
-          <option value="">+ Ijrochi qo'shish</option>
+          <option value="">{tr("+ Ijrochi qo'shish")}</option>
           {options.map((u) => (
             <option key={u.id} value={u.id}>
               {u.fullName}
@@ -150,7 +151,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
       setTask(t);
       setForm(toForm(t));
     } catch (err) {
-      setError(err?.response?.status === 404 ? 'Vazifa topilmadi yoki sizga ko\'rinmaydi.' : apiError(err));
+      setError(err?.response?.status === 404 ? tr("Vazifa topilmadi yoki sizga ko'rinmaydi.") : apiError(err));
     } finally {
       setLoading(false);
     }
@@ -196,13 +197,13 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
     if (!form.title.trim()) return;
     setSaving(true);
     if (!currentId) {
-      const t = await run(() => adminTasks.create(payload()), 'Vazifa yaratildi.');
+      const t = await run(() => adminTasks.create(payload()), tr('Vazifa yaratildi.'));
       if (t) {
         setCurrentId(t.id);
         changed(t);
       }
     } else {
-      const t = await run(() => adminTasks.update(currentId, payload()), 'Saqlandi.');
+      const t = await run(() => adminTasks.update(currentId, payload()), tr('Saqlandi.'));
       if (t) changed(t);
     }
     setSaving(false);
@@ -214,7 +215,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
   };
 
   const remove = async () => {
-    const ok = await run(() => adminTasks.remove(currentId), "Vazifa o'chirildi.");
+    const ok = await run(() => adminTasks.remove(currentId), tr("Vazifa o'chirildi."));
     if (ok !== undefined) {
       notifyTasksChanged();
       onChanged?.();
@@ -264,7 +265,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
       for (const f of files) {
         await adminTasks.addAttachment(currentId, { fileUrl: f.url, fileName: f.originalName });
       }
-      showToast('Fayl biriktirildi.', 'success');
+      showToast(tr('Fayl biriktirildi.'), 'success');
       await load();
       onChanged?.();
     } catch (err) {
@@ -289,9 +290,9 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
-    <Modal open={open} onClose={onClose} title={isNew ? 'Yangi vazifa' : 'Vazifa'} size="xl">
+    <Modal open={open} onClose={onClose} title={isNew ? tr('Yangi vazifa') : tr('Vazifa')} size="xl">
       {error ? (
-        <ErrorState message={error} onRetry={() => load()} retryLabel="Qayta urinish" />
+        <ErrorState message={error} onRetry={() => load()} retryLabel={tr('Qayta urinish')} />
       ) : (loading || currentId) && !task ? (
         // Mavjud vazifa hali yuklanmagan — forma faqat ma'lumot kelgach chiziladi.
         <Loading />
@@ -299,18 +300,18 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
         <div className="space-y-5">
           <form onSubmit={save} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Sarlavha *</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Sarlavha *')}</label>
               <input value={form.title} onChange={set('title')} className="input-field" required maxLength={300} disabled={!canManage} autoFocus={isNew} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Tavsif</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Tavsif')}</label>
               <textarea value={form.description} onChange={set('description')} rows={3} className="input-field" disabled={!canManage} />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">Holat</label>
+                <label className="block text-sm font-medium text-ink mb-1.5">{tr('Holat')}</label>
                 {isNew ? (
-                  <p className="py-2 text-sm text-slate-500">Yangi</p>
+                  <p className="py-2 text-sm text-slate-500">{tr('Yangi')}</p>
                 ) : (
                   <select value={task.status} onChange={(e) => setStatus(e.target.value)} className="input-field" disabled={!canWork}>
                     {TASK_STATUSES.map((s) => (
@@ -322,7 +323,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">Muhimlik</label>
+                <label className="block text-sm font-medium text-ink mb-1.5">{tr('Muhimlik')}</label>
                 <select value={form.priority} onChange={set('priority')} className="input-field" disabled={!canManage}>
                   {TASK_PRIORITIES.map((p) => (
                     <option key={p.value} value={p.value}>
@@ -332,18 +333,18 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">Muddat</label>
+                <label className="block text-sm font-medium text-ink mb-1.5">{tr('Muddat')}</label>
                 <input type="date" value={form.dueDate} onChange={set('dueDate')} className={`input-field ${task?.overdue ? '!border-red-400 text-red-600' : ''}`} disabled={!canManage} />
-                {task?.overdue && <p className="mt-1 text-xs font-medium text-red-600">Muddati o'tgan</p>}
+                {task?.overdue && <p className="mt-1 text-xs font-medium text-red-600">{tr("Muddati o'tgan")}</p>}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">Ijrochilar</label>
+              <label className="block text-sm font-medium text-ink mb-1.5">{tr('Ijrochilar')}</label>
               <AssigneePicker users={pickerUsers} value={form.assigneeIds} onChange={(ids) => setForm((f) => ({ ...f, assigneeIds: ids }))} disabled={!canManage} />
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-ink mb-1.5">Bog'liq bo'lim</label>
+                <label className="block text-sm font-medium text-ink mb-1.5">{tr("Bog'liq bo'lim")}</label>
                 <select value={form.relatedType} onChange={set('relatedType')} className="input-field" disabled={!canManage}>
                   <option value="">—</option>
                   {TASK_RELATED_TYPES.map((r) => (
@@ -354,26 +355,26 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                 </select>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-ink mb-1.5">Bog'liq hujjat (raqam yoki nom)</label>
-                <input value={form.relatedLabel} onChange={set('relatedLabel')} className="input-field" placeholder="masalan: Ariza №125" maxLength={300} disabled={!canManage} />
+                <label className="block text-sm font-medium text-ink mb-1.5">{tr("Bog'liq hujjat (raqam yoki nom)")}</label>
+                <input value={form.relatedLabel} onChange={set('relatedLabel')} className="input-field" placeholder={tr('masalan: Ariza №125')} maxLength={300} disabled={!canManage} />
               </div>
             </div>
             {task && (
               <p className="text-xs text-slate-400">
-                Yaratdi: {task.creator?.fullName} · {formatDateTime(task.createdAt)}
+                {tr('Yaratdi:')} {task.creator?.fullName} · {formatDateTime(task.createdAt)}
                 {task.laboratory ? ` · ${task.laboratory.nameUz}` : ''}
                 {task.relatedType && !canManage ? ` · ${RELATED_BY[task.relatedType]?.label}` : ''}
-                {task.completedAt ? ` · Bajarildi: ${formatDateTime(task.completedAt)}` : ''}
+                {task.completedAt ? (' ' + tr('· Bajarildi: {0}', formatDateTime(task.completedAt))) : ''}
               </p>
             )}
             {canManage && (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <button type="submit" disabled={saving || !form.title.trim()} className="btn-primary">
-                  {saving ? 'Saqlanmoqda...' : isNew ? 'Yaratish' : 'Saqlash'}
+                  {saving ? tr('Saqlanmoqda...') : isNew ? tr('Yaratish') : tr('Saqlash')}
                 </button>
                 {!isNew && (
                   <button type="button" onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 text-sm text-red-600 hover:underline">
-                    <Trash2 className="h-4 w-4" /> O'chirish
+                    <Trash2 className="h-4 w-4" /> {tr("O'chirish")}
                   </button>
                 )}
               </div>
@@ -382,14 +383,14 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
 
           {task && (
             <>
-              <Section title={`Bajariladigan ishlar (${task.checklist.filter((c) => c.done).length}/${task.checklist.length})`}>
+              <Section title={tr('Bajariladigan ishlar ({0}/{1})', task.checklist.filter((c) => c.done).length, task.checklist.length)}>
                 <ul className="space-y-1">
                   {task.checklist.map((item) => (
                     <li key={item.id} className="group flex items-center gap-2 text-sm">
                       <input type="checkbox" checked={item.done} onChange={() => toggleItem(item)} disabled={!canWork} className="h-4 w-4 rounded border-border" />
                       <span className={item.done ? 'text-slate-400 line-through' : 'text-ink'}>{item.text}</span>
                       {canWork && (
-                        <button onClick={() => removeItem(item)} className="ml-auto opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600" aria-label="O'chirish">
+                        <button onClick={() => removeItem(item)} className="ml-auto opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-600" aria-label={tr("O'chirish")}>
                           <X className="h-4 w-4" />
                         </button>
                       )}
@@ -398,8 +399,8 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                 </ul>
                 {canWork && (
                   <form onSubmit={addItem} className="mt-2 flex gap-2">
-                    <input value={newItem} onChange={(e) => setNewItem(e.target.value)} className="input-field" placeholder="Yangi band..." maxLength={500} />
-                    <button type="submit" className="btn-secondary !px-3" aria-label="Qo'shish">
+                    <input value={newItem} onChange={(e) => setNewItem(e.target.value)} className="input-field" placeholder={tr('Yangi band...')} maxLength={500} />
+                    <button type="submit" className="btn-secondary !px-3" aria-label={tr("Qo'shish")}>
                       <Plus className="h-4 w-4" />
                     </button>
                   </form>
@@ -407,18 +408,18 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
               </Section>
 
               <Section
-                title={`Fayllar (${task.attachments.length})`}
+                title={tr('Fayllar ({0})', task.attachments.length)}
                 right={
                   canWork && (
                     <label className="inline-flex cursor-pointer items-center gap-1.5 text-sm text-primary hover:underline">
-                      <Paperclip className="h-4 w-4" /> {uploading ? 'Yuklanmoqda...' : 'Fayl biriktirish'}
+                      <Paperclip className="h-4 w-4" /> {uploading ? tr('Yuklanmoqda...') : tr('Fayl biriktirish')}
                       <input type="file" multiple className="hidden" disabled={uploading} onChange={(e) => attach(e.target.files).then(() => (e.target.value = ''))} />
                     </label>
                   )
                 }
               >
                 {task.attachments.length === 0 ? (
-                  <p className="text-sm text-slate-400">Fayl yo'q.</p>
+                  <p className="text-sm text-slate-400">{tr("Fayl yo'q.")}</p>
                 ) : (
                   <ul className="space-y-1">
                     {task.attachments.map((f) => (
@@ -429,7 +430,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                         </a>
                         <span className="text-xs text-slate-400">{f.uploadedBy?.fullName}</span>
                         {canWork && (
-                          <button onClick={() => removeAttachment(f)} className="ml-auto text-slate-400 hover:text-red-600" aria-label="O'chirish">
+                          <button onClick={() => removeAttachment(f)} className="ml-auto text-slate-400 hover:text-red-600" aria-label={tr("O'chirish")}>
                             <X className="h-4 w-4" />
                           </button>
                         )}
@@ -439,7 +440,7 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                 )}
               </Section>
 
-              <Section title={`Izohlar (${task.comments.length})`}>
+              <Section title={tr('Izohlar ({0})', task.comments.length)}>
                 <div className="space-y-3">
                   {task.comments.map((c) => (
                     <div key={c.id} className="rounded-lg bg-bg-light px-3 py-2">
@@ -459,21 +460,21 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
                     }}
                     rows={2}
                     className="input-field"
-                    placeholder="Izoh yozing... (Ctrl+Enter — yuborish)"
+                    placeholder={tr('Izoh yozing... (Ctrl+Enter — yuborish)')}
                     maxLength={5000}
                   />
-                  <button type="submit" disabled={!comment.trim()} className="btn-primary !px-3 self-end" aria-label="Yuborish">
+                  <button type="submit" disabled={!comment.trim()} className="btn-primary !px-3 self-end" aria-label={tr('Yuborish')}>
                     <Send className="h-4 w-4" />
                   </button>
                 </form>
               </Section>
 
-              <Section title="Tarix" right={<History className="h-4 w-4 text-slate-400" />}>
+              <Section title={tr('Tarix')} right={<History className="h-4 w-4 text-slate-400" />}>
                 <ul className="space-y-1.5">
                   {task.activities.map((a) => (
                     <li key={a.id} className="text-xs text-slate-500">
                       <span className="text-slate-400">{formatDateTime(a.createdAt)}</span> —{' '}
-                      <span className="font-medium text-ink">{a.user?.fullName || "O'chirilgan foydalanuvchi"}</span> {activityText(a, userName)}
+                      <span className="font-medium text-ink">{a.user?.fullName || tr("O'chirilgan foydalanuvchi")}</span> {activityText(a, userName)}
                     </li>
                   ))}
                 </ul>
@@ -486,8 +487,8 @@ export default function TaskModal({ open, taskId, onClose, onChanged, initial })
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
         onConfirm={remove}
-        title="Vazifani o'chirish"
-        message={`«${task?.title}» vazifasi o'chiriladi. Davom etasizmi?`}
+        title={tr("Vazifani o'chirish")}
+        message={tr("«{0}» vazifasi o'chiriladi. Davom etasizmi?", task?.title)}
       />
     </Modal>
   );

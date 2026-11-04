@@ -1,15 +1,16 @@
+import { tr } from '../i18n/tr.js';
 // Bildirishnoma sozlamalarini KLIENTDA qo'llash: brauzer bildirishnomasi,
 // ovoz va tinch soatlar. Serverda faqat "Sayt ichida" (inApp) hisobga olinadi.
 
 export const EVENT_LABELS = {
-  task_assigned: 'Menga vazifa tayinlandi',
-  task_status: "Vazifam holati o'zgardi",
-  task_comment: 'Vazifaga izoh yozildi',
-  task_due: 'Vazifa muddati yaqin / o\'tdi',
-  chat_direct: 'Chat: shaxsiy xabar',
-  chat_mention: "Chat: meni eslatishdi (@)",
-  chat_group: 'Chat: guruh va laboratoriya xabarlari',
-  chat_announcement: "Chat: e'lonlar",
+  task_assigned: tr('Menga vazifa tayinlandi'),
+  task_status: tr("Vazifam holati o'zgardi"),
+  task_comment: tr('Vazifaga izoh yozildi'),
+  task_due: tr("Vazifa muddati yaqin / o'tdi"),
+  chat_direct: tr('Chat: shaxsiy xabar'),
+  chat_mention: tr('Chat: meni eslatishdi (@)'),
+  chat_group: tr('Chat: guruh va laboratoriya xabarlari'),
+  chat_announcement: tr("Chat: e'lonlar"),
 };
 
 // Notification.type -> voqea.
@@ -97,7 +98,7 @@ export function testNotification() {
   beep();
   if (browserPermission() !== 'granted') return false;
   try {
-    new Notification('SLM — sinov xabari', { body: 'Brauzer bildirishnomalari ishlayapti.' });
+    new Notification(tr('SLM — sinov xabari'), { body: tr('Brauzer bildirishnomalari ishlayapti.') });
     return true;
   } catch {
     return false;

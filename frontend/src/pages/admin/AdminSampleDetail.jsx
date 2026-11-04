@@ -9,6 +9,7 @@ import { formatDate } from '../../utils/localize';
 import SampleStatusBadge from '../../components/samples/SampleStatusBadge.jsx';
 import SampleActionPanel from '../../components/samples/SampleActionPanel.jsx';
 import { ACTION_LABELS } from '../../components/samples/sampleConstants';
+import { tr, locName } from '../../i18n/tr.js';
 
 export default function AdminSampleDetail() {
   const { id } = useParams();
@@ -38,12 +39,12 @@ export default function AdminSampleDetail() {
     setActionBusy(true);
     try {
       await adminSamples.action(id, { action, toLabId, notes });
-      showToast('Amal bajarildi.', 'success');
+      showToast(tr('Amal bajarildi.'), 'success');
       setFlash(true);
       setTimeout(() => setFlash(false), 1600);
       load();
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setActionBusy(false);
     }
@@ -55,10 +56,10 @@ export default function AdminSampleDetail() {
     try {
       const res = await uploadFiles(fileList);
       await adminSamples.attach(id, { field, url: res.files[0].url });
-      showToast('Fayl biriktirildi.', 'success');
+      showToast(tr('Fayl biriktirildi.'), 'success');
       load();
     } catch {
-      showToast('Xatolik yuz berdi.', 'error');
+      showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setUploading(false);
     }
@@ -70,7 +71,7 @@ export default function AdminSampleDetail() {
   return (
     <div className="max-w-3xl">
       <Link to="/admin/namunalar" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-primary mb-4">
-        <ArrowLeft className="h-4 w-4" /> Namunalar ro'yxatiga qaytish
+        <ArrowLeft className="h-4 w-4" /> {tr("Namunalar ro'yxatiga qaytish")}
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
@@ -85,26 +86,26 @@ export default function AdminSampleDetail() {
 
       <div className={`card p-5 mb-6 transition-colors ${flash ? 'flash-success' : ''}`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-ink">Joriy holat</h2>
+          <h2 className="font-semibold text-ink">{tr('Joriy holat')}</h2>
           <SampleStatusBadge status={sample.status} />
         </div>
         <SampleActionPanel sample={sample} labs={labs} onAction={doAction} busy={actionBusy} />
       </div>
 
       <div className="card p-5 mb-6">
-        <h2 className="font-semibold text-ink mb-3">Umumiy ma'lumot</h2>
+        <h2 className="font-semibold text-ink mb-3">{tr("Umumiy ma'lumot")}</h2>
         <dl className="grid grid-cols-2 gap-y-2 text-sm">
-          <dt className="text-slate-500">Kelib chiqishi</dt>
-          <dd className="text-ink font-medium">{sample.originLab?.nameUz}</dd>
-          <dt className="text-slate-500">Hozirgi joyi</dt>
-          <dd className="text-ink font-medium">{sample.currentLab?.nameUz || '—'}</dd>
-          <dt className="text-slate-500">Kutilayotgan muddat</dt>
+          <dt className="text-slate-500">{tr('Kelib chiqishi')}</dt>
+          <dd className="text-ink font-medium">{locName(sample.originLab)}</dd>
+          <dt className="text-slate-500">{tr('Hozirgi joyi')}</dt>
+          <dd className="text-ink font-medium">{locName(sample.currentLab) || '—'}</dd>
+          <dt className="text-slate-500">{tr('Kutilayotgan muddat')}</dt>
           <dd className="text-ink font-medium">{sample.dueDate ? formatDate(sample.dueDate) : '—'}</dd>
-          <dt className="text-slate-500">Ro'yxatga olingan sana</dt>
+          <dt className="text-slate-500">{tr("Ro'yxatga olingan sana")}</dt>
           <dd className="text-ink font-medium">{formatDate(sample.createdAt)}</dd>
           {sample.description && (
             <>
-              <dt className="text-slate-500">Izoh</dt>
+              <dt className="text-slate-500">{tr('Izoh')}</dt>
               <dd className="text-ink font-medium">{sample.description}</dd>
             </>
           )}
@@ -112,9 +113,9 @@ export default function AdminSampleDetail() {
       </div>
 
       <div className="card p-5 mb-6">
-        <h2 className="font-semibold text-ink mb-4">Harakat tarixi</h2>
+        <h2 className="font-semibold text-ink mb-4">{tr('Harakat tarixi')}</h2>
         {sample.movements.length === 0 ? (
-          <p className="text-sm text-slate-400">Hali harakat qayd etilmagan.</p>
+          <p className="text-sm text-slate-400">{tr('Hali harakat qayd etilmagan.')}</p>
         ) : (
           <div>
             {sample.movements.map((m, idx) => (
@@ -128,7 +129,7 @@ export default function AdminSampleDetail() {
                 <p className="text-xs text-slate-400">{formatDate(m.createdAt)}</p>
                 <p className="text-sm font-semibold text-ink">{ACTION_LABELS[m.action] || m.action}</p>
                 <p className="text-xs text-slate-500">
-                  {m.fromLab?.nameUz || '—'} → {m.toLab?.nameUz || '—'} · {m.performedByName || '—'}
+                  {locName(m.fromLab) || '—'} → {locName(m.toLab) || '—'} · {m.performedByName || '—'}
                 </p>
                 {m.notes && <p className="text-xs text-slate-500 mt-0.5 italic">"{m.notes}"</p>}
               </div>
@@ -140,25 +141,25 @@ export default function AdminSampleDetail() {
       {sample.application && (
         <div className="card p-5 mb-6">
           <h2 className="font-semibold text-ink mb-3 flex items-center gap-2">
-            <User className="h-4 w-4 text-primary" /> Bog'langan ariza
+            <User className="h-4 w-4 text-primary" /> {tr("Bog'langan ariza")}
           </h2>
           <p className="text-sm text-ink font-medium">{sample.application.fullName}</p>
           <p className="text-sm text-slate-500">{sample.application.phone}</p>
           {sample.application.service && (
-            <p className="text-sm text-slate-500 mt-1">Xizmat: {sample.application.service.nameUz}</p>
+            <p className="text-sm text-slate-500 mt-1">{tr('Xizmat:')} {locName(sample.application.service)}</p>
           )}
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div className="card p-5">
-          <h2 className="font-semibold text-ink mb-3">Namuna rasmi</h2>
+          <h2 className="font-semibold text-ink mb-3">{tr('Namuna rasmi')}</h2>
           {sample.photoUrl && (
             <img src={sample.photoUrl} alt="" className="w-full rounded-lg border border-border mb-3" />
           )}
           <label className="btn-secondary w-full cursor-pointer justify-center">
             <Upload className="h-4 w-4" />
-            {uploadingPhoto ? 'Yuklanmoqda...' : sample.photoUrl ? 'Rasmni almashtirish' : 'Rasm yuklash'}
+            {uploadingPhoto ? tr('Yuklanmoqda...') : sample.photoUrl ? tr('Rasmni almashtirish') : tr('Rasm yuklash')}
             <input
               type="file"
               accept=".jpg,.jpeg,.png,.webp"
@@ -169,7 +170,7 @@ export default function AdminSampleDetail() {
         </div>
 
         <div className="card p-5">
-          <h2 className="font-semibold text-ink mb-3">Yakuniy hujjat / protokol</h2>
+          <h2 className="font-semibold text-ink mb-3">{tr('Yakuniy hujjat / protokol')}</h2>
           {sample.reportUrl && (
             <a
               href={sample.reportUrl}
@@ -177,12 +178,12 @@ export default function AdminSampleDetail() {
               rel="noreferrer"
               className="flex items-center gap-2 text-sm text-primary hover:underline mb-3"
             >
-              <FileText className="h-4 w-4" /> Hujjatni ko'rish
+              <FileText className="h-4 w-4" /> {tr("Hujjatni ko'rish")}
             </a>
           )}
           <label className="btn-secondary w-full cursor-pointer justify-center">
             <Upload className="h-4 w-4" />
-            {uploadingReport ? 'Yuklanmoqda...' : sample.reportUrl ? 'Hujjatni almashtirish' : 'Hujjat yuklash'}
+            {uploadingReport ? tr('Yuklanmoqda...') : sample.reportUrl ? tr('Hujjatni almashtirish') : tr('Hujjat yuklash')}
             <input
               type="file"
               accept=".pdf"

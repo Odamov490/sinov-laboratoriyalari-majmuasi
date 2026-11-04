@@ -8,6 +8,7 @@ import { getAnalyticsOverview } from '../../services/adminApi';
 import { Loading, ErrorState } from '../StateViews.jsx';
 import { formatDate } from '../../utils/localize';
 import TopPagesCard from './TopPagesCard.jsx';
+import { tr } from '../../i18n/tr.js';
 
 const NAVY = '#0B3A63';
 const GOLD = '#D9A441';
@@ -30,12 +31,12 @@ function presetRange(key) {
 }
 
 const PRESETS = [
-  { key: 'today', label: 'Bugun' },
-  { key: 'yesterday', label: 'Kecha' },
-  { key: '7d', label: '7 kun' },
-  { key: '30d', label: '30 kun' },
-  { key: '90d', label: '90 kun' },
-  { key: 'custom', label: 'Maxsus oraliq' },
+  { key: 'today', label: tr('Bugun') },
+  { key: 'yesterday', label: tr('Kecha') },
+  { key: '7d', label: tr('7 kun') },
+  { key: '30d', label: tr('30 kun') },
+  { key: '90d', label: tr('90 kun') },
+  { key: 'custom', label: tr('Maxsus oraliq') },
 ];
 
 function formatBytes(bytes) {
@@ -87,15 +88,15 @@ export default function AnalyticsPanel() {
 
   const cacheData = data
     ? [
-        { name: 'Keshdan', value: data.totals.cachedRequests, color: EMERALD },
-        { name: 'To\'g\'ridan-to\'g\'ri', value: Math.max(data.totals.requests - data.totals.cachedRequests, 0), color: NAVY },
+        { name: tr('Keshdan'), value: data.totals.cachedRequests, color: EMERALD },
+        { name: tr("To'g'ridan-to'g'ri"), value: Math.max(data.totals.requests - data.totals.cachedRequests, 0), color: NAVY },
       ]
     : [];
 
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-bold text-ink">Saytdan foydalanish statistikasi</h2>
+        <h2 className="text-lg font-bold text-ink">{tr('Saytdan foydalanish statistikasi')}</h2>
         <button
           onClick={() => {
             load(range);
@@ -104,7 +105,7 @@ export default function AnalyticsPanel() {
           disabled={status === 'loading'}
           className="btn-secondary !py-1.5 !px-3 text-xs"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${status === 'loading' ? 'animate-spin' : ''}`} /> Yangilash
+          <RefreshCw className={`h-3.5 w-3.5 ${status === 'loading' ? 'animate-spin' : ''}`} /> {tr('Yangilash')}
         </button>
       </div>
 
@@ -143,7 +144,7 @@ export default function AnalyticsPanel() {
               className="input-field !py-1.5 !w-auto text-xs"
             />
             <button onClick={applyCustom} className="btn-primary !py-1.5 !px-3 text-xs">
-              Qo'llash
+              {tr("Qo'llash")}
             </button>
           </div>
         )}
@@ -153,13 +154,13 @@ export default function AnalyticsPanel() {
 
       {status === 'not-configured' && (
         <div className="card p-6 text-center text-sm text-slate-500">
-          Cloudflare Analytics hali ulanmagan.
+          {tr('Cloudflare Analytics hali ulanmagan.')}
         </div>
       )}
 
       {status === 'error' && (
         <div className="card">
-          <ErrorState message="Statistikani olishda xatolik yuz berdi." onRetry={() => load(range)} retryLabel="Qayta urinish" />
+          <ErrorState message={tr('Statistikani olishda xatolik yuz berdi.')} onRetry={() => load(range)} retryLabel={tr('Qayta urinish')} />
         </div>
       )}
 
@@ -167,9 +168,9 @@ export default function AnalyticsPanel() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-5">
             {[
-              { label: 'Noyob tashrifchilar', value: data.totals.uniqueVisitors, icon: Users },
-              { label: 'Sahifa ko‘rishlar', value: data.totals.pageViews, icon: Eye },
-              { label: 'Jami so‘rovlar', value: data.totals.requests, icon: Activity },
+              { label: tr('Noyob tashrifchilar'), value: data.totals.uniqueVisitors, icon: Users },
+              { label: tr('Sahifa ko‘rishlar'), value: data.totals.pageViews, icon: Eye },
+              { label: tr('Jami so‘rovlar'), value: data.totals.requests, icon: Activity },
             ].map((c) => (
               <div key={c.label} className="card p-6 flex items-center gap-4">
                 <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
@@ -185,12 +186,12 @@ export default function AnalyticsPanel() {
 
           {data.dailyStats.length === 0 ? (
             <div className="card p-6 text-center text-sm text-slate-500">
-              Tanlangan oraliq uchun ma'lumot topilmadi.
+              {tr("Tanlangan oraliq uchun ma'lumot topilmadi.")}
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div className="card p-6">
-                <p className="text-sm font-semibold text-ink mb-3">Kunlik tashrifchilar va sahifa ko'rishlar</p>
+                <p className="text-sm font-semibold text-ink mb-3">{tr("Kunlik tashrifchilar va sahifa ko'rishlar")}</p>
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={data.dailyStats} margin={{ bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -205,7 +206,7 @@ export default function AnalyticsPanel() {
               </div>
 
               <div className="card p-6">
-                <p className="text-sm font-semibold text-ink mb-3">Kunlik so'rovlar soni</p>
+                <p className="text-sm font-semibold text-ink mb-3">{tr("Kunlik so'rovlar soni")}</p>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={data.dailyStats} margin={{ bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -218,7 +219,7 @@ export default function AnalyticsPanel() {
               </div>
 
               <div className="card p-6">
-                <p className="text-sm font-semibold text-ink mb-3">Kunlik trafik hajmi</p>
+                <p className="text-sm font-semibold text-ink mb-3">{tr('Kunlik trafik hajmi')}</p>
                 <ResponsiveContainer width="100%" height={240}>
                   <AreaChart data={data.dailyStats} margin={{ bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
@@ -231,7 +232,7 @@ export default function AnalyticsPanel() {
               </div>
 
               <div className="card p-6">
-                <p className="text-sm font-semibold text-ink mb-3">Kesh nisbati (jami so'rovlar)</p>
+                <p className="text-sm font-semibold text-ink mb-3">{tr("Kesh nisbati (jami so'rovlar)")}</p>
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie data={cacheData} dataKey="value" nameKey="name" innerRadius={55} outerRadius={85} paddingAngle={2}>

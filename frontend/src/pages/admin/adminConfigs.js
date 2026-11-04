@@ -9,162 +9,163 @@
 // need markup use React.createElement instead of JSX syntax.
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { tr, locName, dateLocale } from '../../i18n/tr.js';
 
 export const laboratoryConfig = {
   path: 'laboratories',
-  title: 'Laboratoriyalar',
+  title: tr('Laboratoriyalar'),
   columns: [
-    { key: 'nameUz', label: 'Nomi (UZ)' },
+    { key: 'nameUz', label: tr('Nomi (UZ)') },
     { key: 'slug', label: 'Slug' },
-    { key: 'order', label: 'Tartib' },
-    { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") },
+    { key: 'order', label: tr('Tartib') },
+    { key: 'isActive', label: tr('Faol'), render: (i) => (i.isActive ? tr('Ha') : tr("Yo'q")) },
   ],
   fields: [
     { name: 'slug', label: 'Slug', required: true },
-    { name: 'nameUz', label: 'Nomi (UZ)', required: true },
-    { name: 'nameRu', label: 'Nomi (RU)', required: true },
-    { name: 'nameEn', label: 'Nomi (EN)', required: true },
-    { name: 'descriptionUz', label: 'Tavsif (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionRu', label: 'Tavsif (RU)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionEn', label: 'Tavsif (EN)', type: 'textarea', fullWidth: true },
-    { name: 'aboutUz', label: 'Batafsil (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'accreditationScope', label: 'Akkreditatsiya sohasi', type: 'textarea', fullWidth: true },
-    { name: 'coverImage', label: 'Rasm', type: 'file' },
-    { name: 'order', label: 'Tartib', type: 'number' },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'nameUz', label: tr('Nomi (UZ)'), required: true },
+    { name: 'nameRu', label: tr('Nomi (RU)'), required: true },
+    { name: 'nameEn', label: tr('Nomi (EN)'), required: true },
+    { name: 'descriptionUz', label: tr('Tavsif (UZ)'), type: 'textarea', fullWidth: true },
+    { name: 'descriptionRu', label: tr('Tavsif (RU)'), type: 'textarea', fullWidth: true },
+    { name: 'descriptionEn', label: tr('Tavsif (EN)'), type: 'textarea', fullWidth: true },
+    { name: 'aboutUz', label: tr('Batafsil (UZ)'), type: 'textarea', fullWidth: true },
+    { name: 'accreditationScope', label: tr('Akkreditatsiya sohasi'), type: 'textarea', fullWidth: true },
+    { name: 'coverImage', label: tr('Rasm'), type: 'file' },
+    { name: 'order', label: tr('Tartib'), type: 'number' },
+    { name: 'isActive', label: tr('Faol'), type: 'checkbox' },
   ],
 };
 
 export const serviceConfig = {
   path: 'services',
-  title: 'Xizmatlar',
+  title: tr('Xizmatlar'),
   columns: [
-    { key: 'nameUz', label: 'Nomi' },
+    { key: 'nameUz', label: tr('Nomi') },
     { key: 'slug', label: 'Slug' },
-    { key: 'testType', label: 'Sinov turi' },
-    { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") },
+    { key: 'testType', label: tr('Sinov turi') },
+    { key: 'isActive', label: tr('Faol'), render: (i) => (i.isActive ? tr('Ha') : tr("Yo'q")) },
   ],
   fields: [
     { name: 'slug', label: 'Slug', required: true },
-    { name: 'nameUz', label: 'Nomi (UZ)', required: true },
-    { name: 'nameRu', label: 'Nomi (RU)', required: true },
-    { name: 'nameEn', label: 'Nomi (EN)', required: true },
+    { name: 'nameUz', label: tr('Nomi (UZ)'), required: true },
+    { name: 'nameRu', label: tr('Nomi (RU)'), required: true },
+    { name: 'nameEn', label: tr('Nomi (EN)'), required: true },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
     {
       name: 'standardId',
-      label: 'Standart',
+      label: tr('Standart'),
       type: 'async-select',
       optionsResource: 'standards',
-      optionsLabel: (item) => `${item.code} — ${item.nameUz}`,
+      optionsLabel: (item) => `${item.code} — ${locName(item)}`,
     },
     {
       name: 'categoryId',
-      label: 'Xizmat kategoriyasi',
+      label: tr('Xizmat kategoriyasi'),
       type: 'async-select',
       optionsResource: 'service-categories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'testObject', label: 'Sinov obyekti' },
-    { name: 'testType', label: 'Sinov turi' },
-    { name: 'durationDays', label: 'Muddat (kun)', type: 'number' },
-    { name: 'descriptionUz', label: 'Tavsif (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionRu', label: 'Tavsif (RU)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionEn', label: 'Tavsif (EN)', type: 'textarea', fullWidth: true },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'testObject', label: tr('Sinov obyekti') },
+    { name: 'testType', label: tr('Sinov turi') },
+    { name: 'durationDays', label: tr('Muddat (kun)'), type: 'number' },
+    { name: 'descriptionUz', label: tr('Tavsif (UZ)'), type: 'textarea', fullWidth: true },
+    { name: 'descriptionRu', label: tr('Tavsif (RU)'), type: 'textarea', fullWidth: true },
+    { name: 'descriptionEn', label: tr('Tavsif (EN)'), type: 'textarea', fullWidth: true },
+    { name: 'isActive', label: tr('Faol'), type: 'checkbox' },
   ],
 };
 
 export const standardConfig = {
   path: 'standards',
-  title: 'Standartlar',
+  title: tr('Standartlar'),
   columns: [
-    { key: 'code', label: 'Kod' },
-    { key: 'nameUz', label: 'Nomi' },
-    { key: 'category', label: 'Kategoriya' },
+    { key: 'code', label: tr('Kod') },
+    { key: 'nameUz', label: tr('Nomi') },
+    { key: 'category', label: tr('Kategoriya') },
   ],
   fields: [
-    { name: 'code', label: 'Kod', required: true },
-    { name: 'category', label: 'Kategoriya (O‘z DSt, IEC, ISO, GOST, EN, CISPR...)', required: true },
-    { name: 'nameUz', label: 'Nomi (UZ)', required: true },
-    { name: 'nameRu', label: 'Nomi (RU)', required: true },
-    { name: 'nameEn', label: 'Nomi (EN)', required: true },
-    { name: 'scopeUz', label: 'Scope (UZ)', type: 'textarea', fullWidth: true },
+    { name: 'code', label: tr('Kod'), required: true },
+    { name: 'category', label: tr('Kategoriya (O‘z DSt, IEC, ISO, GOST, EN, CISPR...)'), required: true },
+    { name: 'nameUz', label: tr('Nomi (UZ)'), required: true },
+    { name: 'nameRu', label: tr('Nomi (RU)'), required: true },
+    { name: 'nameEn', label: tr('Nomi (EN)'), required: true },
+    { name: 'scopeUz', label: tr('Scope (UZ)'), type: 'textarea', fullWidth: true },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'documentUrl', label: 'Hujjat', type: 'file' },
+    { name: 'documentUrl', label: tr('Hujjat'), type: 'file' },
   ],
 };
 
 export const newsConfig = {
   path: 'news',
-  title: 'Yangiliklar',
+  title: tr('Yangiliklar'),
   columns: [
-    { key: 'titleUz', label: 'Sarlavha' },
-    { key: 'isPublished', label: 'Chop etilgan', render: (i) => (i.isPublished ? 'Ha' : "Yo'q") },
+    { key: 'titleUz', label: tr('Sarlavha') },
+    { key: 'isPublished', label: tr('Chop etilgan'), render: (i) => (i.isPublished ? tr('Ha') : tr("Yo'q")) },
   ],
   fields: [
     { name: 'slug', label: 'Slug', required: true },
-    { name: 'titleUz', label: 'Sarlavha (UZ)', required: true },
-    { name: 'titleRu', label: 'Sarlavha (RU)', required: true },
-    { name: 'titleEn', label: 'Sarlavha (EN)', required: true },
-    { name: 'descriptionUz', label: 'Qisqa tavsif (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionRu', label: 'Qisqa tavsif (RU)', type: 'textarea', fullWidth: true },
-    { name: 'descriptionEn', label: 'Qisqa tavsif (EN)', type: 'textarea', fullWidth: true },
-    { name: 'contentUz', label: 'Batafsil matn (UZ)', type: 'textarea', fullWidth: true, rows: 8 },
-    { name: 'contentRu', label: 'Batafsil matn (RU)', type: 'textarea', fullWidth: true, rows: 8 },
-    { name: 'contentEn', label: 'Batafsil matn (EN)', type: 'textarea', fullWidth: true, rows: 8 },
-    { name: 'image', label: 'Rasmlar (bir nechtasini tanlash mumkin)', type: 'multi-file', fullWidth: true },
+    { name: 'titleUz', label: tr('Sarlavha (UZ)'), required: true },
+    { name: 'titleRu', label: tr('Sarlavha (RU)'), required: true },
+    { name: 'titleEn', label: tr('Sarlavha (EN)'), required: true },
+    { name: 'descriptionUz', label: tr('Qisqa tavsif (UZ)'), type: 'textarea', fullWidth: true },
+    { name: 'descriptionRu', label: tr('Qisqa tavsif (RU)'), type: 'textarea', fullWidth: true },
+    { name: 'descriptionEn', label: tr('Qisqa tavsif (EN)'), type: 'textarea', fullWidth: true },
+    { name: 'contentUz', label: tr('Batafsil matn (UZ)'), type: 'textarea', fullWidth: true, rows: 8 },
+    { name: 'contentRu', label: tr('Batafsil matn (RU)'), type: 'textarea', fullWidth: true, rows: 8 },
+    { name: 'contentEn', label: tr('Batafsil matn (EN)'), type: 'textarea', fullWidth: true, rows: 8 },
+    { name: 'image', label: tr('Rasmlar (bir nechtasini tanlash mumkin)'), type: 'multi-file', fullWidth: true },
     {
       name: 'categoryId',
-      label: 'Kategoriya',
+      label: tr('Kategoriya'),
       type: 'async-select',
       optionsResource: 'news-categories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
     { name: 'seoTitle', label: 'SEO Title' },
     { name: 'seoDescription', label: 'SEO Description' },
-    { name: 'isPublished', label: 'Chop etish', type: 'checkbox' },
+    { name: 'isPublished', label: tr('Chop etish'), type: 'checkbox' },
   ],
 };
 
 export const documentConfig = {
   path: 'documents',
-  title: 'Hujjatlar',
+  title: tr('Hujjatlar'),
   columns: [
-    { key: 'titleUz', label: 'Nomi' },
+    { key: 'titleUz', label: tr('Nomi') },
   ],
   fields: [
-    { name: 'titleUz', label: 'Nomi (UZ)', required: true },
-    { name: 'titleRu', label: 'Nomi (RU)', required: true },
-    { name: 'titleEn', label: 'Nomi (EN)', required: true },
-    { name: 'fileUrl', label: 'Fayl', type: 'file', required: true },
+    { name: 'titleUz', label: tr('Nomi (UZ)'), required: true },
+    { name: 'titleRu', label: tr('Nomi (RU)'), required: true },
+    { name: 'titleEn', label: tr('Nomi (EN)'), required: true },
+    { name: 'fileUrl', label: tr('Fayl'), type: 'file', required: true },
     {
       name: 'categoryId',
-      label: 'Kategoriya',
+      label: tr('Kategoriya'),
       type: 'async-select',
       optionsResource: 'document-categories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
   ],
 };
 
 // Mutaxassisga bog'langan login (parol va boshqa maxfiy maydonlarsiz).
-const formatLastLogin = (v) => (v ? new Date(v).toLocaleString('uz-UZ', { dateStyle: 'short', timeStyle: 'short' }) : 'hali kirmagan');
+const formatLastLogin = (v) => (v ? new Date(v).toLocaleString(dateLocale(), { dateStyle: 'short', timeStyle: 'short' }) : tr('hali kirmagan'));
 
 function staffAccountCell(i) {
-  if (i.isActive === false) return React.createElement('span', { className: 'text-xs text-red-500' }, 'Nofaol');
-  if (!i.account) return React.createElement('span', { className: 'text-xs text-slate-400' }, "Hisob yo'q");
+  if (i.isActive === false) return React.createElement('span', { className: 'text-xs text-red-500' }, tr('Nofaol'));
+  if (!i.account) return React.createElement('span', { className: 'text-xs text-slate-400' }, tr("Hisob yo'q"));
   return React.createElement(
     'span',
     { className: `font-mono text-xs ${i.account.isActive ? 'text-ink' : 'text-red-500 line-through'}` },
@@ -175,104 +176,104 @@ function staffAccountCell(i) {
 function staffAccountInfo(item) {
   const a = item?.account;
   const text = !item
-    ? "Hisob «Foydalanuvchilar → Mutaxassislardan hisob yaratish» orqali ochiladi."
+    ? tr('Hisob «Foydalanuvchilar → Mutaxassislardan hisob yaratish» orqali ochiladi.')
     : !a
-      ? "Hisob yo'q. «Foydalanuvchilar → Mutaxassislardan hisob yaratish» orqali yarating."
-      : `Login: ${a.email} · ${a.isActive ? 'faol' : 'nofaol'} · Oxirgi kirish: ${formatLastLogin(a.lastLoginAt)}${a.mustChangePassword ? ' · parol hali almashtirilmagan' : ''}`;
+      ? tr("Hisob yo'q. «Foydalanuvchilar → Mutaxassislardan hisob yaratish» orqali yarating.")
+      : tr('Login: {0} · {1} · Oxirgi kirish: {2}{3}', a.email, a.isActive ? tr('faol') : tr('nofaol'), formatLastLogin(a.lastLoginAt), a.mustChangePassword ? (' ' + tr('· parol hali almashtirilmagan')) : '');
   return React.createElement('p', { className: 'rounded-lg bg-bg-light px-3 py-2 text-sm text-slate-600' }, text);
 }
 
 export const staffConfig = {
   path: 'staff',
-  title: 'Mutaxassislar',
+  title: tr('Mutaxassislar'),
   columns: [
-    { key: 'fullName', label: 'F.I.Sh.' },
-    { key: 'position', label: 'Lavozim' },
-    { key: 'employeeCode', label: 'Kod', render: (i) => i.employeeCode || '—' },
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'account', label: 'Tizim hisobi', render: staffAccountCell },
+    { key: 'fullName', label: tr('F.I.Sh.') },
+    { key: 'position', label: tr('Lavozim') },
+    { key: 'employeeCode', label: tr('Kod'), render: (i) => i.employeeCode || '—' },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'account', label: tr('Tizim hisobi'), render: staffAccountCell },
   ],
   fields: [
-    { name: 'account', label: 'Tizim hisobi', type: 'info', fullWidth: true, render: staffAccountInfo },
+    { name: 'account', label: tr('Tizim hisobi'), type: 'info', fullWidth: true, render: staffAccountInfo },
     {
       name: 'isActive',
-      label: "Faol (o'chirilsa, bog'langan hisob ham nofaol bo'ladi)",
+      label: tr("Faol (o'chirilsa, bog'langan hisob ham nofaol bo'ladi)"),
       type: 'checkbox',
       default: true,
     },
-    { name: 'fullName', label: 'F.I.Sh.', required: true },
-    { name: 'position', label: 'Lavozim', required: true },
-    { name: 'specialization', label: 'Mutaxassislik' },
-    { name: 'experienceYears', label: 'Tajriba (yil)', type: 'number' },
+    { name: 'fullName', label: tr('F.I.Sh.'), required: true },
+    { name: 'position', label: tr('Lavozim'), required: true },
+    { name: 'specialization', label: tr('Mutaxassislik') },
+    { name: 'experienceYears', label: tr('Tajriba (yil)'), type: 'number' },
     { name: 'email', label: 'Email' },
-    { name: 'phone', label: 'Telefon' },
-    { name: 'photo', label: 'Rasm', type: 'file' },
+    { name: 'phone', label: tr('Telefon') },
+    { name: 'photo', label: tr('Rasm'), type: 'file' },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'order', label: 'Tartib', type: 'number' },
-    { name: 'staffNumber', label: 'Tabel raqami', type: 'number' },
-    { name: 'employeeCode', label: 'Kod' },
-    { name: 'hireDate', label: 'Ishga kirgan sana', type: 'date' },
-    { name: 'birthDate', label: "Tug'ilgan sana", type: 'date' },
-    { name: 'passportSeries', label: 'Pasport seriyasi' },
-    { name: 'passportNumber', label: 'Pasport raqami' },
-    { name: 'pinfl', label: 'JSHSHIR (PINFL)' },
-    { name: 'address', label: 'Manzil', fullWidth: true },
-    { name: 'notes', label: 'Izoh', type: 'textarea', fullWidth: true },
+    { name: 'order', label: tr('Tartib'), type: 'number' },
+    { name: 'staffNumber', label: tr('Tabel raqami'), type: 'number' },
+    { name: 'employeeCode', label: tr('Kod') },
+    { name: 'hireDate', label: tr('Ishga kirgan sana'), type: 'date' },
+    { name: 'birthDate', label: tr("Tug'ilgan sana"), type: 'date' },
+    { name: 'passportSeries', label: tr('Pasport seriyasi') },
+    { name: 'passportNumber', label: tr('Pasport raqami') },
+    { name: 'pinfl', label: tr('JSHSHIR (PINFL)') },
+    { name: 'address', label: tr('Manzil'), fullWidth: true },
+    { name: 'notes', label: tr('Izoh'), type: 'textarea', fullWidth: true },
   ],
   birthdayPin: { dateField: 'birthDate', limit: 3 },
   exportable: true,
-  exportTitle: "Mutaxassislar ro'yxati — Sinov Laboratoriyalari Majmuasi",
+  exportTitle: tr("Mutaxassislar ro'yxati — Sinov Laboratoriyalari Majmuasi"),
   exportWidth: 1900,
   exportColumns: [
-    { key: 'staffNumber', label: 'Tabel №' },
-    { key: 'employeeCode', label: 'Kod' },
-    { key: 'fullName', label: 'F.I.Sh.' },
-    { key: 'position', label: 'Lavozim' },
-    { key: 'specialization', label: 'Mutaxassislik' },
-    { key: 'laboratory', label: 'Laboratoriya', get: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'experienceYears', label: 'Tajriba (yil)', get: (i) => i.experienceYears ?? '—' },
-    { key: 'birthDate', label: "Tug'ilgan sana", get: (i) => (i.birthDate ? String(i.birthDate).slice(0, 10) : '—') },
-    { key: 'hireDate', label: 'Ishga kirgan sana', get: (i) => (i.hireDate ? String(i.hireDate).slice(0, 10) : '—') },
+    { key: 'staffNumber', label: tr('Tabel №') },
+    { key: 'employeeCode', label: tr('Kod') },
+    { key: 'fullName', label: tr('F.I.Sh.') },
+    { key: 'position', label: tr('Lavozim') },
+    { key: 'specialization', label: tr('Mutaxassislik') },
+    { key: 'laboratory', label: tr('Laboratoriya'), get: (i) => locName(i.laboratory) || '—' },
+    { key: 'experienceYears', label: tr('Tajriba (yil)'), get: (i) => i.experienceYears ?? '—' },
+    { key: 'birthDate', label: tr("Tug'ilgan sana"), get: (i) => (i.birthDate ? String(i.birthDate).slice(0, 10) : '—') },
+    { key: 'hireDate', label: tr('Ishga kirgan sana'), get: (i) => (i.hireDate ? String(i.hireDate).slice(0, 10) : '—') },
     {
       key: 'passport',
-      label: 'Pasport seriya/raqami',
+      label: tr('Pasport seriya/raqami'),
       get: (i) => (i.passportSeries || i.passportNumber ? `${i.passportSeries || ''} ${i.passportNumber || ''}`.trim() : '—'),
     },
-    { key: 'pinfl', label: 'JSHSHIR (PINFL)', get: (i) => i.pinfl || '—' },
-    { key: 'address', label: 'Manzil', get: (i) => i.address || '—' },
-    { key: 'phone', label: 'Telefon' },
+    { key: 'pinfl', label: tr('JSHSHIR (PINFL)'), get: (i) => i.pinfl || '—' },
+    { key: 'address', label: tr('Manzil'), get: (i) => i.address || '—' },
+    { key: 'phone', label: tr('Telefon') },
     { key: 'email', label: 'Email' },
-    { key: 'notes', label: 'Izoh' },
+    { key: 'notes', label: tr('Izoh') },
   ],
 };
 
 export const equipmentConfig = {
   path: 'equipment',
-  title: 'Uskunalar',
+  title: tr('Uskunalar'),
   columns: [
-    { key: 'name', label: 'Nomi' },
-    { key: 'manufacturer', label: 'Ishlab chiqaruvchi' },
+    { key: 'name', label: tr('Nomi') },
+    { key: 'manufacturer', label: tr('Ishlab chiqaruvchi') },
   ],
   fields: [
     { name: 'slug', label: 'Slug', required: true },
-    { name: 'name', label: 'Nomi', required: true },
-    { name: 'manufacturer', label: 'Ishlab chiqaruvchi' },
+    { name: 'name', label: tr('Nomi'), required: true },
+    { name: 'manufacturer', label: tr('Ishlab chiqaruvchi') },
     { name: 'model', label: 'Model' },
-    { name: 'specifications', label: 'Texnik xususiyatlari', type: 'textarea', fullWidth: true },
-    { name: 'application', label: 'Qo‘llanilishi', type: 'textarea', fullWidth: true },
-    { name: 'photo', label: 'Rasm', type: 'file' },
+    { name: 'specifications', label: tr('Texnik xususiyatlari'), type: 'textarea', fullWidth: true },
+    { name: 'application', label: tr('Qo‘llanilishi'), type: 'textarea', fullWidth: true },
+    { name: 'photo', label: tr('Rasm'), type: 'file' },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
   ],
 };
@@ -283,11 +284,11 @@ function isVideoFile(url) {
 
 export const galleryConfig = {
   path: 'gallery',
-  title: 'Galereya',
+  title: tr('Galereya'),
   columns: [
     {
       key: 'imageUrl',
-      label: 'Oldindan ko\'rish',
+      label: tr("Oldindan ko'rish"),
       render: (i) =>
         isVideoFile(i.imageUrl)
           ? React.createElement('video', {
@@ -301,10 +302,10 @@ export const galleryConfig = {
               className: 'h-12 w-12 object-cover rounded-lg border border-border',
             }),
     },
-    { key: 'title', label: 'Nomi', render: (i) => i.title || '—' },
-    { key: 'category', label: 'Kategoriya', render: (i) => i.category?.nameUz || '—' },
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'createdAt', label: 'Sana', render: (i) => new Date(i.createdAt).toLocaleDateString('uz-UZ') },
+    { key: 'title', label: tr('Nomi'), render: (i) => i.title || '—' },
+    { key: 'category', label: tr('Kategoriya'), render: (i) => locName(i.category) || '—' },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'createdAt', label: tr('Sana'), render: (i) => new Date(i.createdAt).toLocaleDateString(dateLocale()) },
   ],
   bulkUpload: {
     fileField: 'imageUrl',
@@ -312,21 +313,21 @@ export const galleryConfig = {
     sharedFieldNames: ['categoryId', 'laboratoryId'],
   },
   fields: [
-    { name: 'title', label: 'Nomi' },
-    { name: 'imageUrl', label: 'Rasm', type: 'file', required: true },
+    { name: 'title', label: tr('Nomi') },
+    { name: 'imageUrl', label: tr('Rasm'), type: 'file', required: true },
     {
       name: 'categoryId',
-      label: 'Kategoriya',
+      label: tr('Kategoriya'),
       type: 'async-select',
       optionsResource: 'gallery-categories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
   ],
 };
@@ -334,135 +335,135 @@ export const galleryConfig = {
 export const faqConfig = {
   path: 'faq',
   title: 'FAQ',
-  columns: [{ key: 'questionUz', label: 'Savol' }],
+  columns: [{ key: 'questionUz', label: tr('Savol') }],
   fields: [
-    { name: 'questionUz', label: 'Savol (UZ)', required: true, type: 'textarea', fullWidth: true },
-    { name: 'questionRu', label: 'Savol (RU)', required: true, type: 'textarea', fullWidth: true },
-    { name: 'questionEn', label: 'Savol (EN)', required: true, type: 'textarea', fullWidth: true },
-    { name: 'answerUz', label: 'Javob (UZ)', required: true, type: 'textarea', fullWidth: true },
-    { name: 'answerRu', label: 'Javob (RU)', required: true, type: 'textarea', fullWidth: true },
-    { name: 'answerEn', label: 'Javob (EN)', required: true, type: 'textarea', fullWidth: true },
-    { name: 'order', label: 'Tartib', type: 'number' },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'questionUz', label: tr('Savol (UZ)'), required: true, type: 'textarea', fullWidth: true },
+    { name: 'questionRu', label: tr('Savol (RU)'), required: true, type: 'textarea', fullWidth: true },
+    { name: 'questionEn', label: tr('Savol (EN)'), required: true, type: 'textarea', fullWidth: true },
+    { name: 'answerUz', label: tr('Javob (UZ)'), required: true, type: 'textarea', fullWidth: true },
+    { name: 'answerRu', label: tr('Javob (RU)'), required: true, type: 'textarea', fullWidth: true },
+    { name: 'answerEn', label: tr('Javob (EN)'), required: true, type: 'textarea', fullWidth: true },
+    { name: 'order', label: tr('Tartib'), type: 'number' },
+    { name: 'isActive', label: tr('Faol'), type: 'checkbox' },
   ],
 };
 
 export const accreditationConfig = {
   path: 'accreditation',
-  title: 'Akkreditatsiya',
+  title: tr('Akkreditatsiya'),
   columns: [
-    { key: 'certificateNumber', label: 'Guvohnoma raqami' },
-    { key: 'standardCode', label: 'Standart' },
+    { key: 'certificateNumber', label: tr('Guvohnoma raqami') },
+    { key: 'standardCode', label: tr('Standart') },
   ],
   searchable: false,
   fields: [
-    { name: 'certificateNumber', label: 'Guvohnoma raqami', required: true },
-    { name: 'standardCode', label: 'Standart kodi', required: true },
-    { name: 'scopeUz', label: 'Scope (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'scopeRu', label: 'Scope (RU)', type: 'textarea', fullWidth: true },
-    { name: 'scopeEn', label: 'Scope (EN)', type: 'textarea', fullWidth: true },
-    { name: 'documentUrl', label: 'Guvohnoma (PDF)', type: 'file' },
+    { name: 'certificateNumber', label: tr('Guvohnoma raqami'), required: true },
+    { name: 'standardCode', label: tr('Standart kodi'), required: true },
+    { name: 'scopeUz', label: tr('Scope (UZ)'), type: 'textarea', fullWidth: true },
+    { name: 'scopeRu', label: tr('Scope (RU)'), type: 'textarea', fullWidth: true },
+    { name: 'scopeEn', label: tr('Scope (EN)'), type: 'textarea', fullWidth: true },
+    { name: 'documentUrl', label: tr('Guvohnoma (PDF)'), type: 'file' },
     {
       name: 'scopeUrl',
-      label: "Akkreditatsiya doirasi havolasi (akkred.uz)",
+      label: tr('Akkreditatsiya doirasi havolasi (akkred.uz)'),
       type: 'url',
       fullWidth: true,
       placeholder: 'https://api-e.akkred.uz/media/file/pdf/...',
     },
-    { name: 'issuedAt', label: 'Berilgan sana', type: 'date' },
-    { name: 'validUntil', label: 'Amal qilish muddati', type: 'date' },
+    { name: 'issuedAt', label: tr('Berilgan sana'), type: 'date' },
+    { name: 'validUntil', label: tr('Amal qilish muddati'), type: 'date' },
   ],
 };
 
 export const tnVedRegulationConfig = {
   path: 'tnved-reglament',
-  title: 'TN VED reglament',
+  title: tr('TN VED reglament'),
   fields: [
-    { name: 'item', label: 'Band raqami', required: true },
-    { name: 'nameUz', label: 'Mahsulot nomi', type: 'textarea', fullWidth: true, required: true },
-    { name: 'tnVedRaw', label: 'TN VED kodi/oralig\'i', type: 'textarea', fullWidth: true, required: true },
+    { name: 'item', label: tr('Band raqami'), required: true },
+    { name: 'nameUz', label: tr('Mahsulot nomi'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'tnVedRaw', label: tr("TN VED kodi/oralig'i"), type: 'textarea', fullWidth: true, required: true },
     {
       name: 'category',
-      label: 'Talab turi',
+      label: tr('Talab turi'),
       type: 'select',
       required: true,
       options: [
-        { value: 'SERTIFIKAT', label: 'Majburiy sertifikat' },
-        { value: 'DEKLARATSIYA', label: 'Deklaratsiya' },
+        { value: 'SERTIFIKAT', label: tr('Majburiy sertifikat') },
+        { value: 'DEKLARATSIYA', label: tr('Deklaratsiya') },
       ],
     },
-    { name: 'decision', label: "Qaror raqami (43)", required: true },
+    { name: 'decision', label: tr('Qaror raqami (43)'), required: true },
   ],
   columns: [
-    { key: 'item', label: 'Band' },
-    { key: 'nameUz', label: 'Mahsulot nomi' },
+    { key: 'item', label: tr('Band') },
+    { key: 'nameUz', label: tr('Mahsulot nomi') },
     { key: 'tnVedRaw', label: 'TN VED' },
-    { key: 'category', label: 'Talab', render: (i) => (i.category === 'SERTIFIKAT' ? 'Sertifikat' : 'Deklaratsiya') },
-    { key: 'decision', label: 'Qaror' },
+    { key: 'category', label: tr('Talab'), render: (i) => (i.category === 'SERTIFIKAT' ? tr('Sertifikat') : tr('Deklaratsiya')) },
+    { key: 'decision', label: tr('Qaror') },
   ],
 };
 
 export const testIndicatorConfig = {
   path: 'test-indicators',
-  title: "Ko'rsatkichlar hovuzi",
+  title: tr("Ko'rsatkichlar hovuzi"),
   columns: [
-    { key: 'positionCode', label: 'Pozitsiya kodi', render: (i) => i.positionCode || '—' },
-    { key: 'nameUz', label: 'Nomi' },
-    { key: 'standardCode', label: 'Standart kodi', render: (i) => i.standardCode || '—' },
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'unit', label: "O'lchov birligi", render: (i) => i.unit || '—' },
+    { key: 'positionCode', label: tr('Pozitsiya kodi'), render: (i) => i.positionCode || '—' },
+    { key: 'nameUz', label: tr('Nomi') },
+    { key: 'standardCode', label: tr('Standart kodi'), render: (i) => i.standardCode || '—' },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'unit', label: tr("O'lchov birligi"), render: (i) => i.unit || '—' },
   ],
   fields: [
-    { name: 'positionCode', label: 'Pozitsiya kodi' },
-    { name: 'nameUz', label: 'Nomi (UZ)', required: true, fullWidth: true },
-    { name: 'nameRu', label: 'Nomi (RU)', required: true, fullWidth: true },
-    { name: 'nameEn', label: 'Nomi (EN)', required: true, fullWidth: true },
-    { name: 'standardCode', label: 'Standart kodi' },
-    { name: 'unit', label: "O'lchov birligi" },
+    { name: 'positionCode', label: tr('Pozitsiya kodi') },
+    { name: 'nameUz', label: tr('Nomi (UZ)'), required: true, fullWidth: true },
+    { name: 'nameRu', label: tr('Nomi (RU)'), required: true, fullWidth: true },
+    { name: 'nameEn', label: tr('Nomi (EN)'), required: true, fullWidth: true },
+    { name: 'standardCode', label: tr('Standart kodi') },
+    { name: 'unit', label: tr("O'lchov birligi") },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'method', label: 'Sinov usuli', type: 'textarea', fullWidth: true },
+    { name: 'method', label: tr('Sinov usuli'), type: 'textarea', fullWidth: true },
   ],
 };
 
 export const productConfig = {
   path: 'products',
-  title: 'Mahsulotlar (sinov dasturlari)',
+  title: tr('Mahsulotlar (sinov dasturlari)'),
   columns: [
-    { key: 'nameUz', label: 'Nomi' },
+    { key: 'nameUz', label: tr('Nomi') },
     { key: 'slug', label: 'Slug' },
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'isActive', label: 'Faol', render: (i) => (i.isActive ? 'Ha' : "Yo'q") },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'isActive', label: tr('Faol'), render: (i) => (i.isActive ? tr('Ha') : tr("Yo'q")) },
     {
       key: 'builder',
-      label: 'Konstruktor',
+      label: tr('Konstruktor'),
       render: (i) =>
         React.createElement(
           Link,
           { to: `/admin/sinov-dasturlari/${i.id}`, className: 'text-primary font-medium hover:underline' },
-          'Konstruktor'
+          tr('Konstruktor')
         ),
     },
   ],
   fields: [
     { name: 'slug', label: 'Slug', required: true },
-    { name: 'nameUz', label: 'Nomi (UZ)', required: true },
-    { name: 'nameRu', label: 'Nomi (RU)', required: true },
-    { name: 'nameEn', label: 'Nomi (EN)', required: true },
+    { name: 'nameUz', label: tr('Nomi (UZ)'), required: true },
+    { name: 'nameRu', label: tr('Nomi (RU)'), required: true },
+    { name: 'nameEn', label: tr('Nomi (EN)'), required: true },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'descriptionUz', label: 'Tavsif (UZ)', type: 'textarea', fullWidth: true },
-    { name: 'isActive', label: 'Faol', type: 'checkbox' },
+    { name: 'descriptionUz', label: tr('Tavsif (UZ)'), type: 'textarea', fullWidth: true },
+    { name: 'isActive', label: tr('Faol'), type: 'checkbox' },
   ],
 };
 
@@ -482,16 +483,16 @@ function statusBadge(status, styles, labels) {
 
 const NC_SOURCE_LABELS = {
   AUDIT: 'Audit',
-  SHIKOYAT: 'Shikoyat',
-  ICHKI_KUZATUV: 'Ichki kuzatuv',
-  NAMUNA_MUAMMOSI: 'Namuna muammosi',
+  SHIKOYAT: tr('Shikoyat'),
+  ICHKI_KUZATUV: tr('Ichki kuzatuv'),
+  NAMUNA_MUAMMOSI: tr('Namuna muammosi'),
 };
 
 const NC_STATUS_LABELS = {
-  OCHIQ: 'Ochiq',
-  JARAYONDA: 'Jarayonda',
-  YOPILDI: 'Yopildi',
-  TASDIQLANDI: 'Tasdiqlandi',
+  OCHIQ: tr('Ochiq'),
+  JARAYONDA: tr('Jarayonda'),
+  YOPILDI: tr('Yopildi'),
+  TASDIQLANDI: tr('Tasdiqlandi'),
 };
 
 const NC_STATUS_STYLES = {
@@ -503,60 +504,60 @@ const NC_STATUS_STYLES = {
 
 export const nonConformanceConfig = {
   path: 'smk/nonconformances',
-  title: 'Nomuvofiqliklar (CAPA)',
+  title: tr('Nomuvofiqliklar (CAPA)'),
   columns: [
-    { key: 'code', label: 'Kod' },
-    { key: 'source', label: 'Manba', render: (i) => NC_SOURCE_LABELS[i.source] || i.source },
-    { key: 'description', label: 'Tavsif' },
-    { key: 'responsibleUser', label: "Mas'ul", render: (i) => i.responsibleUser?.fullName || '—' },
-    { key: 'dueDate', label: 'Muddat', render: (i) => (i.dueDate ? String(i.dueDate).slice(0, 10) : '—') },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, NC_STATUS_STYLES, NC_STATUS_LABELS) },
+    { key: 'code', label: tr('Kod') },
+    { key: 'source', label: tr('Manba'), render: (i) => NC_SOURCE_LABELS[i.source] || i.source },
+    { key: 'description', label: tr('Tavsif') },
+    { key: 'responsibleUser', label: tr("Mas'ul"), render: (i) => i.responsibleUser?.fullName || '—' },
+    { key: 'dueDate', label: tr('Muddat'), render: (i) => (i.dueDate ? String(i.dueDate).slice(0, 10) : '—') },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, NC_STATUS_STYLES, NC_STATUS_LABELS) },
   ],
   fields: [
     {
       name: 'source',
-      label: 'Manba',
+      label: tr('Manba'),
       type: 'select',
       required: true,
       options: [
         { value: 'AUDIT', label: 'Audit' },
-        { value: 'SHIKOYAT', label: 'Shikoyat' },
-        { value: 'ICHKI_KUZATUV', label: 'Ichki kuzatuv' },
-        { value: 'NAMUNA_MUAMMOSI', label: 'Namuna muammosi' },
+        { value: 'SHIKOYAT', label: tr('Shikoyat') },
+        { value: 'ICHKI_KUZATUV', label: tr('Ichki kuzatuv') },
+        { value: 'NAMUNA_MUAMMOSI', label: tr('Namuna muammosi') },
       ],
     },
-    { name: 'description', label: 'Tavsif', type: 'textarea', fullWidth: true, required: true },
-    { name: 'detectedDate', label: 'Aniqlangan sana', type: 'date', required: true },
+    { name: 'description', label: tr('Tavsif'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'detectedDate', label: tr('Aniqlangan sana'), type: 'date', required: true },
     {
       name: 'responsibleUserId',
-      label: "Mas'ul xodim",
+      label: tr("Mas'ul xodim"),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
-    { name: 'rootCauseAnalysis', label: 'Ildiz sabab tahlili', type: 'textarea', fullWidth: true },
-    { name: 'correctiveAction', label: "To'g'rilash chorasi", type: 'textarea', fullWidth: true },
-    { name: 'dueDate', label: 'Bajarish muddati', type: 'date' },
-    { name: 'closedDate', label: 'Yopilgan sana', type: 'date' },
+    { name: 'rootCauseAnalysis', label: tr('Ildiz sabab tahlili'), type: 'textarea', fullWidth: true },
+    { name: 'correctiveAction', label: tr("To'g'rilash chorasi"), type: 'textarea', fullWidth: true },
+    { name: 'dueDate', label: tr('Bajarish muddati'), type: 'date' },
+    { name: 'closedDate', label: tr('Yopilgan sana'), type: 'date' },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'OCHIQ',
       options: [
-        { value: 'OCHIQ', label: 'Ochiq' },
-        { value: 'JARAYONDA', label: 'Jarayonda' },
-        { value: 'YOPILDI', label: 'Yopildi' },
-        { value: 'TASDIQLANDI', label: 'Tasdiqlandi' },
+        { value: 'OCHIQ', label: tr('Ochiq') },
+        { value: 'JARAYONDA', label: tr('Jarayonda') },
+        { value: 'YOPILDI', label: tr('Yopildi') },
+        { value: 'TASDIQLANDI', label: tr('Tasdiqlandi') },
       ],
     },
   ],
 };
 
 const COMPLAINT_STATUS_LABELS = {
-  QABUL_QILINDI: 'Qabul qilindi',
-  TEKSHIRILMOQDA: 'Tekshirilmoqda',
-  HAL_QILINDI: 'Hal qilindi',
+  QABUL_QILINDI: tr('Qabul qilindi'),
+  TEKSHIRILMOQDA: tr('Tekshirilmoqda'),
+  HAL_QILINDI: tr('Hal qilindi'),
 };
 
 const COMPLAINT_STATUS_STYLES = {
@@ -567,49 +568,49 @@ const COMPLAINT_STATUS_STYLES = {
 
 export const complaintConfig = {
   path: 'smk/complaints',
-  title: 'Sifat shikoyatlari',
+  title: tr('Sifat shikoyatlari'),
   columns: [
-    { key: 'code', label: 'Kod' },
-    { key: 'fullName', label: 'Mijoz' },
-    { key: 'receivedDate', label: 'Qabul qilingan sana', render: (i) => (i.receivedDate ? String(i.receivedDate).slice(0, 10) : '—') },
-    { key: 'responsibleUser', label: "Mas'ul", render: (i) => i.responsibleUser?.fullName || '—' },
+    { key: 'code', label: tr('Kod') },
+    { key: 'fullName', label: tr('Mijoz') },
+    { key: 'receivedDate', label: tr('Qabul qilingan sana'), render: (i) => (i.receivedDate ? String(i.receivedDate).slice(0, 10) : '—') },
+    { key: 'responsibleUser', label: tr("Mas'ul"), render: (i) => i.responsibleUser?.fullName || '—' },
     {
       key: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       render: (i) => statusBadge(i.status, COMPLAINT_STATUS_STYLES, COMPLAINT_STATUS_LABELS),
     },
   ],
   fields: [
-    { name: 'fullName', label: 'Mijoz F.I.Sh. / tashkilot', required: true },
-    { name: 'phone', label: 'Telefon' },
+    { name: 'fullName', label: tr('Mijoz F.I.Sh. / tashkilot'), required: true },
+    { name: 'phone', label: tr('Telefon') },
     { name: 'email', label: 'Email' },
     {
       name: 'relatedApplicationId',
-      label: "Bog'liq ariza (ixtiyoriy)",
+      label: tr("Bog'liq ariza (ixtiyoriy)"),
       type: 'async-select',
       optionsResource: 'applications',
       optionsLabel: (item) => `${item.applicationNumber} — ${item.productName}`,
     },
-    { name: 'description', label: 'Shikoyat tavsifi', type: 'textarea', fullWidth: true, required: true },
-    { name: 'receivedDate', label: 'Qabul qilingan sana', type: 'date', required: true },
-    { name: 'investigationNotes', label: 'Tekshiruv izohlari', type: 'textarea', fullWidth: true },
-    { name: 'resolution', label: 'Yechim', type: 'textarea', fullWidth: true },
+    { name: 'description', label: tr('Shikoyat tavsifi'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'receivedDate', label: tr('Qabul qilingan sana'), type: 'date', required: true },
+    { name: 'investigationNotes', label: tr('Tekshiruv izohlari'), type: 'textarea', fullWidth: true },
+    { name: 'resolution', label: tr('Yechim'), type: 'textarea', fullWidth: true },
     {
       name: 'responsibleUserId',
-      label: "Mas'ul xodim",
+      label: tr("Mas'ul xodim"),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'QABUL_QILINDI',
       options: [
-        { value: 'QABUL_QILINDI', label: 'Qabul qilindi' },
-        { value: 'TEKSHIRILMOQDA', label: 'Tekshirilmoqda' },
-        { value: 'HAL_QILINDI', label: 'Hal qilindi' },
+        { value: 'QABUL_QILINDI', label: tr('Qabul qilindi') },
+        { value: 'TEKSHIRILMOQDA', label: tr('Tekshirilmoqda') },
+        { value: 'HAL_QILINDI', label: tr('Hal qilindi') },
       ],
     },
   ],
@@ -618,13 +619,13 @@ export const complaintConfig = {
 // ===== SMK — FAZA 2: Hujjat boshqaruvi =====
 
 const SMK_DOC_CATEGORY_LABELS = {
-  PROTSEDURA: 'Protsedura',
-  KORSATMA: "Ko'rsatma",
-  FORMA: 'Forma',
-  JURNAL: 'Jurnal',
+  PROTSEDURA: tr('Protsedura'),
+  KORSATMA: tr("Ko'rsatma"),
+  FORMA: tr('Forma'),
+  JURNAL: tr('Jurnal'),
 };
 
-const SMK_DOC_STATUS_LABELS = { AMALDA: 'Amalda', QORALAMA: 'Qoralama', BEKOR_QILINGAN: 'Bekor qilingan' };
+const SMK_DOC_STATUS_LABELS = { AMALDA: tr('Amalda'), QORALAMA: tr('Qoralama'), BEKOR_QILINGAN: tr('Bekor qilingan') };
 const SMK_DOC_STATUS_STYLES = {
   AMALDA: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   QORALAMA: 'bg-slate-50 text-slate-600 border-slate-200',
@@ -633,47 +634,47 @@ const SMK_DOC_STATUS_STYLES = {
 
 export const smkDocumentConfig = {
   path: 'smk/documents',
-  title: 'SMK Hujjatlar',
+  title: tr('SMK Hujjatlar'),
   columns: [
-    { key: 'code', label: 'Kod' },
-    { key: 'titleUz', label: 'Nomi' },
-    { key: 'category', label: 'Turi', render: (i) => SMK_DOC_CATEGORY_LABELS[i.category] || i.category },
-    { key: 'ownerUser', label: 'Egasi', render: (i) => i.ownerUser?.fullName || '—' },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, SMK_DOC_STATUS_STYLES, SMK_DOC_STATUS_LABELS) },
+    { key: 'code', label: tr('Kod') },
+    { key: 'titleUz', label: tr('Nomi') },
+    { key: 'category', label: tr('Turi'), render: (i) => SMK_DOC_CATEGORY_LABELS[i.category] || i.category },
+    { key: 'ownerUser', label: tr('Egasi'), render: (i) => i.ownerUser?.fullName || '—' },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, SMK_DOC_STATUS_STYLES, SMK_DOC_STATUS_LABELS) },
   ],
   fields: [
-    { name: 'code', label: 'Kod (masalan SMK-P-01)', required: true },
-    { name: 'titleUz', label: 'Nomi (UZ)', required: true, fullWidth: true },
-    { name: 'titleRu', label: 'Nomi (RU)', required: true, fullWidth: true },
-    { name: 'titleEn', label: 'Nomi (EN)', required: true, fullWidth: true },
+    { name: 'code', label: tr('Kod (masalan SMK-P-01)'), required: true },
+    { name: 'titleUz', label: tr('Nomi (UZ)'), required: true, fullWidth: true },
+    { name: 'titleRu', label: tr('Nomi (RU)'), required: true, fullWidth: true },
+    { name: 'titleEn', label: tr('Nomi (EN)'), required: true, fullWidth: true },
     {
       name: 'category',
-      label: 'Turi',
+      label: tr('Turi'),
       type: 'select',
       required: true,
       options: [
-        { value: 'PROTSEDURA', label: 'Protsedura' },
-        { value: 'KORSATMA', label: "Ko'rsatma" },
-        { value: 'FORMA', label: 'Forma' },
-        { value: 'JURNAL', label: 'Jurnal' },
+        { value: 'PROTSEDURA', label: tr('Protsedura') },
+        { value: 'KORSATMA', label: tr("Ko'rsatma") },
+        { value: 'FORMA', label: tr('Forma') },
+        { value: 'JURNAL', label: tr('Jurnal') },
       ],
     },
     {
       name: 'ownerUserId',
-      label: 'Egasi',
+      label: tr('Egasi'),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'QORALAMA',
       options: [
-        { value: 'AMALDA', label: 'Amalda' },
-        { value: 'QORALAMA', label: 'Qoralama' },
-        { value: 'BEKOR_QILINGAN', label: 'Bekor qilingan' },
+        { value: 'AMALDA', label: tr('Amalda') },
+        { value: 'QORALAMA', label: tr('Qoralama') },
+        { value: 'BEKOR_QILINGAN', label: tr('Bekor qilingan') },
       ],
     },
   ],
@@ -681,39 +682,39 @@ export const smkDocumentConfig = {
 
 export const smkDocumentVersionConfig = {
   path: 'smk/document-versions',
-  title: 'Hujjat versiyalari',
+  title: tr('Hujjat versiyalari'),
   columns: [
-    { key: 'document', label: 'Hujjat', render: (i) => i.document ? `${i.document.code} — ${i.document.titleUz}` : '—' },
-    { key: 'versionNumber', label: 'Versiya' },
-    { key: 'approvedByUser', label: 'Tasdiqlagan', render: (i) => i.approvedByUser?.fullName || '—' },
-    { key: 'approvedAt', label: 'Tasdiqlangan sana', render: (i) => (i.approvedAt ? String(i.approvedAt).slice(0, 10) : '—') },
+    { key: 'document', label: tr('Hujjat'), render: (i) => i.document ? `${i.document.code} — ${i.document.titleUz}` : '—' },
+    { key: 'versionNumber', label: tr('Versiya') },
+    { key: 'approvedByUser', label: tr('Tasdiqlagan'), render: (i) => i.approvedByUser?.fullName || '—' },
+    { key: 'approvedAt', label: tr('Tasdiqlangan sana'), render: (i) => (i.approvedAt ? String(i.approvedAt).slice(0, 10) : '—') },
   ],
   fields: [
     {
       name: 'documentId',
-      label: 'Hujjat',
+      label: tr('Hujjat'),
       type: 'async-select',
       required: true,
       optionsResource: 'smk/documents',
       optionsLabel: (item) => `${item.code} — ${item.titleUz}`,
     },
-    { name: 'versionNumber', label: 'Versiya raqami (masalan v2.0)', required: true },
-    { name: 'fileUrl', label: 'Fayl', type: 'file' },
-    { name: 'changeDescription', label: "O'zgarish tavsifi", type: 'textarea', fullWidth: true },
+    { name: 'versionNumber', label: tr('Versiya raqami (masalan v2.0)'), required: true },
+    { name: 'fileUrl', label: tr('Fayl'), type: 'file' },
+    { name: 'changeDescription', label: tr("O'zgarish tavsifi"), type: 'textarea', fullWidth: true },
     {
       name: 'approvedByUserId',
-      label: 'Tasdiqlagan',
+      label: tr('Tasdiqlagan'),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
-    { name: 'approvedAt', label: 'Tasdiqlangan sana', type: 'date' },
+    { name: 'approvedAt', label: tr('Tasdiqlangan sana'), type: 'date' },
   ],
 };
 
 // ===== SMK — FAZA 3: Auditlar =====
 
-const AUDIT_STATUS_LABELS = { REJALASHTIRILGAN: 'Rejalashtirilgan', OTKAZILDI: "O'tkazildi", YAKUNLANDI: 'Yakunlandi' };
+const AUDIT_STATUS_LABELS = { REJALASHTIRILGAN: tr('Rejalashtirilgan'), OTKAZILDI: tr("O'tkazildi"), YAKUNLANDI: tr('Yakunlandi') };
 const AUDIT_STATUS_STYLES = {
   REJALASHTIRILGAN: 'bg-slate-50 text-slate-600 border-slate-200',
   OTKAZILDI: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -722,46 +723,46 @@ const AUDIT_STATUS_STYLES = {
 
 export const internalAuditConfig = {
   path: 'smk/audits',
-  title: 'Ichki auditlar',
+  title: tr('Ichki auditlar'),
   columns: [
-    { key: 'plannedDate', label: 'Rejalashtirilgan sana', render: (i) => String(i.plannedDate).slice(0, 10) },
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'auditorUser', label: 'Auditor', render: (i) => i.auditorUser?.fullName || '—' },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, AUDIT_STATUS_STYLES, AUDIT_STATUS_LABELS) },
+    { key: 'plannedDate', label: tr('Rejalashtirilgan sana'), render: (i) => String(i.plannedDate).slice(0, 10) },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'auditorUser', label: tr('Auditor'), render: (i) => i.auditorUser?.fullName || '—' },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, AUDIT_STATUS_STYLES, AUDIT_STATUS_LABELS) },
   ],
   fields: [
-    { name: 'plannedDate', label: 'Rejalashtirilgan sana', type: 'date', required: true },
-    { name: 'actualDate', label: "O'tkazilgan sana", type: 'date' },
+    { name: 'plannedDate', label: tr('Rejalashtirilgan sana'), type: 'date', required: true },
+    { name: 'actualDate', label: tr("O'tkazilgan sana"), type: 'date' },
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
     {
       name: 'auditorUserId',
-      label: 'Auditor',
+      label: tr('Auditor'),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'REJALASHTIRILGAN',
       options: [
-        { value: 'REJALASHTIRILGAN', label: 'Rejalashtirilgan' },
-        { value: 'OTKAZILDI', label: "O'tkazildi" },
-        { value: 'YAKUNLANDI', label: 'Yakunlandi' },
+        { value: 'REJALASHTIRILGAN', label: tr('Rejalashtirilgan') },
+        { value: 'OTKAZILDI', label: tr("O'tkazildi") },
+        { value: 'YAKUNLANDI', label: tr('Yakunlandi') },
       ],
     },
-    { name: 'summary', label: 'Xulosa', type: 'textarea', fullWidth: true },
+    { name: 'summary', label: tr('Xulosa'), type: 'textarea', fullWidth: true },
   ],
 };
 
-const FINDING_SEVERITY_LABELS = { KATTA: 'Katta', KICHIK: 'Kichik', KUZATUV: 'Kuzatuv' };
+const FINDING_SEVERITY_LABELS = { KATTA: tr('Katta'), KICHIK: tr('Kichik'), KUZATUV: tr('Kuzatuv') };
 const FINDING_SEVERITY_STYLES = {
   KATTA: 'bg-red-50 text-red-700 border-red-200',
   KICHIK: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -770,12 +771,12 @@ const FINDING_SEVERITY_STYLES = {
 
 export const auditFindingConfig = {
   path: 'smk/audit-findings',
-  title: 'Audit topilmalari',
+  title: tr('Audit topilmalari'),
   columns: [
     { key: 'audit', label: 'Audit', render: (i) => (i.audit ? String(i.audit.plannedDate).slice(0, 10) : '—') },
-    { key: 'description', label: 'Tavsif' },
-    { key: 'severity', label: "Jiddiylik darajasi", render: (i) => statusBadge(i.severity, FINDING_SEVERITY_STYLES, FINDING_SEVERITY_LABELS) },
-    { key: 'linkedNonConformance', label: 'Bog\'liq CAPA', render: (i) => i.linkedNonConformance?.code || '—' },
+    { key: 'description', label: tr('Tavsif') },
+    { key: 'severity', label: tr('Jiddiylik darajasi'), render: (i) => statusBadge(i.severity, FINDING_SEVERITY_STYLES, FINDING_SEVERITY_LABELS) },
+    { key: 'linkedNonConformance', label: tr("Bog'liq CAPA"), render: (i) => i.linkedNonConformance?.code || '—' },
   ],
   fields: [
     {
@@ -784,23 +785,23 @@ export const auditFindingConfig = {
       type: 'async-select',
       required: true,
       optionsResource: 'smk/audits',
-      optionsLabel: (item) => `Audit — ${String(item.plannedDate).slice(0, 10)}`,
+      optionsLabel: (item) => tr('Audit — {0}', String(item.plannedDate).slice(0, 10)),
     },
-    { name: 'description', label: 'Tavsif', type: 'textarea', fullWidth: true, required: true },
+    { name: 'description', label: tr('Tavsif'), type: 'textarea', fullWidth: true, required: true },
     {
       name: 'severity',
-      label: 'Jiddiylik darajasi',
+      label: tr('Jiddiylik darajasi'),
       type: 'select',
       required: true,
       options: [
-        { value: 'KATTA', label: 'Katta' },
-        { value: 'KICHIK', label: 'Kichik' },
-        { value: 'KUZATUV', label: 'Kuzatuv' },
+        { value: 'KATTA', label: tr('Katta') },
+        { value: 'KICHIK', label: tr('Kichik') },
+        { value: 'KUZATUV', label: tr('Kuzatuv') },
       ],
     },
     {
       name: 'linkedNonConformanceId',
-      label: "Bog'liq nomuvofiqlik (ixtiyoriy)",
+      label: tr("Bog'liq nomuvofiqlik (ixtiyoriy)"),
       type: 'async-select',
       optionsResource: 'smk/nonconformances',
       optionsLabel: (item) => `${item.code} — ${item.description?.slice(0, 40) || ''}`,
@@ -812,90 +813,90 @@ export const auditFindingConfig = {
 
 export const calibrationRecordConfig = {
   path: 'smk/calibration',
-  title: 'Uskunalar kalibrlash reestri',
+  title: tr('Uskunalar kalibrlash reestri'),
   columns: [
-    { key: 'equipment', label: 'Uskuna', render: (i) => i.equipment?.name || '—' },
-    { key: 'calibrationDate', label: 'Kalibrlangan sana', render: (i) => String(i.calibrationDate).slice(0, 10) },
-    { key: 'nextDueDate', label: 'Keyingi muddat', render: (i) => String(i.nextDueDate).slice(0, 10) },
+    { key: 'equipment', label: tr('Uskuna'), render: (i) => i.equipment?.name || '—' },
+    { key: 'calibrationDate', label: tr('Kalibrlangan sana'), render: (i) => String(i.calibrationDate).slice(0, 10) },
+    { key: 'nextDueDate', label: tr('Keyingi muddat'), render: (i) => String(i.nextDueDate).slice(0, 10) },
     {
       key: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       render: (i) =>
         new Date(i.nextDueDate) < new Date()
-          ? statusBadge('MUDDATI_OTGAN', { MUDDATI_OTGAN: 'bg-red-50 text-red-700 border-red-200' }, { MUDDATI_OTGAN: 'Muddati o\'tgan' })
-          : statusBadge('AMALDA', { AMALDA: 'bg-emerald-50 text-emerald-700 border-emerald-200' }, { AMALDA: 'Amalda' }),
+          ? statusBadge('MUDDATI_OTGAN', { MUDDATI_OTGAN: 'bg-red-50 text-red-700 border-red-200' }, { MUDDATI_OTGAN: tr("Muddati o'tgan") })
+          : statusBadge('AMALDA', { AMALDA: 'bg-emerald-50 text-emerald-700 border-emerald-200' }, { AMALDA: tr('Amalda') }),
     },
   ],
   fields: [
     {
       name: 'equipmentId',
-      label: 'Uskuna',
+      label: tr('Uskuna'),
       type: 'async-select',
       required: true,
       optionsResource: 'equipment',
       optionsLabel: (item) => item.name,
     },
-    { name: 'calibrationDate', label: 'Kalibrlangan sana', type: 'date', required: true },
-    { name: 'nextDueDate', label: 'Keyingi kalibrlash muddati', type: 'date', required: true },
-    { name: 'certificateUrl', label: 'Sertifikat', type: 'file' },
-    { name: 'performedBy', label: 'Kim bajardi' },
+    { name: 'calibrationDate', label: tr('Kalibrlangan sana'), type: 'date', required: true },
+    { name: 'nextDueDate', label: tr('Keyingi kalibrlash muddati'), type: 'date', required: true },
+    { name: 'certificateUrl', label: tr('Sertifikat'), type: 'file' },
+    { name: 'performedBy', label: tr('Kim bajardi') },
   ],
 };
 
 export const trainingRecordConfig = {
   path: 'smk/training',
-  title: "Xodimlar malakasi / treninglar",
+  title: tr('Xodimlar malakasi / treninglar'),
   columns: [
-    { key: 'user', label: 'Xodim', render: (i) => i.user?.fullName || '—' },
-    { key: 'trainingTitle', label: 'Trening nomi' },
-    { key: 'trainingDate', label: 'Sana', render: (i) => String(i.trainingDate).slice(0, 10) },
-    { key: 'expiryDate', label: 'Amal qilish muddati', render: (i) => (i.expiryDate ? String(i.expiryDate).slice(0, 10) : '—') },
+    { key: 'user', label: tr('Xodim'), render: (i) => i.user?.fullName || '—' },
+    { key: 'trainingTitle', label: tr('Trening nomi') },
+    { key: 'trainingDate', label: tr('Sana'), render: (i) => String(i.trainingDate).slice(0, 10) },
+    { key: 'expiryDate', label: tr('Amal qilish muddati'), render: (i) => (i.expiryDate ? String(i.expiryDate).slice(0, 10) : '—') },
   ],
   fields: [
     {
       name: 'userId',
-      label: 'Xodim',
+      label: tr('Xodim'),
       type: 'async-select',
       required: true,
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
-    { name: 'trainingTitle', label: 'Trening nomi', required: true, fullWidth: true },
-    { name: 'trainingDate', label: 'Sana', type: 'date', required: true },
-    { name: 'provider', label: "Ta'minlovchi tashkilot" },
-    { name: 'certificateUrl', label: 'Sertifikat', type: 'file' },
-    { name: 'expiryDate', label: 'Amal qilish muddati', type: 'date' },
+    { name: 'trainingTitle', label: tr('Trening nomi'), required: true, fullWidth: true },
+    { name: 'trainingDate', label: tr('Sana'), type: 'date', required: true },
+    { name: 'provider', label: tr("Ta'minlovchi tashkilot") },
+    { name: 'certificateUrl', label: tr('Sertifikat'), type: 'file' },
+    { name: 'expiryDate', label: tr('Amal qilish muddati'), type: 'date' },
   ],
 };
 
 export const qualityControlRecordConfig = {
   path: 'smk/qc',
-  title: 'Ichki sifat nazorati (QC)',
+  title: tr('Ichki sifat nazorati (QC)'),
   columns: [
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'testType', label: 'Sinov turi' },
-    { key: 'controlDate', label: 'Sana', render: (i) => String(i.controlDate).slice(0, 10) },
-    { key: 'withinLimits', label: 'Me\'yor ichida', render: (i) => (i.withinLimits ? 'Ha' : "Yo'q") },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'testType', label: tr('Sinov turi') },
+    { key: 'controlDate', label: tr('Sana'), render: (i) => String(i.controlDate).slice(0, 10) },
+    { key: 'withinLimits', label: tr("Me'yor ichida"), render: (i) => (i.withinLimits ? tr('Ha') : tr("Yo'q")) },
   ],
   fields: [
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'testType', label: 'Sinov turi', required: true },
-    { name: 'controlDate', label: 'Sana', type: 'date', required: true },
-    { name: 'expectedValue', label: 'Kutilgan qiymat' },
-    { name: 'actualValue', label: 'Haqiqiy qiymat' },
-    { name: 'deviation', label: 'Chetlanish' },
-    { name: 'withinLimits', label: "Me'yor ichida", type: 'checkbox' },
-    { name: 'notes', label: 'Izoh', type: 'textarea', fullWidth: true },
+    { name: 'testType', label: tr('Sinov turi'), required: true },
+    { name: 'controlDate', label: tr('Sana'), type: 'date', required: true },
+    { name: 'expectedValue', label: tr('Kutilgan qiymat') },
+    { name: 'actualValue', label: tr('Haqiqiy qiymat') },
+    { name: 'deviation', label: tr('Chetlanish') },
+    { name: 'withinLimits', label: tr("Me'yor ichida"), type: 'checkbox' },
+    { name: 'notes', label: tr('Izoh'), type: 'textarea', fullWidth: true },
   ],
 };
 
-const PT_RESULT_LABELS = { QONIQARLI: 'Qoniqarli', QONIQARSIZ: 'Qoniqarsiz', OGOHLANTIRISH: 'Ogohlantirish' };
+const PT_RESULT_LABELS = { QONIQARLI: tr('Qoniqarli'), QONIQARSIZ: tr('Qoniqarsiz'), OGOHLANTIRISH: tr('Ogohlantirish') };
 const PT_RESULT_STYLES = {
   QONIQARLI: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   QONIQARSIZ: 'bg-red-50 text-red-700 border-red-200',
@@ -904,64 +905,64 @@ const PT_RESULT_STYLES = {
 
 export const proficiencyTestConfig = {
   path: 'smk/proficiency-tests',
-  title: 'Malakaviy sinovlar (PT)',
+  title: tr('Malakaviy sinovlar (PT)'),
   columns: [
-    { key: 'testProgram', label: 'Dastur' },
-    { key: 'providerName', label: "Ta'minlovchi" },
-    { key: 'testDate', label: 'Sana', render: (i) => String(i.testDate).slice(0, 10) },
-    { key: 'resultStatus', label: 'Natija', render: (i) => statusBadge(i.resultStatus, PT_RESULT_STYLES, PT_RESULT_LABELS) },
+    { key: 'testProgram', label: tr('Dastur') },
+    { key: 'providerName', label: tr("Ta'minlovchi") },
+    { key: 'testDate', label: tr('Sana'), render: (i) => String(i.testDate).slice(0, 10) },
+    { key: 'resultStatus', label: tr('Natija'), render: (i) => statusBadge(i.resultStatus, PT_RESULT_STYLES, PT_RESULT_LABELS) },
   ],
   fields: [
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'testProgram', label: 'Dastur nomi', required: true },
-    { name: 'providerName', label: "Ta'minlovchi tashkilot", required: true },
-    { name: 'testDate', label: 'Sana', type: 'date', required: true },
+    { name: 'testProgram', label: tr('Dastur nomi'), required: true },
+    { name: 'providerName', label: tr("Ta'minlovchi tashkilot"), required: true },
+    { name: 'testDate', label: tr('Sana'), type: 'date', required: true },
     {
       name: 'resultStatus',
-      label: 'Natija',
+      label: tr('Natija'),
       type: 'select',
       required: true,
       options: [
-        { value: 'QONIQARLI', label: 'Qoniqarli' },
-        { value: 'QONIQARSIZ', label: 'Qoniqarsiz' },
-        { value: 'OGOHLANTIRISH', label: 'Ogohlantirish' },
+        { value: 'QONIQARLI', label: tr('Qoniqarli') },
+        { value: 'QONIQARSIZ', label: tr('Qoniqarsiz') },
+        { value: 'OGOHLANTIRISH', label: tr('Ogohlantirish') },
       ],
     },
-    { name: 'reportUrl', label: 'Hisobot', type: 'file' },
+    { name: 'reportUrl', label: tr('Hisobot'), type: 'file' },
   ],
 };
 
 export const measurementUncertaintyConfig = {
   path: 'smk/uncertainty',
-  title: "O'lchov noaniqligi",
+  title: tr("O'lchov noaniqligi"),
   columns: [
-    { key: 'service', label: 'Xizmat / usul', render: (i) => i.service?.nameUz || i.testMethodName || '—' },
-    { key: 'uncertaintyValue', label: 'Qiymat' },
-    { key: 'unit', label: 'Birlik' },
+    { key: 'service', label: tr('Xizmat / usul'), render: (i) => locName(i.service) || i.testMethodName || '—' },
+    { key: 'uncertaintyValue', label: tr('Qiymat') },
+    { key: 'unit', label: tr('Birlik') },
   ],
   fields: [
     {
       name: 'serviceId',
-      label: 'Xizmat (ixtiyoriy)',
+      label: tr('Xizmat (ixtiyoriy)'),
       type: 'async-select',
       optionsResource: 'services',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'testMethodName', label: 'Sinov usuli nomi (xizmat tanlanmasa)' },
-    { name: 'uncertaintyValue', label: 'Noaniqlik qiymati', required: true },
-    { name: 'unit', label: 'Birlik' },
-    { name: 'calculationMethod', label: 'Hisoblash usuli', type: 'textarea', fullWidth: true },
-    { name: 'documentUrl', label: 'Hujjat', type: 'file' },
+    { name: 'testMethodName', label: tr('Sinov usuli nomi (xizmat tanlanmasa)') },
+    { name: 'uncertaintyValue', label: tr('Noaniqlik qiymati'), required: true },
+    { name: 'unit', label: tr('Birlik') },
+    { name: 'calculationMethod', label: tr('Hisoblash usuli'), type: 'textarea', fullWidth: true },
+    { name: 'documentUrl', label: tr('Hujjat'), type: 'file' },
   ],
 };
 
-const METHOD_STATUS_LABELS = { TASDIQLANGAN: 'Tasdiqlangan', JARAYONDA: 'Jarayonda' };
+const METHOD_STATUS_LABELS = { TASDIQLANGAN: tr('Tasdiqlangan'), JARAYONDA: tr('Jarayonda') };
 const METHOD_STATUS_STYLES = {
   TASDIQLANGAN: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   JARAYONDA: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -969,27 +970,27 @@ const METHOD_STATUS_STYLES = {
 
 export const methodValidationConfig = {
   path: 'smk/methods',
-  title: 'Metodikani tasdiqlash',
+  title: tr('Metodikani tasdiqlash'),
   columns: [
-    { key: 'methodName', label: 'Metod nomi' },
-    { key: 'standardReference', label: 'Standart' },
-    { key: 'validationDate', label: 'Sana', render: (i) => String(i.validationDate).slice(0, 10) },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, METHOD_STATUS_STYLES, METHOD_STATUS_LABELS) },
+    { key: 'methodName', label: tr('Metod nomi') },
+    { key: 'standardReference', label: tr('Standart') },
+    { key: 'validationDate', label: tr('Sana'), render: (i) => String(i.validationDate).slice(0, 10) },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, METHOD_STATUS_STYLES, METHOD_STATUS_LABELS) },
   ],
   fields: [
-    { name: 'methodName', label: 'Metod nomi', required: true, fullWidth: true },
-    { name: 'standardReference', label: 'Standart havolasi' },
-    { name: 'validationDate', label: 'Sana', type: 'date', required: true },
-    { name: 'validatedBy', label: 'Kim tasdiqladi' },
-    { name: 'reportUrl', label: 'Hisobot', type: 'file' },
+    { name: 'methodName', label: tr('Metod nomi'), required: true, fullWidth: true },
+    { name: 'standardReference', label: tr('Standart havolasi') },
+    { name: 'validationDate', label: tr('Sana'), type: 'date', required: true },
+    { name: 'validatedBy', label: tr('Kim tasdiqladi') },
+    { name: 'reportUrl', label: tr('Hisobot'), type: 'file' },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'JARAYONDA',
       options: [
-        { value: 'TASDIQLANGAN', label: 'Tasdiqlangan' },
-        { value: 'JARAYONDA', label: 'Jarayonda' },
+        { value: 'TASDIQLANGAN', label: tr('Tasdiqlangan') },
+        { value: 'JARAYONDA', label: tr('Jarayonda') },
       ],
     },
   ],
@@ -999,104 +1000,104 @@ export const methodValidationConfig = {
 
 export const impartialityDeclarationConfig = {
   path: 'smk/impartiality',
-  title: 'Xolislik/maxfiylik deklaratsiyalari',
+  title: tr('Xolislik/maxfiylik deklaratsiyalari'),
   columns: [
-    { key: 'user', label: 'Xodim', render: (i) => i.user?.fullName || '—' },
-    { key: 'declarationYear', label: 'Yil' },
-    { key: 'signedDate', label: 'Imzolangan sana', render: (i) => String(i.signedDate).slice(0, 10) },
+    { key: 'user', label: tr('Xodim'), render: (i) => i.user?.fullName || '—' },
+    { key: 'declarationYear', label: tr('Yil') },
+    { key: 'signedDate', label: tr('Imzolangan sana'), render: (i) => String(i.signedDate).slice(0, 10) },
   ],
   fields: [
     {
       name: 'userId',
-      label: 'Xodim',
+      label: tr('Xodim'),
       type: 'async-select',
       required: true,
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
-    { name: 'declarationYear', label: 'Yil', type: 'number', required: true },
-    { name: 'signedDate', label: 'Imzolangan sana', type: 'date', required: true },
-    { name: 'fileUrl', label: 'Fayl', type: 'file' },
+    { name: 'declarationYear', label: tr('Yil'), type: 'number', required: true },
+    { name: 'signedDate', label: tr('Imzolangan sana'), type: 'date', required: true },
+    { name: 'fileUrl', label: tr('Fayl'), type: 'file' },
   ],
 };
 
 export const supplierEvaluationConfig = {
   path: 'smk/suppliers',
-  title: "Ta'minotchilarni baholash",
+  title: tr("Ta'minotchilarni baholash"),
   columns: [
-    { key: 'supplierName', label: "Ta'minotchi" },
-    { key: 'category', label: 'Kategoriya' },
-    { key: 'score', label: 'Baho (1-5)' },
-    { key: 'evaluationDate', label: 'Sana', render: (i) => String(i.evaluationDate).slice(0, 10) },
+    { key: 'supplierName', label: tr("Ta'minotchi") },
+    { key: 'category', label: tr('Kategoriya') },
+    { key: 'score', label: tr('Baho (1-5)') },
+    { key: 'evaluationDate', label: tr('Sana'), render: (i) => String(i.evaluationDate).slice(0, 10) },
   ],
   fields: [
-    { name: 'supplierName', label: "Ta'minotchi nomi", required: true },
-    { name: 'category', label: 'Kategoriya' },
-    { name: 'evaluationDate', label: 'Baholash sanasi', type: 'date', required: true },
-    { name: 'score', label: 'Baho (1-5)', type: 'number', required: true },
-    { name: 'notes', label: 'Izoh', type: 'textarea', fullWidth: true },
-    { name: 'nextEvaluationDate', label: 'Keyingi baholash sanasi', type: 'date' },
+    { name: 'supplierName', label: tr("Ta'minotchi nomi"), required: true },
+    { name: 'category', label: tr('Kategoriya') },
+    { name: 'evaluationDate', label: tr('Baholash sanasi'), type: 'date', required: true },
+    { name: 'score', label: tr('Baho (1-5)'), type: 'number', required: true },
+    { name: 'notes', label: tr('Izoh'), type: 'textarea', fullWidth: true },
+    { name: 'nextEvaluationDate', label: tr('Keyingi baholash sanasi'), type: 'date' },
   ],
 };
 
 export const subcontractorConfig = {
   path: 'smk/subcontractors',
-  title: 'Subpudratchilar reestri',
+  title: tr('Subpudratchilar reestri'),
   columns: [
-    { key: 'name', label: 'Nomi' },
-    { key: 'servicesProvided', label: 'Xizmatlar' },
-    { key: 'validUntil', label: 'Amal qilish muddati', render: (i) => (i.validUntil ? String(i.validUntil).slice(0, 10) : '—') },
+    { key: 'name', label: tr('Nomi') },
+    { key: 'servicesProvided', label: tr('Xizmatlar') },
+    { key: 'validUntil', label: tr('Amal qilish muddati'), render: (i) => (i.validUntil ? String(i.validUntil).slice(0, 10) : '—') },
   ],
   fields: [
-    { name: 'name', label: 'Nomi', required: true, fullWidth: true },
-    { name: 'accreditationInfo', label: 'Akkreditatsiya ma\'lumoti', type: 'textarea', fullWidth: true },
-    { name: 'servicesProvided', label: "Ko'rsatiladigan xizmatlar", type: 'textarea', fullWidth: true },
-    { name: 'contractUrl', label: 'Shartnoma', type: 'file' },
-    { name: 'validUntil', label: 'Amal qilish muddati', type: 'date' },
+    { name: 'name', label: tr('Nomi'), required: true, fullWidth: true },
+    { name: 'accreditationInfo', label: tr("Akkreditatsiya ma'lumoti"), type: 'textarea', fullWidth: true },
+    { name: 'servicesProvided', label: tr("Ko'rsatiladigan xizmatlar"), type: 'textarea', fullWidth: true },
+    { name: 'contractUrl', label: tr('Shartnoma'), type: 'file' },
+    { name: 'validUntil', label: tr('Amal qilish muddati'), type: 'date' },
   ],
 };
 
 export const environmentLogConfig = {
   path: 'smk/environment',
-  title: 'Muhit sharoitlari monitoring',
+  title: tr('Muhit sharoitlari monitoring'),
   columns: [
-    { key: 'laboratory', label: 'Laboratoriya', render: (i) => i.laboratory?.nameUz || '—' },
-    { key: 'recordedAt', label: 'Sana', render: (i) => String(i.recordedAt).slice(0, 10) },
-    { key: 'temperature', label: 'Harorat (°C)', render: (i) => i.temperature ?? '—' },
-    { key: 'humidity', label: 'Namlik (%)', render: (i) => i.humidity ?? '—' },
-    { key: 'withinLimits', label: "Me'yorda", render: (i) => (i.withinLimits ? 'Ha' : "Yo'q") },
+    { key: 'laboratory', label: tr('Laboratoriya'), render: (i) => locName(i.laboratory) || '—' },
+    { key: 'recordedAt', label: tr('Sana'), render: (i) => String(i.recordedAt).slice(0, 10) },
+    { key: 'temperature', label: tr('Harorat (°C)'), render: (i) => i.temperature ?? '—' },
+    { key: 'humidity', label: tr('Namlik (%)'), render: (i) => i.humidity ?? '—' },
+    { key: 'withinLimits', label: tr("Me'yorda"), render: (i) => (i.withinLimits ? tr('Ha') : tr("Yo'q")) },
   ],
   fields: [
     {
       name: 'laboratoryId',
-      label: 'Laboratoriya',
+      label: tr('Laboratoriya'),
       type: 'async-select',
       optionsResource: 'laboratories',
-      optionsLabel: (item) => item.nameUz,
+      optionsLabel: (item) => locName(item),
     },
-    { name: 'recordedAt', label: 'Qayd etilgan sana', type: 'date', required: true },
-    { name: 'temperature', label: 'Harorat (°C)', type: 'number' },
-    { name: 'humidity', label: 'Namlik (%)', type: 'number' },
-    { name: 'withinLimits', label: "Me'yorda", type: 'checkbox' },
+    { name: 'recordedAt', label: tr('Qayd etilgan sana'), type: 'date', required: true },
+    { name: 'temperature', label: tr('Harorat (°C)'), type: 'number' },
+    { name: 'humidity', label: tr('Namlik (%)'), type: 'number' },
+    { name: 'withinLimits', label: tr("Me'yorda"), type: 'checkbox' },
   ],
 };
 
 export const documentAcknowledgmentConfig = {
   path: 'smk/acknowledgments',
-  title: 'Hujjat bilan tanishtirish kuzatuvi',
+  title: tr('Hujjat bilan tanishtirish kuzatuvi'),
   columns: [
     {
       key: 'documentVersion',
-      label: 'Hujjat versiyasi',
+      label: tr('Hujjat versiyasi'),
       render: (i) => (i.documentVersion ? `${i.documentVersion.document?.code || ''} (${i.documentVersion.versionNumber})` : '—'),
     },
-    { key: 'user', label: 'Xodim', render: (i) => i.user?.fullName || '—' },
-    { key: 'acknowledgedAt', label: 'Tanishgan sana', render: (i) => String(i.acknowledgedAt).slice(0, 10) },
+    { key: 'user', label: tr('Xodim'), render: (i) => i.user?.fullName || '—' },
+    { key: 'acknowledgedAt', label: tr('Tanishgan sana'), render: (i) => String(i.acknowledgedAt).slice(0, 10) },
   ],
   fields: [
     {
       name: 'documentVersionId',
-      label: 'Hujjat versiyasi',
+      label: tr('Hujjat versiyasi'),
       type: 'async-select',
       required: true,
       optionsResource: 'smk/document-versions',
@@ -1104,7 +1105,7 @@ export const documentAcknowledgmentConfig = {
     },
     {
       name: 'userId',
-      label: 'Xodim',
+      label: tr('Xodim'),
       type: 'async-select',
       required: true,
       optionsResource: 'users',
@@ -1117,21 +1118,21 @@ export const documentAcknowledgmentConfig = {
 
 export const managementReviewConfig = {
   path: 'smk/reviews',
-  title: 'Boshqaruv sharhi',
+  title: tr('Boshqaruv sharhi'),
   columns: [
-    { key: 'reviewDate', label: 'Sana', render: (i) => String(i.reviewDate).slice(0, 10) },
-    { key: 'nextReviewDate', label: 'Keyingi sharh', render: (i) => (i.nextReviewDate ? String(i.nextReviewDate).slice(0, 10) : '—') },
+    { key: 'reviewDate', label: tr('Sana'), render: (i) => String(i.reviewDate).slice(0, 10) },
+    { key: 'nextReviewDate', label: tr('Keyingi sharh'), render: (i) => (i.nextReviewDate ? String(i.nextReviewDate).slice(0, 10) : '—') },
   ],
   fields: [
-    { name: 'reviewDate', label: 'Sana', type: 'date', required: true },
-    { name: 'participants', label: 'Ishtirokchilar', type: 'textarea', fullWidth: true },
-    { name: 'agendaItems', label: "Kun tartibi", type: 'textarea', fullWidth: true },
-    { name: 'decisions', label: 'Qarorlar', type: 'textarea', fullWidth: true },
-    { name: 'nextReviewDate', label: 'Keyingi sharh sanasi', type: 'date' },
+    { name: 'reviewDate', label: tr('Sana'), type: 'date', required: true },
+    { name: 'participants', label: tr('Ishtirokchilar'), type: 'textarea', fullWidth: true },
+    { name: 'agendaItems', label: tr('Kun tartibi'), type: 'textarea', fullWidth: true },
+    { name: 'decisions', label: tr('Qarorlar'), type: 'textarea', fullWidth: true },
+    { name: 'nextReviewDate', label: tr('Keyingi sharh sanasi'), type: 'date' },
   ],
 };
 
-const RISK_STATUS_LABELS = { FAOL: 'Faol', NAZORAT_OSTIDA: 'Nazorat ostida', YOPILDI: 'Yopildi' };
+const RISK_STATUS_LABELS = { FAOL: tr('Faol'), NAZORAT_OSTIDA: tr('Nazorat ostida'), YOPILDI: tr('Yopildi') };
 const RISK_STATUS_STYLES = {
   FAOL: 'bg-red-50 text-red-700 border-red-200',
   NAZORAT_OSTIDA: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -1140,41 +1141,41 @@ const RISK_STATUS_STYLES = {
 
 export const riskItemConfig = {
   path: 'smk/risks',
-  title: 'Risklar reestri',
+  title: tr('Risklar reestri'),
   columns: [
-    { key: 'description', label: 'Tavsif' },
-    { key: 'category', label: 'Kategoriya' },
-    { key: 'riskScore', label: 'Risk bahosi', render: (i) => `${i.likelihood} × ${i.impact} = ${i.riskScore}` },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, RISK_STATUS_STYLES, RISK_STATUS_LABELS) },
+    { key: 'description', label: tr('Tavsif') },
+    { key: 'category', label: tr('Kategoriya') },
+    { key: 'riskScore', label: tr('Risk bahosi'), render: (i) => `${i.likelihood} × ${i.impact} = ${i.riskScore}` },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, RISK_STATUS_STYLES, RISK_STATUS_LABELS) },
   ],
   fields: [
-    { name: 'description', label: 'Tavsif', type: 'textarea', fullWidth: true, required: true },
-    { name: 'category', label: 'Kategoriya' },
-    { name: 'likelihood', label: 'Ehtimollik (1-5)', type: 'number', required: true },
-    { name: 'impact', label: "Ta'sir darajasi (1-5)", type: 'number', required: true },
-    { name: 'mitigationPlan', label: 'Kamaytirish rejasi', type: 'textarea', fullWidth: true },
+    { name: 'description', label: tr('Tavsif'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'category', label: tr('Kategoriya') },
+    { name: 'likelihood', label: tr('Ehtimollik (1-5)'), type: 'number', required: true },
+    { name: 'impact', label: tr("Ta'sir darajasi (1-5)"), type: 'number', required: true },
+    { name: 'mitigationPlan', label: tr('Kamaytirish rejasi'), type: 'textarea', fullWidth: true },
     {
       name: 'ownerUserId',
-      label: "Mas'ul",
+      label: tr("Mas'ul"),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'FAOL',
       options: [
-        { value: 'FAOL', label: 'Faol' },
-        { value: 'NAZORAT_OSTIDA', label: 'Nazorat ostida' },
-        { value: 'YOPILDI', label: 'Yopildi' },
+        { value: 'FAOL', label: tr('Faol') },
+        { value: 'NAZORAT_OSTIDA', label: tr('Nazorat ostida') },
+        { value: 'YOPILDI', label: tr('Yopildi') },
       ],
     },
   ],
 };
 
-const OBJECTIVE_STATUS_LABELS = { BAJARILMOQDA: 'Bajarilmoqda', BAJARILDI: 'Bajarildi', BAJARILMADI: 'Bajarilmadi' };
+const OBJECTIVE_STATUS_LABELS = { BAJARILMOQDA: tr('Bajarilmoqda'), BAJARILDI: tr('Bajarildi'), BAJARILMADI: tr('Bajarilmadi') };
 const OBJECTIVE_STATUS_STYLES = {
   BAJARILMOQDA: 'bg-amber-50 text-amber-700 border-amber-200',
   BAJARILDI: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -1183,37 +1184,37 @@ const OBJECTIVE_STATUS_STYLES = {
 
 export const qualityObjectiveConfig = {
   path: 'smk/objectives',
-  title: 'Sifat maqsadlari (KPI)',
+  title: tr('Sifat maqsadlari (KPI)'),
   columns: [
-    { key: 'year', label: 'Yil' },
-    { key: 'objectiveText', label: 'Maqsad' },
-    { key: 'targetValue', label: 'Reja', render: (i) => i.targetValue || '—' },
-    { key: 'actualValue', label: 'Bajarildi', render: (i) => i.actualValue || '—' },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, OBJECTIVE_STATUS_STYLES, OBJECTIVE_STATUS_LABELS) },
+    { key: 'year', label: tr('Yil') },
+    { key: 'objectiveText', label: tr('Maqsad') },
+    { key: 'targetValue', label: tr('Reja'), render: (i) => i.targetValue || '—' },
+    { key: 'actualValue', label: tr('Bajarildi'), render: (i) => i.actualValue || '—' },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, OBJECTIVE_STATUS_STYLES, OBJECTIVE_STATUS_LABELS) },
   ],
   fields: [
-    { name: 'year', label: 'Yil', type: 'number', required: true },
-    { name: 'objectiveText', label: 'Maqsad matni', type: 'textarea', fullWidth: true, required: true },
-    { name: 'targetValue', label: 'Reja qiymati' },
-    { name: 'actualValue', label: 'Haqiqiy qiymat' },
+    { name: 'year', label: tr('Yil'), type: 'number', required: true },
+    { name: 'objectiveText', label: tr('Maqsad matni'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'targetValue', label: tr('Reja qiymati') },
+    { name: 'actualValue', label: tr('Haqiqiy qiymat') },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'BAJARILMOQDA',
       options: [
-        { value: 'BAJARILMOQDA', label: 'Bajarilmoqda' },
-        { value: 'BAJARILDI', label: 'Bajarildi' },
-        { value: 'BAJARILMADI', label: 'Bajarilmadi' },
+        { value: 'BAJARILMOQDA', label: tr('Bajarilmoqda') },
+        { value: 'BAJARILDI', label: tr('Bajarildi') },
+        { value: 'BAJARILMADI', label: tr('Bajarilmadi') },
       ],
     },
   ],
 };
 
 const IMPROVEMENT_STATUS_LABELS = {
-  KORIB_CHIQILMOQDA: "Ko'rib chiqilmoqda",
-  QABUL_QILINDI: 'Qabul qilindi',
-  RAD_ETILDI: 'Rad etildi',
+  KORIB_CHIQILMOQDA: tr("Ko'rib chiqilmoqda"),
+  QABUL_QILINDI: tr('Qabul qilindi'),
+  RAD_ETILDI: tr('Rad etildi'),
 };
 const IMPROVEMENT_STATUS_STYLES = {
   KORIB_CHIQILMOQDA: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -1223,67 +1224,67 @@ const IMPROVEMENT_STATUS_STYLES = {
 
 export const improvementSuggestionConfig = {
   path: 'smk/improvements',
-  title: 'Yaxshilash takliflari',
+  title: tr('Yaxshilash takliflari'),
   columns: [
-    { key: 'submittedByUser', label: 'Taklif bergan', render: (i) => i.submittedByUser?.fullName || '—' },
-    { key: 'description', label: 'Tavsif' },
-    { key: 'submittedDate', label: 'Sana', render: (i) => String(i.submittedDate).slice(0, 10) },
-    { key: 'status', label: 'Holati', render: (i) => statusBadge(i.status, IMPROVEMENT_STATUS_STYLES, IMPROVEMENT_STATUS_LABELS) },
+    { key: 'submittedByUser', label: tr('Taklif bergan'), render: (i) => i.submittedByUser?.fullName || '—' },
+    { key: 'description', label: tr('Tavsif') },
+    { key: 'submittedDate', label: tr('Sana'), render: (i) => String(i.submittedDate).slice(0, 10) },
+    { key: 'status', label: tr('Holati'), render: (i) => statusBadge(i.status, IMPROVEMENT_STATUS_STYLES, IMPROVEMENT_STATUS_LABELS) },
   ],
   fields: [
     {
       name: 'submittedByUserId',
-      label: 'Taklif bergan xodim',
+      label: tr('Taklif bergan xodim'),
       type: 'async-select',
       optionsResource: 'users',
       optionsLabel: (item) => item.fullName,
     },
-    { name: 'description', label: 'Tavsif', type: 'textarea', fullWidth: true, required: true },
-    { name: 'submittedDate', label: 'Taqdim etilgan sana', type: 'date', required: true },
+    { name: 'description', label: tr('Tavsif'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'submittedDate', label: tr('Taqdim etilgan sana'), type: 'date', required: true },
     {
       name: 'status',
-      label: 'Holati',
+      label: tr('Holati'),
       type: 'select',
       default: 'KORIB_CHIQILMOQDA',
       options: [
-        { value: 'KORIB_CHIQILMOQDA', label: "Ko'rib chiqilmoqda" },
-        { value: 'QABUL_QILINDI', label: 'Qabul qilindi' },
-        { value: 'RAD_ETILDI', label: 'Rad etildi' },
+        { value: 'KORIB_CHIQILMOQDA', label: tr("Ko'rib chiqilmoqda") },
+        { value: 'QABUL_QILINDI', label: tr('Qabul qilindi') },
+        { value: 'RAD_ETILDI', label: tr('Rad etildi') },
       ],
     },
-    { name: 'implementationNotes', label: "Amalga oshirish izohlari", type: 'textarea', fullWidth: true },
+    { name: 'implementationNotes', label: tr('Amalga oshirish izohlari'), type: 'textarea', fullWidth: true },
   ],
 };
 
 export const retentionPolicyConfig = {
   path: 'smk/retention',
-  title: 'Arxiv/saqlash siyosati',
+  title: tr('Arxiv/saqlash siyosati'),
   columns: [
-    { key: 'documentType', label: 'Hujjat turi' },
-    { key: 'retentionYears', label: 'Saqlash muddati (yil)' },
+    { key: 'documentType', label: tr('Hujjat turi') },
+    { key: 'retentionYears', label: tr('Saqlash muddati (yil)') },
   ],
   fields: [
-    { name: 'documentType', label: 'Hujjat turi', required: true, fullWidth: true },
-    { name: 'retentionYears', label: 'Saqlash muddati (yil)', type: 'number', required: true },
-    { name: 'notes', label: 'Izoh', type: 'textarea', fullWidth: true },
+    { name: 'documentType', label: tr('Hujjat turi'), required: true, fullWidth: true },
+    { name: 'retentionYears', label: tr('Saqlash muddati (yil)'), type: 'number', required: true },
+    { name: 'notes', label: tr('Izoh'), type: 'textarea', fullWidth: true },
   ],
 };
 
 export const contactMessageConfig = {
   path: 'contact-messages',
-  title: 'Murojaatlar',
+  title: tr('Murojaatlar'),
   columns: [
-    { key: 'fullName', label: 'F.I.Sh.' },
-    { key: 'phone', label: 'Telefon' },
+    { key: 'fullName', label: tr('F.I.Sh.') },
+    { key: 'phone', label: tr('Telefon') },
     { key: 'email', label: 'Email' },
-    { key: 'message', label: 'Xabar' },
-    { key: 'isRead', label: "O'qilgan", render: (i) => (i.isRead ? 'Ha' : "Yo'q") },
+    { key: 'message', label: tr('Xabar') },
+    { key: 'isRead', label: tr("O'qilgan"), render: (i) => (i.isRead ? tr('Ha') : tr("Yo'q")) },
   ],
   fields: [
-    { name: 'fullName', label: 'F.I.Sh.', required: true },
-    { name: 'phone', label: 'Telefon' },
+    { name: 'fullName', label: tr('F.I.Sh.'), required: true },
+    { name: 'phone', label: tr('Telefon') },
     { name: 'email', label: 'Email' },
-    { name: 'message', label: 'Xabar', type: 'textarea', fullWidth: true, required: true },
-    { name: 'isRead', label: "O'qilgan", type: 'checkbox' },
+    { name: 'message', label: tr('Xabar'), type: 'textarea', fullWidth: true, required: true },
+    { name: 'isRead', label: tr("O'qilgan"), type: 'checkbox' },
   ],
 };

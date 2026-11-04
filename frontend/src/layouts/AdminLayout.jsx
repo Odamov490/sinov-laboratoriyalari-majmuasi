@@ -69,15 +69,16 @@ import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
 import Logo from '../components/Logo.jsx';
 import { smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
+import { tr, currentLang, LOADED_LANG } from '../i18n/tr.js';
 
 // Always shown at the very top, outside any collapsible group.
 const ALL_ROLES = ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'];
-const DASHBOARD_ITEM = { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ALL_ROLES };
+const DASHBOARD_ITEM = { to: '/admin/dashboard', label: tr('Dashboard'), icon: LayoutDashboard, roles: ALL_ROLES };
 // Personal items, shown under Dashboard for every role (the only menu of a STAFF user).
 const PERSONAL_ITEMS = [
-  { to: '/admin/vazifalar', label: 'Vazifalar', icon: ListChecks, roles: ALL_ROLES, badgeKey: 'myTasks' },
-  { to: '/admin/chat', label: 'Chat', icon: MessageCircle, roles: ALL_ROLES, badgeKey: 'chat' },
-  { to: '/admin/mening-profilim', label: 'Mening profilim', icon: UserCircle, roles: ALL_ROLES },
+  { to: '/admin/vazifalar', label: tr('Vazifalar'), icon: ListChecks, roles: ALL_ROLES, badgeKey: 'myTasks' },
+  { to: '/admin/chat', label: tr('Chat'), icon: MessageCircle, roles: ALL_ROLES, badgeKey: 'chat' },
+  { to: '/admin/mening-profilim', label: tr('Mening profilim'), icon: UserCircle, roles: ALL_ROLES },
 ];
 // A STAFF user may open only these; any other /admin address goes to the dashboard.
 const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/chat', '/admin/mening-profilim'];
@@ -87,28 +88,28 @@ const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/chat', '/ad
 // lab, with `to` rewritten to /admin/smk/<lab-slug>/<module>. New SMK modules
 // go here.
 const SMK_MODULES = [
-      { to: '/admin/smk/nomuvofiqliklar', label: 'Nomuvofiqliklar (CAPA)', icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/shikoyatlar', label: 'Sifat shikoyatlari', icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/hujjatlar', label: 'SMK Hujjatlar', icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/hujjat-versiyalari', label: 'Hujjat versiyalari', icon: History, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/auditlar', label: 'Ichki auditlar', icon: ClipboardCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/audit-topilmalari', label: 'Audit topilmalari', icon: Search, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/kalibrlash', label: 'Uskunalar kalibrlash', icon: Gauge, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/treninglar', label: 'Xodimlar treningi', icon: GraduationCap, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/qc', label: 'Ichki sifat nazorati', icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/malakaviy-sinovlar', label: 'Malakaviy sinovlar', icon: Target, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/olchov-noaniqligi', label: "O'lchov noaniqligi", icon: Calculator, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/metodika', label: 'Metodikani tasdiqlash', icon: FileSearch, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/xolislik', label: 'Xolislik deklaratsiyasi', icon: Scale, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/taminotchilar', label: "Ta'minotchilarni baholash", icon: Truck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/subpudratchilar', label: 'Subpudratchilar', icon: Handshake, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/muhit-monitoring', label: 'Muhit sharoitlari', icon: Thermometer, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/tanishtirish', label: 'Hujjat bilan tanishtirish', icon: UserCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/boshqaruv-sharhi', label: 'Boshqaruv sharhi', icon: Presentation, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/risklar', label: 'Risklar reestri', icon: AlertOctagon, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/maqsadlar', label: 'Sifat maqsadlari (KPI)', icon: Flag, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/takliflar', label: 'Yaxshilash takliflari', icon: Lightbulb, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/arxiv-siyosati', label: 'Arxiv/saqlash siyosati', icon: Archive, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/nomuvofiqliklar', label: tr('Nomuvofiqliklar (CAPA)'), icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/shikoyatlar', label: tr('Sifat shikoyatlari'), icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/hujjatlar', label: tr('SMK Hujjatlar'), icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/hujjat-versiyalari', label: tr('Hujjat versiyalari'), icon: History, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/auditlar', label: tr('Ichki auditlar'), icon: ClipboardCheck, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/audit-topilmalari', label: tr('Audit topilmalari'), icon: Search, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/kalibrlash', label: tr('Uskunalar kalibrlash'), icon: Gauge, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/treninglar', label: tr('Xodimlar treningi'), icon: GraduationCap, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/qc', label: tr('Ichki sifat nazorati'), icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/malakaviy-sinovlar', label: tr('Malakaviy sinovlar'), icon: Target, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/olchov-noaniqligi', label: tr("O'lchov noaniqligi"), icon: Calculator, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/metodika', label: tr('Metodikani tasdiqlash'), icon: FileSearch, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/xolislik', label: tr('Xolislik deklaratsiyasi'), icon: Scale, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/taminotchilar', label: tr("Ta'minotchilarni baholash"), icon: Truck, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/subpudratchilar', label: tr('Subpudratchilar'), icon: Handshake, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/muhit-monitoring', label: tr('Muhit sharoitlari'), icon: Thermometer, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/tanishtirish', label: tr('Hujjat bilan tanishtirish'), icon: UserCheck, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/boshqaruv-sharhi', label: tr('Boshqaruv sharhi'), icon: Presentation, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/risklar', label: tr('Risklar reestri'), icon: AlertOctagon, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/maqsadlar', label: tr('Sifat maqsadlari (KPI)'), icon: Flag, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/smk/takliflar', label: tr('Yaxshilash takliflari'), icon: Lightbulb, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/smk/arxiv-siyosati', label: tr('Arxiv/saqlash siyosati'), icon: Archive, roles: ['SUPER_ADMIN'] },
 ];
 
 const SMK_PREFIX = '/admin/smk/';
@@ -124,68 +125,68 @@ const smkItemsForLab = (labSlug, items) =>
 const MENU_GROUPS = [
   {
     key: 'operatsiyalar',
-    label: 'Operatsiyalar',
+    label: tr('Operatsiyalar'),
     icon: Briefcase,
     items: [
-      { to: '/admin/arizalar', label: 'Arizalar', icon: Inbox, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/namunalar', label: 'Namunalar', icon: Package, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/hisobot', label: 'Hisobot', icon: BarChart3, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/skanerlash', label: 'Skanerlash', icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/murojaatlar', label: 'Murojaatlar', icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'], badgeKey: 'unreadMessages' },
+      { to: '/admin/arizalar', label: tr('Arizalar'), icon: Inbox, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/namunalar', label: tr('Namunalar'), icon: Package, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/hisobot', label: tr('Hisobot'), icon: BarChart3, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/skanerlash', label: tr('Skanerlash'), icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/murojaatlar', label: tr('Murojaatlar'), icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'], badgeKey: 'unreadMessages' },
     ],
   },
   {
     key: 'katalog',
-    label: 'Katalog',
+    label: tr('Katalog'),
     icon: Library,
     items: [
-      { to: '/admin/laboratoriyalar', label: 'Laboratoriyalar', icon: FlaskConical, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/xizmatlar', label: 'Xizmatlar', icon: Wrench, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/narxlar', label: 'Narxlar', icon: Tag, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/standartlar', label: 'Standartlar', icon: BookOpen, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/mutaxassislar', label: 'Mutaxassislar', icon: Users, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/uskunalar', label: 'Uskunalar', icon: Cpu, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/tnved-reglament', label: 'TN VED reglament', icon: ScrollText, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/korsatkichlar', label: "Ko'rsatkichlar hovuzi", icon: ClipboardList, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/sinov-dasturlari', label: 'Sinov dasturlari', icon: Layers, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/laboratoriyalar', label: tr('Laboratoriyalar'), icon: FlaskConical, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/xizmatlar', label: tr('Xizmatlar'), icon: Wrench, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/narxlar', label: tr('Narxlar'), icon: Tag, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/standartlar', label: tr('Standartlar'), icon: BookOpen, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/mutaxassislar', label: tr('Mutaxassislar'), icon: Users, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/uskunalar', label: tr('Uskunalar'), icon: Cpu, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/tnved-reglament', label: tr('TN VED reglament'), icon: ScrollText, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/korsatkichlar', label: tr("Ko'rsatkichlar hovuzi"), icon: ClipboardList, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/sinov-dasturlari', label: tr('Sinov dasturlari'), icon: Layers, roles: ['SUPER_ADMIN', 'MANAGER'] },
     ],
   },
   {
     key: 'kontent',
-    label: 'Kontent',
+    label: tr('Kontent'),
     icon: PenLine,
     items: [
-      { to: '/admin/yangiliklar', label: 'Yangiliklar', icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR'] },
-      { to: '/admin/hujjatlar', label: 'Hujjatlar', icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR'] },
-      { to: '/admin/galereya', label: 'Galereya', icon: Image, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/yangiliklar', label: tr('Yangiliklar'), icon: Newspaper, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/hujjatlar', label: tr('Hujjatlar'), icon: FileText, roles: ['SUPER_ADMIN', 'EDITOR'] },
+      { to: '/admin/galereya', label: tr('Galereya'), icon: Image, roles: ['SUPER_ADMIN', 'EDITOR'] },
       { to: '/admin/faq', label: 'FAQ', icon: HelpCircle, roles: ['SUPER_ADMIN', 'EDITOR'] },
-      { to: '/admin/deklaratsiya-sertifikat', label: 'Deklaratsiya/sertifikat', icon: Info, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/deklaratsiya-sertifikat', label: tr('Deklaratsiya/sertifikat'), icon: Info, roles: ['SUPER_ADMIN', 'MANAGER'] },
     ],
   },
   {
     // Akkreditatsiya + per-laboratory SMK subgroups (see SMK_MODULES).
     key: 'sifat',
-    label: 'Sifat',
+    label: tr('Sifat'),
     icon: Award,
     smk: true,
     items: [
-      { to: '/admin/akkreditatsiya', label: 'Akkreditatsiya', icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/akkreditatsiya', label: tr('Akkreditatsiya'), icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
     ],
   },
   {
     key: 'tizim',
-    label: 'Tizim',
+    label: tr('Tizim'),
     icon: Settings,
     items: [
-      { to: '/admin/foydalanuvchilar', label: 'Foydalanuvchilar', icon: Users, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/sozlamalar', label: 'Sozlamalar', icon: Settings, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/chat-sozlamalari', label: 'Chat sozlamalari', icon: SlidersHorizontal, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/stikerlar', label: 'Stikerlar', icon: Smile, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/foydalanuvchilar', label: tr('Foydalanuvchilar'), icon: Users, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/sozlamalar', label: tr('Sozlamalar'), icon: Settings, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/chat-sozlamalari', label: tr('Chat sozlamalari'), icon: SlidersHorizontal, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/stikerlar', label: tr('Stikerlar'), icon: Smile, roles: ['SUPER_ADMIN'] },
     ],
   },
   {
     key: 'boshqa',
-    label: 'Boshqa',
+    label: tr('Boshqa'),
     icon: MoreHorizontal,
     items: [],
   },
@@ -234,6 +235,11 @@ function loadOpenGroups(pathname) {
 
 export default function AdminLayout() {
   const { user, loading, logout } = useAuth();
+  // Menyu/ustun nomlari modul yuklanganda tarjima qilingan; til boshqa joyda
+  // (ommaviy saytda) almashtirilgan bo'lsa, ular yangi tilda qayta hisoblansin.
+  useEffect(() => {
+    if (currentLang() !== LOADED_LANG) window.location.reload();
+  }, []);
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
@@ -363,13 +369,13 @@ export default function AdminLayout() {
       <div className="min-h-screen bg-bg-light flex items-center justify-center p-4">
         <div className="w-full max-w-md card p-8">
           <Logo className="mb-5" />
-          <h1 className="text-lg font-bold text-ink">Parolni almashtiring</h1>
+          <h1 className="text-lg font-bold text-ink">{tr('Parolni almashtiring')}</h1>
           <p className="mt-1 mb-5 text-sm text-slate-500">
-            Siz vaqtinchalik parol bilan kirdingiz. Davom etish uchun o'zingizning yangi parolingizni o'rnating.
+            {tr("Siz vaqtinchalik parol bilan kirdingiz. Davom etish uchun o'zingizning yangi parolingizni o'rnating.")}
           </p>
-          <ChangePasswordForm submitLabel="Parolni saqlash va davom etish" />
+          <ChangePasswordForm submitLabel={tr('Parolni saqlash va davom etish')} />
           <button onClick={logout} className="mt-4 w-full text-sm text-slate-500 hover:text-ink">
-            Chiqish
+            {tr('Chiqish')}
           </button>
         </div>
       </div>
@@ -456,7 +462,7 @@ export default function AdminLayout() {
           {favorites.length > 0 && (
             <div className="mb-2 border-b border-white/10 pb-2">
               <p className="flex items-center gap-1.5 px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-wider text-white/50">
-                <Star className="h-3 w-3" /> Sevimlilar
+                <Star className="h-3 w-3" /> {tr('Sevimlilar')}
               </p>
               {favorites.map((item) => renderLink(item))}
             </div>
@@ -490,7 +496,7 @@ export default function AdminLayout() {
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-white/70 hover:bg-white/10 hover:text-white mt-4"
           >
             <LogOut className="h-4 w-4" />
-            Chiqish
+            {tr('Chiqish')}
           </button>
         </nav>
       </aside>

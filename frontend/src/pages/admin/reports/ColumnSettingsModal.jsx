@@ -4,8 +4,9 @@ import { Modal } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { COLUMNS, CUSTOM_TYPES, resolveColumns } from './journalColumns.jsx';
+import { tr } from '../../../i18n/tr.js';
 
-const ctx = { brandLabel: 'Marka' };
+const ctx = { brandLabel: tr('Marka') };
 
 const toRows = (layout) =>
   resolveColumns(layout, true).map((c) => ({
@@ -63,7 +64,7 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
 
   const save = async () => {
     if (rows.some((r) => r.custom && !r.label.trim())) {
-      showToast("Qo'shimcha ustun nomini kiriting.", 'error');
+      showToast(tr("Qo'shimcha ustun nomini kiriting."), 'error');
       return;
     }
     setSaving(true);
@@ -74,10 +75,10 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
           : { key: r.key, hidden: r.hidden }
       );
       const res = await adminTestJournal.saveLayout(columns);
-      showToast('Ustunlar saqlandi.', 'success');
+      showToast(tr('Ustunlar saqlandi.'), 'success');
       onSaved(res.columns);
     } catch (err) {
-      showToast(err?.response?.data?.error || 'Saqlashda xatolik yuz berdi.', 'error');
+      showToast(err?.response?.data?.error || tr('Saqlashda xatolik yuz berdi.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -86,10 +87,9 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
   const builtinCount = COLUMNS.length;
 
   return (
-    <Modal open={open} onClose={onClose} title="Jadval ustunlari" size="lg">
+    <Modal open={open} onClose={onClose} title={tr('Jadval ustunlari')} size="lg">
       <p className="mb-3 text-sm text-slate-500">
-        Ustunni sudrab yoki strelkalar bilan joyini o'zgartiring, belgini olib tashlab yashiring. Sozlama barcha foydalanuvchilar uchun
-        bir xil. Jadval va Excel eksporti shu tartibda bo'ladi.
+        {tr("Ustunni sudrab yoki strelkalar bilan joyini o'zgartiring, belgini olib tashlab yashiring. Sozlama barcha foydalanuvchilar uchun bir xil. Jadval va Excel eksporti shu tartibda bo'ladi.")}
       </p>
 
       <ul className="space-y-1">
@@ -114,7 +114,7 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
               checked={!r.hidden}
               onChange={(e) => patch(r.key, { hidden: !e.target.checked })}
               className="h-4 w-4 shrink-0 rounded border-border text-primary"
-              aria-label={`${r.label} ko'rinadi`}
+              aria-label={tr("{0} ko'rinadi", r.label)}
             />
             {r.custom ? (
               <>
@@ -122,13 +122,13 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
                   value={r.label}
                   onChange={(e) => patch(r.key, { label: e.target.value })}
                   className="input-field !py-1 text-sm flex-1 min-w-0"
-                  aria-label="Ustun nomi"
+                  aria-label={tr('Ustun nomi')}
                 />
                 <select
                   value={r.type}
                   onChange={(e) => patch(r.key, { type: e.target.value })}
                   className="input-field !w-auto !py-1 text-xs"
-                  aria-label="Ustun turi"
+                  aria-label={tr('Ustun turi')}
                 >
                   {Object.entries(CUSTOM_TYPES).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -142,7 +142,7 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
                 {r.label}
               </span>
             )}
-            <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} className="p-1 text-slate-400 hover:text-ink disabled:opacity-30" aria-label="Yuqoriga">
+            <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} className="p-1 text-slate-400 hover:text-ink disabled:opacity-30" aria-label={tr('Yuqoriga')}>
               <ArrowUp className="h-4 w-4" />
             </button>
             <button
@@ -150,7 +150,7 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
               onClick={() => move(i, i + 1)}
               disabled={i === rows.length - 1}
               className="p-1 text-slate-400 hover:text-ink disabled:opacity-30"
-              aria-label="Pastga"
+              aria-label={tr('Pastga')}
             >
               <ArrowDown className="h-4 w-4" />
             </button>
@@ -159,8 +159,8 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
                 type="button"
                 onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
                 className="p-1 text-red-500 hover:text-red-700"
-                aria-label="Ustunni o'chirish"
-                title="Ustunni o'chirish (yozuvlardagi qiymatlar bazada qoladi)"
+                aria-label={tr("Ustunni o'chirish")}
+                title={tr("Ustunni o'chirish (yozuvlardagi qiymatlar bazada qoladi)")}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -172,13 +172,13 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
       </ul>
 
       <div className="mt-4 rounded-lg border border-dashed border-border p-3">
-        <p className="mb-2 text-sm font-medium text-ink">Yangi ustun qo'shish</p>
+        <p className="mb-2 text-sm font-medium text-ink">{tr("Yangi ustun qo'shish")}</p>
         <div className="flex flex-wrap gap-2">
           <input
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addColumn()}
-            placeholder="Ustun nomi, masalan: Sinov boshlangan sana"
+            placeholder={tr('Ustun nomi, masalan: Sinov boshlangan sana')}
             className="input-field !py-1.5 text-sm flex-1 min-w-[200px]"
           />
           <select value={newType} onChange={(e) => setNewType(e.target.value)} className="input-field !w-auto !py-1.5 text-sm">
@@ -189,22 +189,22 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
             ))}
           </select>
           <button type="button" onClick={addColumn} disabled={!newLabel.trim()} className="btn-secondary !py-1.5">
-            <Plus className="h-4 w-4" /> Qo'shish
+            <Plus className="h-4 w-4" /> {tr("Qo'shish")}
           </button>
         </div>
-        <p className="mt-1 text-xs text-slate-400">Yangi ustun qiymati yozuv oynasidagi "Qo'shimcha ustunlar" bo'limida kiritiladi.</p>
+        <p className="mt-1 text-xs text-slate-400">{tr("Yangi ustun qiymati yozuv oynasidagi \"Qo'shimcha ustunlar\" bo'limida kiritiladi.")}</p>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
         <button type="button" onClick={reset} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-ink">
-          <RotateCcw className="h-3.5 w-3.5" /> Standart tartib ({builtinCount} ta asosiy ustun)
+          <RotateCcw className="h-3.5 w-3.5" /> {tr('Standart tartib (')}{builtinCount} {tr('ta asosiy ustun)')}
         </button>
         <div className="flex gap-3">
           <button onClick={onClose} className="btn-secondary">
-            Bekor qilish
+            {tr('Bekor qilish')}
           </button>
           <button onClick={save} disabled={saving} className="btn-primary">
-            {saving ? 'Saqlanmoqda...' : 'Saqlash'}
+            {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
           </button>
         </div>
       </div>

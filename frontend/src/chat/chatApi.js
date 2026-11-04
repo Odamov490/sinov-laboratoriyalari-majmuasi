@@ -1,4 +1,5 @@
 import apiClient from '../api/client';
+import { tr } from '../i18n/tr.js';
 
 // /api/admin/chat REST. Socket bo'lmaganda yuborish ham shu yerdan (idempotent).
 const get = (url, params) => apiClient.get(`/admin/chat${url}`, { params }).then((r) => r.data);
@@ -54,6 +55,6 @@ const chatApi = {
   deleteSticker: (id) => del(`/stickers/${id}`),
 };
 
-export const apiError = (err) => err?.response?.data?.error || err?.error || 'Xatolik yuz berdi.';
+export const apiError = (err) => err?.response?.data?.error || err?.error || tr('Xatolik yuz berdi.');
 
 export default chatApi;

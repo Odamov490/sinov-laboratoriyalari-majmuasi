@@ -8,6 +8,7 @@ import * as store from '../../../chat/chatStore';
 import RoomList from './RoomList.jsx';
 import Conversation from './Conversation.jsx';
 import { NewChatDialog, SearchDialog } from './Dialogs.jsx';
+import { tr } from '../../../i18n/tr.js';
 
 // Ichki chat: chapda xonalar, o'ngda suhbat. Mobil ekranda bittadan panel.
 export default function AdminChat() {
@@ -99,8 +100,8 @@ export default function AdminChat() {
     return (
       <div className="card flex flex-col items-center justify-center gap-3 p-12 text-center">
         <Ban className="h-10 w-10 text-slate-400" />
-        <h1 className="text-lg font-bold text-ink">Chat mavjud emas</h1>
-        <p className="max-w-md text-sm text-slate-500">Siz uchun chat o'chirilgan yoki vaqtincha yopilgan. Savollar bo'lsa, administratorga murojaat qiling.</p>
+        <h1 className="text-lg font-bold text-ink">{tr('Chat mavjud emas')}</h1>
+        <p className="max-w-md text-sm text-slate-500">{tr("Siz uchun chat o'chirilgan yoki vaqtincha yopilgan. Savollar bo'lsa, administratorga murojaat qiling.")}</p>
       </div>
     );
   }
@@ -123,7 +124,7 @@ export default function AdminChat() {
       <div className={`${active ? 'flex' : 'hidden md:flex'} relative h-full min-w-0 flex-1`}>
         {status === 'offline' && (
           <div className="absolute left-1/2 top-16 z-30 flex -translate-x-1/2 items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 shadow">
-            <WifiOff className="h-3.5 w-3.5" /> Ulanish tiklanmoqda…
+            <WifiOff className="h-3.5 w-3.5" /> {tr('Ulanish tiklanmoqda…')}
           </div>
         )}
         {active ? (
@@ -145,7 +146,7 @@ export default function AdminChat() {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-[#eef2f6] text-center text-slate-500">
             <MessageCircle className="h-12 w-12 text-primary/40" />
-            <p className="text-sm">Suhbatni tanlang yoki yangisini boshlang.</p>
+            <p className="text-sm">{tr('Suhbatni tanlang yoki yangisini boshlang.')}</p>
           </div>
         )}
       </div>
