@@ -100,14 +100,20 @@ function TaskCard({ task, onOpen, onStatus, onDragStart }) {
             <Paperclip className="h-3.5 w-3.5" /> {task.attachmentCount}
           </span>
         )}
-        <span className="ml-auto flex -space-x-1.5">
-          {task.assignees.slice(0, 4).map((a) => (
-            <span key={a.id} title={a.fullName} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-primary/15 text-[10px] font-semibold text-primary">
-              {initials(a.fullName)}
-            </span>
-          ))}
-        </span>
       </div>
+      {/* Ijrochilar: F.I.Sh. bilan (bo'lsa). */}
+      {task.assignees.length > 0 && (
+        <div className="mt-2 space-y-1">
+          {task.assignees.map((a) => (
+            <div key={a.id} className="flex items-center gap-1.5 text-xs text-slate-600" title={a.fullName}>
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/15 text-[9px] font-semibold text-primary">
+                {initials(a.fullName)}
+              </span>
+              <span className="truncate">{a.fullName}</span>
+            </div>
+          ))}
+        </div>
+      )}
       <StatusSelect task={task} onChange={onStatus} className="mt-2 w-full" />
     </div>
   );
