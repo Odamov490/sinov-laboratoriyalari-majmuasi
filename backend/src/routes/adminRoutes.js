@@ -509,6 +509,7 @@ router.get('/test-journal/:id/history', requireModule('reports'), testJournal.ge
 router.post('/test-journal', requireModule('reports'), testJournal.createRecord);
 // Excel jurnalidan tayyorlangan JSON'ni admin paneldan import qilish (faqat SUPER_ADMIN).
 router.post('/test-journal/import', requireModule('reports_admin'), testJournal.importJournal);
+router.post('/test-journal/bulk-delete', requireModule('reports'), testJournal.bulkDeleteRecords);
 router.put('/test-journal/:id', requireModule('reports'), testJournal.updateRecord);
 router.delete('/test-journal/:id', requireModule('reports'), testJournal.deleteRecord);
 

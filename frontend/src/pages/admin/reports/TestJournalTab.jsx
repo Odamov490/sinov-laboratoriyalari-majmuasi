@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon, Columns3 } from 'lucide-react';
+import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon, Columns3, Trash2 } from 'lucide-react';
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { SearchBar, Pagination } from '../../../components/UI.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
+import { Modal } from '../../../components/Modal.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
 import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journalConstants';
 import { ROW_COLORS, resolveColumns } from './journalColumns.jsx';
@@ -66,6 +67,12 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
   const [modal, setModal] = useState({ open: false, record: null, copyFrom: null });
   const [exporting, setExporting] = useState(false);
   const [savingCell, setSavingCell] = useState(null);
+  // Bir nechta qatorni belgilab o'chirish. allMatching — filtrga mos barcha
+  // sahifalardagi yozuvlar (faqat SUPER_ADMIN: canEditLayout).
+  const [selected, setSelected] = useState(() => new Set());
+  const [allMatching, setAllMatching] = useState(false);
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const sheetProduct = dictionaries.productTypes.find((p) => p.id === sheet);
   const brandLabel = sheet === SHOVQIN_SHEET ? tr('Muzlatkich markasi') : sheetProduct ? tr('{0} markasi', sheetProduct.nameUz) : tr('Marka');
@@ -98,6 +105,14 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
       .then(setData)
       .catch(() => setError(true));
   };
+
+  // Varaq, filtr yoki saralash o'zgarsa — tanlov tozalanadi (ko'rinmaydigan
+  // yozuvlar tasodifan o'chib ketmasligi uchun). Sahifa almashsa saqlanadi.
+  const selectionScope = JSON.stringify({ ...params, page: undefined, pageSize: undefined });
+  useEffect(() => {
+    setSelected(new Set());
+    setAllMatching(false);
+  }, [selectionScope]);
 
   useEffect(() => {
     setData(null);
@@ -173,6 +188,70 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
       showToast(tr('Excel eksportda xatolik yuz berdi.'), 'error');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const pageIds = data?.items?.map((r) => r.id) || [];
+  const pageAllSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
+  const pageSomeSelected = pageIds.some((id) => selected.has(id));
+  const selectedCount = allMatching ? data?.total || 0 : selected.size;
+
+  const toggleRow = (id) => {
+    setAllMatching(false);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const togglePage = () => {
+    if (allMatching) {
+      setAllMatching(false);
+      setSelected(new Set());
+      return;
+    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (pageAllSelected) pageIds.forEach((id) => next.delete(id));
+      else pageIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelected(new Set());
+    setAllMatching(false);
+  };
+
+  const bulkDelete = async () => {
+    setBulkBusy(true);
+    try {
+      let payload;
+      if (allMatching) {
+        const filtersOnly = { ...params };
+        ['page', 'pageSize', 'sortBy', 'sortDir'].forEach((k) => delete filtersOnly[k]);
+        payload = { all: true, filters: filtersOnly, expectedCount: data.total };
+      } else {
+        payload = { ids: [...selected] };
+      }
+      const { deleted } = await adminTestJournal.bulkDelete(payload);
+      showToast(tr("{0} ta yozuv o'chirildi.", deleted), 'success');
+      setConfirmBulk(false);
+      clearSelection();
+      setPage(1);
+      load();
+      onRecordsChanged?.();
+    } catch (err) {
+      showToast(err?.response?.data?.error || tr("O'chirishda xatolik."), 'error');
+      if (err?.response?.status === 409) {
+        setConfirmBulk(false);
+        clearSelection();
+        load();
+      }
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -290,6 +369,29 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
         </div>
       </div>
 
+      {/* Belgilangan qatorlar paneli */}
+      {selectedCount > 0 && data && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm">
+          <span className="font-semibold text-ink">{tr('{0} ta yozuv tanlandi', selectedCount)}</span>
+          {canEditLayout && !allMatching && pageAllSelected && data.total > selected.size && (
+            <button type="button" onClick={() => setAllMatching(true)} className="font-medium text-primary hover:underline">
+              {tr('Filtrga mos barcha {0} ta yozuvni tanlash', data.total)}
+            </button>
+          )}
+          {allMatching && <span className="text-slate-600">{tr('(filtrga mos barcha sahifalardagi yozuvlar)')}</span>}
+          <button type="button" onClick={clearSelection} className="text-slate-500 hover:text-ink">
+            {tr('Tanlovni bekor qilish')}
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmBulk(true)}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white hover:bg-red-700"
+          >
+            <Trash2 className="h-4 w-4" /> {tr("Tanlanganlarni o'chirish")}
+          </button>
+        </div>
+      )}
+
       {/* Journal table */}
       <div className="card overflow-x-auto">
         {error ? (
@@ -304,6 +406,18 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
           <table className="w-full border-collapse text-[13px] text-ink">
             <thead>
               <tr className="bg-[#dbe5f1] text-[12px] font-medium text-slate-700">
+                <th className={`${cell} w-9 text-center`}>
+                  <input
+                    type="checkbox"
+                    aria-label={tr('Sahifadagi barcha qatorlarni belgilash')}
+                    checked={pageAllSelected || allMatching}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !allMatching && pageSomeSelected && !pageAllSelected;
+                    }}
+                    onChange={togglePage}
+                    className="h-4 w-4 cursor-pointer rounded border-slate-400 text-primary"
+                  />
+                </th>
                 <th className={`${cell} w-10 text-center`}>№</th>
                 {columns.map((c) => (
                   <th key={c.key} className={`${cell} text-center leading-tight ${c.wide ? 'min-w-[180px]' : 'min-w-[90px]'}`}>
@@ -324,8 +438,19 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                 <tr
                   key={r.id}
                   onClick={() => setModal({ open: true, record: r, copyFrom: null })}
-                  className={`cursor-pointer hover:brightness-95 ${ROW_COLORS[r.result] || ''}`}
+                  className={`cursor-pointer hover:brightness-95 ${ROW_COLORS[r.result] || ''} ${
+                    allMatching || selected.has(r.id) ? 'outline outline-2 -outline-offset-2 outline-red-400' : ''
+                  }`}
                 >
+                  <td className={`${cell} text-center`} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      aria-label={tr('Qatorni belgilash')}
+                      checked={allMatching || selected.has(r.id)}
+                      onChange={() => toggleRow(r.id)}
+                      className="h-4 w-4 cursor-pointer rounded border-slate-400 text-primary"
+                    />
+                  </td>
                   <td className={`${cell} text-center tabular-nums`}>
                     <span className="inline-flex items-center gap-1">
                       {(data.page - 1) * data.pageSize + idx + 1}
@@ -352,6 +477,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
             </tbody>
             <tfoot>
               <tr className="bg-[#dbe5f1] font-semibold">
+                <td className={cell} />
                 <td className={`${cell} text-center`}>{tr('Jami')}</td>
                 {columns.map((c, i) => (
                   <td key={c.key} className={`${cell} ${c.right ? 'text-right tabular-nums whitespace-nowrap' : c.center ? 'text-center' : ''}`}>
@@ -408,6 +534,29 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
           onRecordsChanged?.();
         }}
       />
+
+      <Modal open={confirmBulk} onClose={() => !bulkBusy && setConfirmBulk(false)} title={tr("Yozuvlarni o'chirish")} size="sm">
+        <p className="text-sm text-slate-600">
+          {allMatching
+            ? tr("Joriy varaq va filtrlarga mos BARCHA {0} ta yozuv o'chiriladi (barcha sahifalardagi).", selectedCount)
+            : tr("Belgilangan {0} ta yozuv o'chiriladi.", selectedCount)}
+        </p>
+        <p className="mt-2 text-xs text-slate-500">
+          {tr("Yozuvlar jadvaldan, hisobot va Excel eksportdan olib tashlanadi; har biri tarixda «o'chirdi» deb qayd etiladi.")}
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button onClick={() => setConfirmBulk(false)} disabled={bulkBusy} className="btn-secondary">
+            {tr('Bekor qilish')}
+          </button>
+          <button
+            onClick={bulkDelete}
+            disabled={bulkBusy}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+          >
+            <Trash2 className="h-4 w-4" /> {bulkBusy ? tr("O'chirilmoqda...") : tr("{0} ta yozuvni o'chirish", selectedCount)}
+          </button>
+        </div>
+      </Modal>
 
       {canEditLayout && (
         <ColumnSettingsModal

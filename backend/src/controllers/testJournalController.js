@@ -292,6 +292,60 @@ const deleteRecord = asyncHandler(async (req, res) => {
   res.status(204).send();
 });
 
+// POST /admin/test-journal/bulk-delete — bir nechta yozuvni birdaniga o'chirish
+// (yakka o'chirish kabi yumshoq: deletedAt + tarixda DELETE).
+//   { ids: [...] }                              — belgilangan yozuvlar (ko'pi bilan 1000)
+//   { all: true, filters: {...}, expectedCount } — filtrga mos HAMMASI, faqat SUPER_ADMIN;
+//     foydalanuvchi ko'rgan son bazadagi bilan mos kelmasa — 409, hech narsa o'chmaydi.
+const BULK_MAX_IDS = 1000;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const bulkDeleteRecords = asyncHandler(async (req, res) => {
+  const body = req.body || {};
+  let where;
+  let expected = null;
+  if (body.all === true) {
+    if (req.user?.role !== 'SUPER_ADMIN') {
+      return res.status(403).json({ error: "Filtr bo'yicha hammasini o'chirish faqat Super Admin uchun." });
+    }
+    const filters = body.filters && typeof body.filters === 'object' && !Array.isArray(body.filters) ? body.filters : {};
+    where = buildWhere(filters, canSeeFinance(req));
+    expected = Number(body.expectedCount);
+    if (!Number.isInteger(expected) || expected < 1) {
+      return res.status(400).json({ error: "O'chiriladigan yozuvlar soni ko'rsatilmagan." });
+    }
+  } else {
+    const ids = Array.isArray(body.ids) ? [...new Set(body.ids.filter((id) => typeof id === 'string' && UUID_RE.test(id)))] : [];
+    if (!ids.length) return res.status(400).json({ error: 'Hech qanday yozuv tanlanmagan.' });
+    if (ids.length > BULK_MAX_IDS) {
+      return res.status(400).json({ error: `Bir martada ko'pi bilan ${BULK_MAX_IDS} ta yozuv o'chirish mumkin.` });
+    }
+    where = { id: { in: ids }, deletedAt: null };
+  }
+
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const victims = await tx.testJournalRecord.findMany({ where, select: { id: true } });
+      if (expected !== null && victims.length !== expected) return { conflict: victims.length };
+      const ids = victims.map((v) => v.id);
+      if (!ids.length) return { deleted: 0 };
+      const { count } = await tx.testJournalRecord.updateMany({
+        where: { id: { in: ids }, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+      await tx.testJournalChange.createMany({
+        data: ids.map((recordId) => ({ recordId, userId: req.user?.sub || null, action: 'DELETE' })),
+      });
+      return { deleted: count };
+    },
+    { timeout: 60000 }
+  );
+  if (result.conflict !== undefined) {
+    return res.status(409).json({ error: "Yozuvlar soni o'zgargan. Ro'yxatni yangilab, qayta urinib ko'ring." });
+  }
+  res.json({ deleted: result.deleted });
+});
+
 // GET /admin/test-journal/:id/history — newest first, with who made each change.
 const getHistory = asyncHandler(async (req, res) => {
   const finance = canSeeFinance(req);
@@ -462,6 +516,7 @@ module.exports = {
   createRecord,
   updateRecord,
   deleteRecord,
+  bulkDeleteRecords,
   getSummary,
   getHistory,
   getSuggestions,

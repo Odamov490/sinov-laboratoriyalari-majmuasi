@@ -91,7 +91,9 @@ export default function TestJournalHistory({ recordId, dictionaries }) {
               <span className="font-medium text-ink">{e.userName || tr("Noma'lum foydalanuvchi")}</span> {ACTION_LABELS[e.action]}
               {e.changes && (
                 <ul className="mt-0.5 pl-4 list-disc">
-                  {Object.entries(e.changes).map(([field, { from, to }]) => (
+                  {Object.entries(e.changes)
+                    .filter(([, v]) => v && typeof v === 'object')
+                    .map(([field, { from, to }]) => (
                     <li key={field}>
                       {fieldLabel(field)}: {formatValue(field, from, dictionaries)} →{' '}
                       <span className="text-ink">{formatValue(field, to, dictionaries)}</span>

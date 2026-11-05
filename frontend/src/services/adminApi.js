@@ -44,6 +44,7 @@ export const adminTestJournal = {
   history: (id) => apiClient.get(`/admin/test-journal/${id}/history`).then((r) => r.data),
   suggestions: () => apiClient.get('/admin/test-journal/suggestions').then((r) => r.data),
   layout: () => apiClient.get('/admin/test-journal/layout').then((r) => r.data),
+  bulkDelete: (payload) => apiClient.post('/admin/test-journal/bulk-delete', payload).then((r) => r.data),
   saveLayout: (columns) => apiClient.put('/admin/test-journal/layout', { columns }).then((r) => r.data),
   importJournal: (data, { dryRun } = {}) =>
     apiClient.post('/admin/test-journal/import', data, { params: dryRun ? { dryRun: 1 } : {} }).then((r) => r.data),
