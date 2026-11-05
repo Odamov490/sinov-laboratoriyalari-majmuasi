@@ -1,6 +1,6 @@
 import React from 'react';
 import { RESULT_LABELS, resultOptions, directionShort, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
-import { tr } from '../../../i18n/tr.js';
+import { tr, currentLang } from '../../../i18n/tr.js';
 
 // Columns of the journal table, in the paper/Excel journal's order. The same
 // list drives the on-screen table and the Excel export, so a new column is
@@ -136,6 +136,18 @@ const customText = (type, value) => {
   return type === 'date' ? formatDate(value) : value;
 };
 
+// SUPER_ADMIN bergan ustun nomi joriy interfeys tilida (labels[til]).
+// Asosiy ustun: shu tilda nom berilmagan bo'lsa — null (lug'atdagi tarjima
+// ishlaydi); eski (tilsiz) `label` o'zbekcha nom hisoblanadi.
+// Qo'shimcha ustun: shu tilda bo'lmasa — o'zbekcha / asosiy nomi.
+export function layoutLabel(entry, lang = currentLang()) {
+  const own = entry?.labels?.[lang];
+  if (own) return own;
+  if (entry?.custom) return entry.labels?.uz || entry.label || entry.key;
+  if (lang === 'uz') return entry?.label || null;
+  return null;
+}
+
 // Column definition for a SUPER_ADMIN-defined extra column; its values live
 // in record.customFields[key].
 export function customColumn(entry) {
@@ -143,7 +155,7 @@ export function customColumn(entry) {
     key: entry.key,
     custom: true,
     type: entry.type || 'text',
-    label: () => entry.label,
+    label: () => layoutLabel(entry),
     text: (r) => customText(entry.type, r.customFields?.[entry.key]),
     center: entry.type === 'date',
     right: entry.type === 'number',
@@ -164,8 +176,9 @@ export function resolveColumns(layout, showFinance = true) {
     seen.add(e.key);
     // O'chirilgan asosiy ustun ro'yxatda qoladi (qayta qo'shilib ketmasligi uchun), lekin ko'rsatilmaydi.
     if (e.removed) return;
-    // Asosiy ustunga SUPER_ADMIN bergan nom.
-    const label = !e.custom && e.label ? () => e.label : col.label;
+    // Asosiy ustunga SUPER_ADMIN bergan nom (joriy til uchun).
+    const own = e.custom ? null : layoutLabel(e);
+    const label = own ? () => own : col.label;
     out.push({ ...col, label, hidden: Boolean(e.hidden) });
   });
   COLUMNS.forEach((c) => {

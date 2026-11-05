@@ -3,8 +3,8 @@ import { ArrowUp, ArrowDown, GripVertical, Trash2, Plus, Undo2 } from 'lucide-re
 import { Modal } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
-import { COLUMNS, CUSTOM_TYPES, resolveColumns } from './journalColumns.jsx';
-import { tr } from '../../../i18n/tr.js';
+import { COLUMNS, CUSTOM_TYPES, resolveColumns, layoutLabel } from './journalColumns.jsx';
+import { tr, currentLang, ADMIN_LANGS } from '../../../i18n/tr.js';
 
 const ctx = { brandLabel: tr('Marka') };
 
@@ -24,11 +24,20 @@ const toRows = (layout) =>
 const toRemoved = (layout) =>
   (layout || [])
     .filter((e) => e.removed && !e.custom && BUILTIN.has(e.key))
-    .map((e) => ({
-      key: e.key,
-      label: e.label || defaultLabel(e.key),
-      renamed: e.label || null,
-    }));
+    .map((e) => ({ key: e.key, label: layoutLabel(e) || defaultLabel(e.key) }));
+
+// Saqlangan til nomlari + shu tilda tahrirlangan nom. Eski tilsiz `label`
+// (asosiy ustunda) o'zbekcha nomga ko'chiriladi. Asosiy ustun nomi standart
+// (lug'atdagi) bilan bir xil bo'lsa — shu til uchun saqlanmaydi.
+function mergeLabels(orig, lang, text, isDefault) {
+  const labels = { ...(orig?.labels || {}) };
+  if (orig && !orig.custom && orig.label && !labels.uz) labels.uz = orig.label;
+  if (text !== undefined) {
+    if (isDefault) delete labels[lang];
+    else labels[lang] = text;
+  }
+  return Object.keys(labels).length ? labels : undefined;
+}
 
 const newKey = () => `c_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
@@ -42,6 +51,8 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
   const [newType, setNewType] = useState('text');
   const [dragIndex, setDragIndex] = useState(null);
   const [saving, setSaving] = useState(false);
+  const lang = currentLang();
+  const langLabel = ADMIN_LANGS.find((l) => l.code === lang)?.label || lang;
 
   useEffect(() => {
     if (open) {
@@ -81,7 +92,6 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
         {
           key: row.key,
           label: row.label,
-          renamed: row.label.trim() !== defaultLabel(row.key) ? row.label.trim() : null,
         },
       ]);
   };
@@ -98,21 +108,21 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
     }
     setSaving(true);
     try {
+      // Nom faqat joriy interfeys tili uchun yoziladi; boshqa tillardagi nomlar saqlanib qoladi.
+      const orig = new Map((layout || []).map((e) => [e.key, e]));
+      const withLabels = (entry, labels) => (labels ? { ...entry, labels } : entry);
       const columns = [
         ...rows.map((r) => {
-          if (r.custom)
-            return {
-              key: r.key,
-              hidden: r.hidden,
-              custom: true,
-              label: r.label.trim(),
-              type: r.type,
-            };
-          const label = r.label.trim();
-          // Nom standartdan farq qilsagina saqlanadi (aks holda tarjima ishlayveradi).
-          return label !== defaultLabel(r.key) ? { key: r.key, hidden: r.hidden, label } : { key: r.key, hidden: r.hidden };
+          const text = r.label.trim();
+          const prev = orig.get(r.key);
+          if (r.custom) {
+            const labels = mergeLabels(prev, lang, text, false);
+            const base = lang === 'uz' || !prev?.label ? text : prev.label;
+            return withLabels({ key: r.key, hidden: r.hidden, custom: true, label: base, type: r.type }, labels);
+          }
+          return withLabels({ key: r.key, hidden: r.hidden }, mergeLabels(prev, lang, text, text === defaultLabel(r.key)));
         }),
-        ...removed.map((x) => (x.renamed ? { key: x.key, removed: true, label: x.renamed } : { key: x.key, removed: true })),
+        ...removed.map((x) => withLabels({ key: x.key, removed: true }, mergeLabels(orig.get(x.key), lang))),
       ];
       const res = await adminTestJournal.saveLayout(columns);
       showToast(tr('Ustunlar saqlandi.'), 'success');
@@ -129,6 +139,12 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
       <p className="mb-3 text-sm text-slate-500">
         {tr(
           "Ustunni sudrab yoki strelkalar bilan joyini o'zgartiring, belgini olib tashlab yashiring, nomini to'g'ridan-to'g'ri tahrirlang yoki keraksizini o'chiring. Sozlama barcha foydalanuvchilar uchun bir xil. Jadval va Excel eksporti shu tartibda bo'ladi.",
+        )}
+      </p>
+      <p className="mb-3 rounded-lg bg-sky-50 px-3 py-2 text-xs text-sky-800">
+        {tr(
+          "Nomlar hozirgi interfeys tili uchun saqlanadi: {0}. Boshqa tildagi nomni kiritish uchun yuqoridagi til tanlagichdan tilni almashtiring va shu oynada qayta nomlang. Nomi berilmagan tilda asosiy ustunlar standart tarjimasi bilan ko'rinadi.",
+          langLabel
         )}
       </p>
 

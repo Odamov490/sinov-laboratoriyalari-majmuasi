@@ -812,6 +812,7 @@
   "Nomi majburiy.": "Название обязательно.",
   "Nomi, standart yoki pozitsiya kodi bo'yicha qidiring...": "Поиск по названию, стандарту или коду позиции...",
   "Nomini o'zgartirish": "Переименовать",
+  "Nomlar hozirgi interfeys tili uchun saqlanadi: {0}. Boshqa tildagi nomni kiritish uchun yuqoridagi til tanlagichdan tilni almashtiring va shu oynada qayta nomlang. Nomi berilmagan tilda asosiy ustunlar standart tarjimasi bilan ko'rinadi.": "Названия сохраняются для текущего языка интерфейса: {0}. Чтобы задать название на другом языке, переключите язык в переключателе вверху и переименуйте столбец в этом окне. Для языка без своего названия основные столбцы показываются со стандартным переводом.",
   "Nomuvofiq": "Не соответствует",
   "Nomuvofiq namunalar": "Несоответствующие образцы",
   "Nomuvofiq namunalar soni": "Количество несоответствующих образцов",

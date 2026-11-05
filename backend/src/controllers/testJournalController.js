@@ -475,6 +475,15 @@ const layoutSchema = z
       label: z.string().trim().max(120).optional(),
       type: z.enum(['text', 'number', 'date']).optional(),
       removed: z.boolean().optional(),
+      // Har bir interfeys tili uchun alohida nom (SUPER_ADMIN shu tilda tahrirlaydi).
+      labels: z
+        .object({
+          uz: z.string().trim().max(120).optional(),
+          ru: z.string().trim().max(120).optional(),
+          en: z.string().trim().max(120).optional(),
+        })
+        .strict()
+        .optional(),
     })
   )
   .max(200)
