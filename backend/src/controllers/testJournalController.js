@@ -462,7 +462,8 @@ const getSummary = asyncHandler(async (req, res) => {
 });
 
 // Journal table layout — one shared row. columns = [{ key, hidden?, custom?,
-// label?, type? }]; null until a SUPER_ADMIN first saves it (the frontend
+// label?, type?, removed? }]: label on a built-in column renames it; removed
+// drops it from the table/export (kept in the list so it doesn't come back); null until a SUPER_ADMIN first saves it (the frontend
 // then shows its built-in default order).
 const LAYOUT_ID = 'default';
 const layoutSchema = z
@@ -473,6 +474,7 @@ const layoutSchema = z
       custom: z.boolean().optional(),
       label: z.string().trim().max(120).optional(),
       type: z.enum(['text', 'number', 'date']).optional(),
+      removed: z.boolean().optional(),
     })
   )
   .max(200)

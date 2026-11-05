@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowUp, ArrowDown, GripVertical, Trash2, Plus, RotateCcw } from 'lucide-react';
+import { ArrowUp, ArrowDown, GripVertical, Trash2, Plus, Undo2 } from 'lucide-react';
 import { Modal } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
@@ -7,6 +7,9 @@ import { COLUMNS, CUSTOM_TYPES, resolveColumns } from './journalColumns.jsx';
 import { tr } from '../../../i18n/tr.js';
 
 const ctx = { brandLabel: tr('Marka') };
+
+const BUILTIN = new Map(COLUMNS.map((c) => [c.key, c]));
+const defaultLabel = (key) => BUILTIN.get(key)?.label(ctx) || key;
 
 const toRows = (layout) =>
   resolveColumns(layout, true).map((c) => ({
@@ -17,6 +20,16 @@ const toRows = (layout) =>
     type: c.type,
   }));
 
+// Saqlangan sozlamadagi o'chirilgan asosiy ustunlar (qaytarish uchun).
+const toRemoved = (layout) =>
+  (layout || [])
+    .filter((e) => e.removed && !e.custom && BUILTIN.has(e.key))
+    .map((e) => ({
+      key: e.key,
+      label: e.label || defaultLabel(e.key),
+      renamed: e.label || null,
+    }));
+
 const newKey = () => `c_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 
 // SUPER_ADMIN-only editor of the shared journal layout: drag (or arrows) to
@@ -24,6 +37,7 @@ const newKey = () => `c_${Date.now().toString(36)}${Math.random().toString(36).s
 export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) {
   const { showToast } = useToast();
   const [rows, setRows] = useState([]);
+  const [removed, setRemoved] = useState([]);
   const [newLabel, setNewLabel] = useState('');
   const [newType, setNewType] = useState('text');
   const [dragIndex, setDragIndex] = useState(null);
@@ -32,6 +46,7 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
   useEffect(() => {
     if (open) {
       setRows(toRows(layout));
+      setRemoved(toRemoved(layout));
       setNewLabel('');
       setNewType('text');
     }
@@ -56,24 +71,49 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
     setNewLabel('');
   };
 
-  // Built-in columns back to the code order, all visible; extra columns kept at the end.
-  const reset = () => {
-    const custom = rows.filter((r) => r.custom);
-    setRows([...toRows(null), ...custom.map((r) => ({ ...r, hidden: false }))]);
+  // Asosiy ustun o'chirilsa — pastdagi ro'yxatdan qaytarish mumkin; qo'shimcha
+  // ustun butunlay olib tashlanadi (yozuvlardagi qiymatlari bazada qoladi).
+  const removeRow = (row) => {
+    setRows((rs) => rs.filter((x) => x.key !== row.key));
+    if (!row.custom)
+      setRemoved((rm) => [
+        ...rm,
+        {
+          key: row.key,
+          label: row.label,
+          renamed: row.label.trim() !== defaultLabel(row.key) ? row.label.trim() : null,
+        },
+      ]);
+  };
+
+  const restoreRow = (item) => {
+    setRemoved((rm) => rm.filter((x) => x.key !== item.key));
+    setRows((rs) => [...rs, { key: item.key, label: item.label, hidden: false, custom: false }]);
   };
 
   const save = async () => {
-    if (rows.some((r) => r.custom && !r.label.trim())) {
-      showToast(tr("Qo'shimcha ustun nomini kiriting."), 'error');
+    if (rows.some((r) => !r.label.trim())) {
+      showToast(tr('Ustun nomini kiriting.'), 'error');
       return;
     }
     setSaving(true);
     try {
-      const columns = rows.map((r) =>
-        r.custom
-          ? { key: r.key, hidden: r.hidden, custom: true, label: r.label.trim(), type: r.type }
-          : { key: r.key, hidden: r.hidden }
-      );
+      const columns = [
+        ...rows.map((r) => {
+          if (r.custom)
+            return {
+              key: r.key,
+              hidden: r.hidden,
+              custom: true,
+              label: r.label.trim(),
+              type: r.type,
+            };
+          const label = r.label.trim();
+          // Nom standartdan farq qilsagina saqlanadi (aks holda tarjima ishlayveradi).
+          return label !== defaultLabel(r.key) ? { key: r.key, hidden: r.hidden, label } : { key: r.key, hidden: r.hidden };
+        }),
+        ...removed.map((x) => (x.renamed ? { key: x.key, removed: true, label: x.renamed } : { key: x.key, removed: true })),
+      ];
       const res = await adminTestJournal.saveLayout(columns);
       showToast(tr('Ustunlar saqlandi.'), 'success');
       onSaved(res.columns);
@@ -84,12 +124,12 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
     }
   };
 
-  const builtinCount = COLUMNS.length;
-
   return (
     <Modal open={open} onClose={onClose} title={tr('Jadval ustunlari')} size="lg">
       <p className="mb-3 text-sm text-slate-500">
-        {tr("Ustunni sudrab yoki strelkalar bilan joyini o'zgartiring, belgini olib tashlab yashiring. Sozlama barcha foydalanuvchilar uchun bir xil. Jadval va Excel eksporti shu tartibda bo'ladi.")}
+        {tr(
+          "Ustunni sudrab yoki strelkalar bilan joyini o'zgartiring, belgini olib tashlab yashiring, nomini to'g'ridan-to'g'ri tahrirlang yoki keraksizini o'chiring. Sozlama barcha foydalanuvchilar uchun bir xil. Jadval va Excel eksporti shu tartibda bo'ladi.",
+        )}
       </p>
 
       <ul className="space-y-1">
@@ -116,33 +156,34 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
               className="h-4 w-4 shrink-0 rounded border-border text-primary"
               aria-label={tr("{0} ko'rinadi", r.label)}
             />
-            {r.custom ? (
-              <>
-                <input
-                  value={r.label}
-                  onChange={(e) => patch(r.key, { label: e.target.value })}
-                  className="input-field !py-1 text-sm flex-1 min-w-0"
-                  aria-label={tr('Ustun nomi')}
-                />
-                <select
-                  value={r.type}
-                  onChange={(e) => patch(r.key, { type: e.target.value })}
-                  className="input-field !w-auto !py-1 text-xs"
-                  aria-label={tr('Ustun turi')}
-                >
-                  {Object.entries(CUSTOM_TYPES).map(([value, label]) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </>
-            ) : (
-              <span className="flex-1 min-w-0 truncate text-ink" title={r.label}>
-                {r.label}
-              </span>
+            <input
+              value={r.label}
+              onChange={(e) => patch(r.key, { label: e.target.value })}
+              className="input-field !py-1 text-sm flex-1 min-w-0"
+              aria-label={tr('Ustun nomi')}
+              title={!r.custom && r.label.trim() !== defaultLabel(r.key) ? tr('Asl nomi: {0}', defaultLabel(r.key)) : undefined}
+            />
+            {r.custom && (
+              <select
+                value={r.type}
+                onChange={(e) => patch(r.key, { type: e.target.value })}
+                className="input-field !w-auto !py-1 text-xs"
+                aria-label={tr('Ustun turi')}
+              >
+                {Object.entries(CUSTOM_TYPES).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
             )}
-            <button type="button" onClick={() => move(i, i - 1)} disabled={i === 0} className="p-1 text-slate-400 hover:text-ink disabled:opacity-30" aria-label={tr('Yuqoriga')}>
+            <button
+              type="button"
+              onClick={() => move(i, i - 1)}
+              disabled={i === 0}
+              className="p-1 text-slate-400 hover:text-ink disabled:opacity-30"
+              aria-label={tr('Yuqoriga')}
+            >
               <ArrowUp className="h-4 w-4" />
             </button>
             <button
@@ -154,22 +195,41 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
             >
               <ArrowDown className="h-4 w-4" />
             </button>
-            {r.custom ? (
-              <button
-                type="button"
-                onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-                className="p-1 text-red-500 hover:text-red-700"
-                aria-label={tr("Ustunni o'chirish")}
-                title={tr("Ustunni o'chirish (yozuvlardagi qiymatlar bazada qoladi)")}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            ) : (
-              <span className="w-6" />
-            )}
+            <button
+              type="button"
+              onClick={() => removeRow(r)}
+              className="p-1 text-red-500 hover:text-red-700"
+              aria-label={tr("Ustunni o'chirish")}
+              title={tr("Ustunni o'chirish (yozuvlardagi qiymatlar bazada qoladi)")}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </li>
         ))}
       </ul>
+
+      {removed.length > 0 && (
+        <div className="mt-4 rounded-lg bg-bg-light p-3">
+          <p className="mb-2 text-sm font-medium text-ink">{tr("O'chirilgan ustunlar ({0})", removed.length)}</p>
+          <ul className="flex flex-wrap gap-2">
+            {removed.map((x) => (
+              <li
+                key={x.key}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1 text-xs text-slate-600"
+              >
+                {x.label}
+                <button
+                  type="button"
+                  onClick={() => restoreRow(x)}
+                  className="inline-flex items-center gap-0.5 font-medium text-primary hover:underline"
+                >
+                  <Undo2 className="h-3 w-3" /> {tr('Qaytarish')}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-4 rounded-lg border border-dashed border-border p-3">
         <p className="mb-2 text-sm font-medium text-ink">{tr("Yangi ustun qo'shish")}</p>
@@ -192,13 +252,10 @@ export default function ColumnSettingsModal({ open, layout, onClose, onSaved }) 
             <Plus className="h-4 w-4" /> {tr("Qo'shish")}
           </button>
         </div>
-        <p className="mt-1 text-xs text-slate-400">{tr("Yangi ustun qiymati yozuv oynasidagi \"Qo'shimcha ustunlar\" bo'limida kiritiladi.")}</p>
+        <p className="mt-1 text-xs text-slate-400">{tr('Yangi ustun qiymati yozuv oynasidagi "Qo\'shimcha ustunlar" bo\'limida kiritiladi.')}</p>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onClick={reset} className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-ink">
-          <RotateCcw className="h-3.5 w-3.5" /> {tr('Standart tartib (')}{builtinCount} {tr('ta asosiy ustun)')}
-        </button>
+      <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
         <div className="flex gap-3">
           <button onClick={onClose} className="btn-secondary">
             {tr('Bekor qilish')}

@@ -162,7 +162,11 @@ export function resolveColumns(layout, showFinance = true) {
     const col = e.custom ? customColumn(e) : builtin.get(e.key);
     if (!col || seen.has(e.key)) return;
     seen.add(e.key);
-    out.push({ ...col, hidden: Boolean(e.hidden) });
+    // O'chirilgan asosiy ustun ro'yxatda qoladi (qayta qo'shilib ketmasligi uchun), lekin ko'rsatilmaydi.
+    if (e.removed) return;
+    // Asosiy ustunga SUPER_ADMIN bergan nom.
+    const label = !e.custom && e.label ? () => e.label : col.label;
+    out.push({ ...col, label, hidden: Boolean(e.hidden) });
   });
   COLUMNS.forEach((c) => {
     if (!seen.has(c.key)) out.push({ ...c, hidden: false });
