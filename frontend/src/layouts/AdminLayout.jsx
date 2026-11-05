@@ -56,8 +56,6 @@ import {
   ListChecks,
   UserCircle,
   MessageCircle,
-  Smile,
-  SlidersHorizontal,
   Star,
 } from 'lucide-react';
 import { setNotifyPrefs } from '../utils/notifyPrefs';
@@ -180,8 +178,6 @@ const MENU_GROUPS = [
     items: [
       { to: '/admin/foydalanuvchilar', label: tr('Foydalanuvchilar'), icon: Users, roles: ['SUPER_ADMIN'] },
       { to: '/admin/sozlamalar', label: tr('Sozlamalar'), icon: Settings, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/chat-sozlamalari', label: tr('Chat sozlamalari'), icon: SlidersHorizontal, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/stikerlar', label: tr('Stikerlar'), icon: Smile, roles: ['SUPER_ADMIN'] },
     ],
   },
   {

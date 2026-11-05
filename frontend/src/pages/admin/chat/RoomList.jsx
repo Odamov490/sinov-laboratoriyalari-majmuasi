@@ -36,10 +36,10 @@ function PrefsMenu({ me, onClose }) {
         {me.role === 'SUPER_ADMIN' && (
           <>
             <div className="my-1 border-t border-border" />
-            <Link to="/admin/stikerlar" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
+            <Link to="/admin/sozlamalar?tab=stikerlar" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
               <Smile className="h-4 w-4" /> {tr('Stikerlar')}
             </Link>
-            <Link to="/admin/chat-sozlamalari" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
+            <Link to="/admin/sozlamalar?tab=chat" className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-bg-light">
               <Settings className="h-4 w-4" /> {tr('Chat sozlamalari')}
             </Link>
           </>

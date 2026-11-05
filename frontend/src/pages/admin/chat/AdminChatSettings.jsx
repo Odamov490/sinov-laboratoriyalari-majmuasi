@@ -24,7 +24,7 @@ const FIELDS = [
 ];
 const KIND = { IMAGE: tr('Rasmlar'), VIDEO: tr('Videolar'), AUDIO: tr('Ovoz/audio'), FILE: tr('Fayllar') };
 
-export default function AdminChatSettings() {
+export default function AdminChatSettings({ embedded = false }) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [form, setForm] = useState(null);
@@ -79,7 +79,7 @@ export default function AdminChatSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-ink">{tr('Chat sozlamalari')}</h1>
+        {!embedded && <h1 className="text-2xl font-bold text-ink">{tr('Chat sozlamalari')}</h1>}
         <p className="text-sm text-slate-500">{tr("Cheklovlar, disk hajmi va foydalanuvchilar uchun chatni yoqish/o'chirish.")}</p>
       </div>
 

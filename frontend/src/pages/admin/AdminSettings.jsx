@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ImagePlus, Trash2 } from 'lucide-react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { ArrowDown, ArrowUp, ImagePlus, Settings, SlidersHorizontal, Smile, Trash2 } from 'lucide-react';
 import { getSettings } from '../../services/publicApi';
 import { updateSettings, uploadFiles } from '../../services/adminApi';
 import { Loading } from '../../components/StateViews.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import { tr } from '../../i18n/tr.js';
 import {
   DEFAULT_HERO_INTERVAL,
@@ -23,7 +25,56 @@ const FIELDS = [
   { key: 'instagram', label: tr('Instagram havolasi') },
 ];
 
+const AdminChatSettings = lazy(() => import('./chat/AdminChatSettings.jsx'));
+const AdminStickers = lazy(() => import('./chat/AdminStickers.jsx'));
+
+// Yorliq havolada: ?tab=umumiy|chat|stikerlar
+// (eski /admin/chat-sozlamalari va /admin/stikerlar shu yerga yo'naltiriladi).
+const TABS = [
+  { key: 'umumiy', label: tr('Umumiy'), icon: Settings },
+  { key: 'chat', label: tr('Chat sozlamalari'), icon: SlidersHorizontal, superOnly: true },
+  { key: 'stikerlar', label: tr('Stikerlar'), icon: Smile, superOnly: true },
+];
+
 export default function AdminSettings() {
+  const { user } = useAuth();
+  const [params, setParams] = useSearchParams();
+  // Chat sozlamalari va stikerlar — faqat SUPER_ADMIN uchun.
+  const tabs = TABS.filter((t) => !t.superOnly || user?.role === 'SUPER_ADMIN');
+  const tab = tabs.some((t) => t.key === params.get('tab')) ? params.get('tab') : 'umumiy';
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-5">
+      <h1 className="text-2xl font-bold text-ink">{tr('Sozlamalar')}</h1>
+
+      <div className="-mx-1 overflow-x-auto border-b border-border" role="tablist">
+        <div className="flex min-w-max gap-1 px-1">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              role="tab"
+              aria-selected={tab === t.key}
+              onClick={() => setParams({ tab: t.key })}
+              className={`inline-flex items-center gap-2 whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+                tab === t.key ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-ink'
+              }`}
+            >
+              <t.icon className="h-4 w-4" /> {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {tab === 'umumiy' && <GeneralSettings />}
+      <Suspense fallback={<Loading />}>
+        {tab === 'chat' && <AdminChatSettings embedded />}
+        {tab === 'stikerlar' && <AdminStickers embedded />}
+      </Suspense>
+    </div>
+  );
+}
+
+function GeneralSettings() {
   const { showToast } = useToast();
   const [values, setValues] = useState(null);
   const [slides, setSlides] = useState([]);
@@ -106,7 +157,6 @@ export default function AdminSettings() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-ink mb-6">{tr('Sozlamalar')}</h1>
       <div className="card p-6 space-y-4">
         {FIELDS.map((f) => (
           <div key={f.key}>

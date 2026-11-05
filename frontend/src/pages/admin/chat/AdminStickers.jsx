@@ -128,7 +128,7 @@ function PackCard({ pack, onChanged, toast }) {
   );
 }
 
-export default function AdminStickers() {
+export default function AdminStickers({ embedded = false }) {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [packs, setPacks] = useState(null);
@@ -153,7 +153,7 @@ export default function AdminStickers() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink">{tr('Stikerlar')}</h1>
+          {!embedded && <h1 className="text-2xl font-bold text-ink">{tr('Stikerlar')}</h1>}
           <p className="text-sm text-slate-500">{tr("Chatdagi stiker to'plamlari. Yashirin to'plam foydalanuvchilarga ko'rinmaydi.")}</p>
         </div>
         <form
