@@ -529,6 +529,56 @@ function mountDictionary(path, modelName, opts) {
 mountDictionary('test-product-types', 'testProductType', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
 mountDictionary('test-locations', 'testLocation', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
 mountDictionary('certification-bodies', 'certificationBody', { searchFields: ['name'], orderBy: { name: 'asc' } });
+// Sinov yo'nalishlari (BZ, EMM, EE, Shovqin, ...). Yozuvlar kod bo'yicha
+// bog'langan: kod faqat yaratishda beriladi va keyin o'zgarmaydi; yozuvlarda
+// ishlatilgan yo'nalish o'chirilmaydi (nofaol qilinadi).
+const DIRECTION_CODE_RE = /^[A-Z0-9_]{1,40}$/;
+router.delete(
+  '/test-direction-types/:id',
+  requireModule('reports_admin'),
+  asyncHandler(async (req, res, next) => {
+    const type = await prisma.testDirectionType.findUnique({ where: { id: req.params.id }, select: { code: true } });
+    if (!type) return next();
+    const [records, prices] = await Promise.all([
+      prisma.testJournalRecord.count({ where: { directions: { has: type.code } } }),
+      prisma.testJournalPrice.count({ where: { direction: type.code } }),
+    ]);
+    if (type.code === 'SHOVQIN' || records || prices) {
+      return res.status(409).json({ error: "Bu yo'nalish jurnalda ishlatilgan — o'chirib bo'lmaydi. Uni nofaol qiling." });
+    }
+    next();
+  })
+);
+mountDictionary('test-direction-types', 'testDirectionType', {
+  searchFields: ['code', 'short', 'nameUz'],
+  orderBy: [{ order: 'asc' }, { short: 'asc' }],
+  buildData: (body, { isUpdate }) => {
+    const data = {};
+    if (!isUpdate) {
+      const code = String(body.code || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
+      if (!DIRECTION_CODE_RE.test(code)) {
+        const err = new Error("Kod faqat lotin harflari, raqam va _ dan iborat bo'lishi kerak (masalan ISSIQLIK).");
+        err.status = 400;
+        throw err;
+      }
+      data.code = code;
+    }
+    ['short', 'nameUz'].forEach((f) => {
+      if (f in body || !isUpdate) {
+        const v = String(body[f] ?? '').trim();
+        if (!v) {
+          const err = new Error(f === 'short' ? "Qisqa nomi majburiy." : 'Nomi majburiy.');
+          err.status = 400;
+          throw err;
+        }
+        data[f] = v.slice(0, 120);
+      }
+    });
+    if ('order' in body) data.order = Number.parseInt(body.order, 10) || 0;
+    if ('isActive' in body) data.isActive = Boolean(body.isActive);
+    return data;
+  },
+});
 // Bir namuna narxi (summani avtomatik hisoblash uchun). Formadan kelgan bo'sh
 // qiymatlar Prisma turlariga keltiriladi.
 mountDictionary('test-journal-prices', 'testJournalPrice', {

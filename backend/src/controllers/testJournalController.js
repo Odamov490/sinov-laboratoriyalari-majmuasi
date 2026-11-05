@@ -12,7 +12,8 @@ const { validate, summarize, checkSummary, importToDb } = require('../services/t
 // o'chirish TestJournalChange'ga yoziladi (kim, qachon, nima).
 
 const RESULTS = ['MOS', 'MOS_EMAS', 'QISMAN_MOS_EMAS', 'NAMUNA_TAQDIM_ETILMADI', 'BEKOR_QILINDI', 'KUTILMOQDA', 'KORIB_CHIQISH'];
-const DIRECTIONS = ['XAVFSIZLIK', 'EMC', 'ENERGIYA', 'SHOVQIN'];
+// Yo'nalishlar spravochnikdan (TestDirectionType) — kod formati shu.
+const DIRECTION_CODE_RE = /^[A-Z0-9_]{1,40}$/;
 const PAYMENTS = ['TOLANGAN', 'TOLANMAGAN'];
 const FINANCE_FIELDS = ['amount', 'contractNo', 'contractDate', 'paymentStatus'];
 // Asl Excel matnlari ichidagi moliyaviy qismlar (raw.contract va h.k.).
@@ -87,10 +88,10 @@ function buildWhere(query, finance) {
   if (query.certificationBodyId) where.certificationBodyId = String(query.certificationBodyId);
   if (query.locationId) where.locationId = String(query.locationId);
   if (query.result && RESULTS.includes(query.result)) where.result = query.result;
-  if (query.direction && DIRECTIONS.includes(query.direction)) where.directions = { has: query.direction };
+  if (typeof query.direction === 'string' && DIRECTION_CODE_RE.test(query.direction)) where.directions = { has: query.direction };
   // Journal "sheets": e.g. the Muzlatkich sheet excludes its noise-test rows,
   // which live on the separate Shovqin sheet.
-  if (query.excludeDirection && DIRECTIONS.includes(query.excludeDirection)) {
+  if (typeof query.excludeDirection === 'string' && DIRECTION_CODE_RE.test(query.excludeDirection)) {
     and.push({ NOT: { directions: { has: query.excludeDirection } } });
   }
   if (query.needsReview === '1' || query.needsReview === 'true') where.needsReview = true;
@@ -182,7 +183,7 @@ const recordSchema = z.object({
   cancelledSampleCount: z.number().int().min(0).optional(),
   weightNote: optText,
   protocolDate: optDate,
-  directions: z.array(z.enum(DIRECTIONS)).optional(),
+  directions: z.array(z.string().regex(DIRECTION_CODE_RE)).max(30).optional(),
   result: z.enum(RESULTS),
   nonconformingCount: optInt,
   cancelledBy: z.enum(['ARIZACHI', 'ORGAN']).nullable().optional(),
@@ -216,6 +217,22 @@ function toData(body, finance, { partial }) {
     data.customFields = Object.keys(kept).length ? kept : Prisma.DbNull;
   }
   return data;
+}
+
+// Yozuvdagi yo'nalish kodlari spravochnikda bo'lishi kerak (nofaol bo'lsa ham —
+// eski yozuvni tahrirlash buzilmasin). Takrorlar olib tashlanadi.
+async function checkDirections(data) {
+  if (!Array.isArray(data.directions)) return;
+  data.directions = [...new Set(data.directions)];
+  if (!data.directions.length) return;
+  const known = await prisma.testDirectionType.findMany({ where: { code: { in: data.directions } }, select: { code: true } });
+  const knownSet = new Set(known.map((k) => k.code));
+  const unknown = data.directions.filter((c) => !knownSet.has(c));
+  if (unknown.length) {
+    const err = new Error(`Noma'lum yo'nalish: ${unknown.join(', ')}`);
+    err.status = 400;
+    throw err;
+  }
 }
 
 // Comparable form of a field value (dates/decimals), for the change log.
@@ -257,6 +274,7 @@ const logChange = (tx, recordId, req, action, changes = null) =>
 const createRecord = asyncHandler(async (req, res) => {
   const finance = canSeeFinance(req);
   const data = toData(req.body, finance, { partial: false });
+  await checkDirections(data);
   const record = await prisma.$transaction(async (tx) => {
     const created = await tx.testJournalRecord.create({ data, include: INCLUDE });
     await logChange(tx, created.id, req, 'CREATE');
@@ -270,6 +288,7 @@ const updateRecord = asyncHandler(async (req, res) => {
   const before = await prisma.testJournalRecord.findFirst({ where: { id: req.params.id, deletedAt: null } });
   if (!before) return res.status(404).json({ error: 'Yozuv topilmadi.' });
   const data = toData(req.body, finance, { partial: true });
+  await checkDirections(data);
   const changes = diff(before, data);
   const record = await prisma.$transaction(async (tx) => {
     const updated = await tx.testJournalRecord.update({ where: { id: req.params.id }, data, include: INCLUDE });

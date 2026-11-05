@@ -1130,11 +1130,19 @@ model PageViewDaily {
 // qatori = bitta TestJournalRecord. Dastlabki ma'lumot
 // prisma/seed/importTestJournal.js orqali import qilinadi (importKey bo'yicha).
 
-enum TestDirection {
-  XAVFSIZLIK
-  EMC
-  ENERGIYA
-  SHOVQIN
+// Sinov yo'nalishlari spravochnigi (BZ, EMM, EE, Shovqin va SUPER_ADMIN
+// qo'shgan yangilari). Yozuvlar yo'nalishni `code` bo'yicha saqlaydi, shuning
+// uchun kod o'zgarmaydi; ishlatilgan yo'nalish o'chirilmaydi (nofaol qilinadi).
+// SHOVQIN — maxsus: alohida varaq va alohida narx.
+model TestDirectionType {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  short     String
+  nameUz    String
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum JournalResult {
@@ -1212,7 +1220,7 @@ model TestJournalRecord {
   cancelledSampleCount Int                 @default(0)
   weightNote           String?
   protocolDate         DateTime?           @db.Date
-  directions           TestDirection[]
+  directions           String[]
   result               JournalResult
   nonconformingCount   Int?
   cancelledBy          JournalCancelledBy?
@@ -1273,7 +1281,7 @@ model TestJournalPrice {
   id            String          @id @default(uuid())
   productTypeId String
   productType   TestProductType @relation(fields: [productTypeId], references: [id])
-  direction     TestDirection?
+  direction     String?
   unitPrice     Decimal         @db.Decimal(14, 2)
   validFrom     DateTime        @db.Date
   note          String?

@@ -31,14 +31,37 @@ export const RESULT_STYLES = {
   KORIB_CHIQISH: 'bg-amber-100 text-amber-800',
 };
 
-export const DIRECTIONS = [
-  { value: 'XAVFSIZLIK', short: 'BZ', label: tr('Xavfsizlik (BZ)') },
-  { value: 'EMC', short: 'EMM', label: tr('Elektromagnit moslashuvchanlik (EMM)') },
-  { value: 'ENERGIYA', short: 'EE', label: tr('Energiya samaradorligi (EE)') },
-  { value: 'SHOVQIN', short: tr('Shovqin'), label: tr('Shovqin darajasi') },
+// Sinov yo'nalishlari — Spravochniklar > "Sinov yo'nalishlari" dan keladi
+// (AdminReports yuklab, setDirectionTypes bilan o'rnatadi). Yuklanguncha —
+// dastlabki 4 tasi. Nomlar tr() orqali (bazadagi o'zbekcha nom kalit bo'ladi).
+const DEFAULT_DIRECTION_TYPES = [
+  { code: 'XAVFSIZLIK', short: 'BZ', nameUz: 'Xavfsizlik (BZ)', isActive: true },
+  { code: 'EMC', short: 'EMM', nameUz: 'Elektromagnit moslashuvchanlik (EMM)', isActive: true },
+  { code: 'ENERGIYA', short: 'EE', nameUz: 'Energiya samaradorligi (EE)', isActive: true },
+  { code: 'SHOVQIN', short: 'Shovqin', nameUz: 'Shovqin darajasi', isActive: true },
 ];
+let directionTypes = DEFAULT_DIRECTION_TYPES;
 
-export const DIRECTION_SHORT = Object.fromEntries(DIRECTIONS.map((d) => [d.value, d.short]));
+export function setDirectionTypes(list) {
+  if (Array.isArray(list) && list.length) directionTypes = list;
+}
+
+// Jadval/Excel/tarixdagi qisqa nomi (BZ, EMM, ...); noma'lum kod — o'zi.
+export function directionShort(code) {
+  const d = directionTypes.find((x) => x.code === code);
+  return d ? tr(d.short) : code;
+}
+
+// Tanlov uchun: faol yo'nalishlar + yozuvda allaqachon belgilangan nofaollari.
+export function directionOptions(selected = []) {
+  return directionTypes
+    .filter((d) => d.isActive !== false || selected.includes(d.code))
+    .map((d) => ({ value: d.code, short: tr(d.short), label: tr(d.nameUz) }));
+}
+
+// Yangi yozuv uchun standart belgilanganlar (asosiy sinovlar, mavjud bo'lsa).
+export const defaultDirections = () =>
+  ['XAVFSIZLIK', 'EMC', 'ENERGIYA'].filter((c) => directionTypes.some((d) => d.code === c && d.isActive !== false));
 
 export const PAYMENT_LABELS = { TOLANGAN: tr("To'langan"), TOLANMAGAN: tr("To'lanmagan") };
 

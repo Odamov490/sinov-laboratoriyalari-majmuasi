@@ -6,7 +6,7 @@ import { SearchBar, Pagination } from '../../../components/UI.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { Modal } from '../../../components/Modal.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
-import { resultOptions, DIRECTIONS, PAYMENT_LABELS, formatMoney } from './journalConstants';
+import { resultOptions, directionOptions, PAYMENT_LABELS, formatMoney } from './journalConstants';
 import { ROW_COLORS, resolveColumns } from './journalColumns.jsx';
 import ColumnSettingsModal from './ColumnSettingsModal.jsx';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
@@ -269,7 +269,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
     bodies: dictionaries.bodies.map((b) => ({ value: b.id, label: b.name })),
     locations: dictionaries.locations.map((l) => ({ value: l.id, label: l.nameUz })),
     results: resultOptions(filters.result),
-    directions: DIRECTIONS.map((d) => ({ value: d.value, label: d.short })),
+    directions: directionOptions(filters.direction ? [filters.direction] : []).map((d) => ({ value: d.value, label: d.short })),
     payments: [...Object.entries(PAYMENT_LABELS).map(([value, label]) => ({ value, label })), { value: 'none', label: tr('Kuzatilmagan') }],
   };
   const thisYear = new Date().getFullYear();

@@ -4,7 +4,7 @@ import { Modal, ConfirmDialog } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalHistory from './TestJournalHistory.jsx';
-import { resultOptions, DIRECTIONS, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
+import { resultOptions, directionOptions, defaultDirections, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 const EMPTY = {
@@ -20,7 +20,7 @@ const EMPTY = {
   cancelledSampleCount: 0,
   weightNote: '',
   protocolDate: '',
-  directions: ['XAVFSIZLIK', 'EMC', 'ENERGIYA'],
+  directions: [],
   result: 'KUTILMOQDA',
   nonconformingCount: '',
   cancelledBy: '',
@@ -51,7 +51,7 @@ const COPY_RESET = {
 };
 
 function toForm(record) {
-  const form = { ...EMPTY };
+  const form = { ...EMPTY, directions: [] };
   Object.keys(EMPTY).forEach((k) => {
     if (record[k] !== undefined && record[k] !== null) form[k] = record[k];
   });
@@ -147,7 +147,7 @@ export default function TestJournalRecordModal({
     if (!open) return;
     if (record) setForm(toForm(record));
     else if (copyFrom) setForm({ ...toForm(copyFrom), ...COPY_RESET });
-    else setForm({ ...EMPTY });
+    else setForm({ ...EMPTY, directions: defaultDirections() });
     setAmountTouched(Boolean(record));
   }, [open, record, copyFrom]);
 
@@ -261,7 +261,7 @@ export default function TestJournalRecordModal({
 
           <Field label={tr("Yo'nalishlar")} full>
             <div className="flex flex-wrap gap-3">
-              {DIRECTIONS.map((d) => (
+              {directionOptions(form.directions).map((d) => (
                 <label key={d.value} className="flex items-center gap-2 text-sm text-ink cursor-pointer">
                   <input
                     type="checkbox"

@@ -8,7 +8,7 @@ import AdminCrudPage from '../AdminCrudPage.jsx';
 import TestJournalTab from './TestJournalTab.jsx';
 import TestJournalSummaryTab from './TestJournalSummaryTab.jsx';
 import JournalImportCard from './JournalImportCard.jsx';
-import { FINANCE_ROLES, formatMoney, formatDate } from './journalConstants';
+import { FINANCE_ROLES, formatMoney, formatDate, setDirectionTypes } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 const activeColumn = { key: 'isActive', label: tr('Faol'), render: (i) => (i.isActive ? tr('Ha') : tr("Yo'q")) };
@@ -45,7 +45,28 @@ const PRICE_CONFIG = {
   ],
 };
 
+const DIRECTION_TYPES_CONFIG = {
+  path: 'test-direction-types',
+  title: tr("Sinov yo'nalishlari"),
+  searchable: false,
+  columns: [
+    { key: 'short', label: tr('Qisqa nomi') },
+    { key: 'nameUz', label: tr("To'liq nomi") },
+    { key: 'code', label: tr('Kod') },
+    { key: 'order', label: tr('Tartib') },
+    activeColumn,
+  ],
+  fields: [
+    { name: 'short', label: tr('Qisqa nomi (jadvalda, masalan BZ)'), required: true },
+    { name: 'nameUz', label: tr("To'liq nomi"), required: true },
+    { name: 'code', label: tr("Kod (lotincha, masalan ISSIQLIK; saqlangandan keyin o'zgarmaydi)"), required: true },
+    { name: 'order', label: tr('Tartib raqami'), type: 'number', default: 10 },
+    { name: 'isActive', label: tr('Faol'), type: 'checkbox', default: true },
+  ],
+};
+
 const DICTIONARY_CONFIGS = [
+  DIRECTION_TYPES_CONFIG,
   {
     path: 'test-product-types',
     title: tr('Mahsulot turlari'),
@@ -119,10 +140,12 @@ export default function AdminReports() {
       listAll('test-journal-prices'),
       adminTestJournal.suggestions(),
       adminTestJournal.layout(),
+      listAll('test-direction-types'),
     ])
-      .then(([productTypes, locations, bodies, prices, suggestions, layout]) =>
-        setDictionaries({ productTypes, locations, bodies, prices, suggestions, layout: layout.columns })
-      )
+      .then(([productTypes, locations, bodies, prices, suggestions, layout, directionTypes]) => {
+        setDirectionTypes(directionTypes);
+        setDictionaries({ productTypes, locations, bodies, prices, suggestions, layout: layout.columns, directionTypes });
+      })
       .catch(() => setDictError(true));
   };
 

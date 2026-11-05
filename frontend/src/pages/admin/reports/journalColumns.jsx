@@ -1,5 +1,5 @@
 import React from 'react';
-import { RESULT_LABELS, resultOptions, DIRECTION_SHORT, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
+import { RESULT_LABELS, resultOptions, directionShort, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 // Columns of the journal table, in the paper/Excel journal's order. The same
@@ -73,7 +73,7 @@ export const COLUMNS = [
   {
     key: 'directions',
     label: () => tr("Sinov o'tkazilishi kerak bo'lgan yo'nalish (BZ, EMM, EE)"),
-    text: (r) => (r.directions || []).map((d) => DIRECTION_SHORT[d] || d).join('+'),
+    text: (r) => (r.directions || []).map(directionShort).join('+'),
     center: true,
   },
   {

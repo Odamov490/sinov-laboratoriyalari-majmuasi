@@ -4,7 +4,7 @@ import { adminTestJournal } from '../../../services/adminApi';
 import {
   FIELD_LABELS,
   RESULT_LABELS,
-  DIRECTION_SHORT,
+  directionShort,
   PAYMENT_LABELS,
   CANCELLED_BY_LABELS,
   formatDate,
@@ -40,7 +40,7 @@ function formatValue(field, value, dictionaries) {
     case 'cancelledBy':
       return CANCELLED_BY_LABELS[value] || value;
     case 'directions':
-      return value.map((d) => DIRECTION_SHORT[d] || d).join('+');
+      return value.map(directionShort).join('+');
     case 'amount':
       return tr("{0} so'm", formatMoney(value));
     default:
