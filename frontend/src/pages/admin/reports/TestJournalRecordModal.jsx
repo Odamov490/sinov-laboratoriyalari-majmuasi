@@ -4,7 +4,7 @@ import { Modal, ConfirmDialog } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalHistory from './TestJournalHistory.jsx';
-import { RESULT_LABELS, DIRECTIONS, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
+import { resultOptions, DIRECTIONS, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 const EMPTY = {
@@ -278,11 +278,11 @@ export default function TestJournalRecordModal({
           <Field label={tr('Natija')}>
             {select(
               'result',
-              Object.entries(RESULT_LABELS).map(([value, label]) => ({ value, label })),
+              resultOptions(form.result),
               tr('Tanlang')
             )}
           </Field>
-          <Field label={tr('Mos emas namunalar soni')}>{input('nonconformingCount', 'number', { min: 0 })}</Field>
+          <Field label={tr('Nomuvofiq namunalar soni')}>{input('nonconformingCount', 'number', { min: 0 })}</Field>
           <Field label={tr('Bekor qilgan tomon')}>
             {select(
               'cancelledBy',

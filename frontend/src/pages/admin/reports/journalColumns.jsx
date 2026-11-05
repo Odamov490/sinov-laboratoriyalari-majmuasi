@@ -1,5 +1,5 @@
 import React from 'react';
-import { RESULT_LABELS, DIRECTION_SHORT, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
+import { RESULT_LABELS, resultOptions, DIRECTION_SHORT, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 // Columns of the journal table, in the paper/Excel journal's order. The same
@@ -17,7 +17,7 @@ export const resultText = (r) =>
   (RESULT_LABELS[r.result] || r.result) +
   (r.result === 'QISMAN_MOS_EMAS' && r.nonconformingCount ? (' ' + tr('({0} ta)', r.nonconformingCount)) : '');
 
-// Row colors of the Excel journal: green = mos, red = mos emas,
+// Row colors of the Excel journal: green = muvofiq, red = nomuvofiq,
 // yellow = not submitted / cancelled; pending rows stay white.
 export const ROW_COLORS = {
   MOS: 'bg-green-200/80',
@@ -88,7 +88,7 @@ export const COLUMNS = [
         className={`${inlineInput} cursor-pointer`}
         aria-label={tr('Natija')}
       >
-        {Object.entries(RESULT_LABELS).map(([value, label]) => (
+        {resultOptions(r.result).map(({ value, label }) => (
           <option key={value} value={value}>
             {value === r.result ? resultText(r) : label}
           </option>
@@ -96,7 +96,7 @@ export const COLUMNS = [
       </select>
     ),
   },
-  { key: 'nonconformingCount', label: () => tr('Mos emas namunalar soni'), text: (r) => r.nonconformingCount ?? '', center: true },
+  { key: 'nonconformingCount', label: () => tr('Nomuvofiq namunalar soni'), text: (r) => r.nonconformingCount ?? '', center: true },
   { key: 'cancelledBy', label: () => tr('Bekor qilgan tomon'), text: (r) => (r.cancelledBy ? CANCELLED_BY_LABELS[r.cancelledBy] : '') },
   { key: 'brand', label: (ctx) => ctx.brandLabel, text: (r) => r.brand || '', center: true },
   {

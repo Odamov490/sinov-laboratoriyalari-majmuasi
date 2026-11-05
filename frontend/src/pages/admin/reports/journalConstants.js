@@ -3,14 +3,23 @@ import { tr } from '../../../i18n/tr.js';
 // backend (prisma TestDirection / JournalResult / JournalPayment).
 
 export const RESULT_LABELS = {
-  MOS: tr('Mos'),
-  MOS_EMAS: tr('Mos emas'),
-  QISMAN_MOS_EMAS: tr('Qisman mos emas'),
+  MOS: tr('Muvofiq'),
+  MOS_EMAS: tr('Nomuvofiq'),
+  // Endi tanlanmaydi; faqat eski yozuvlarni ko'rsatish uchun qoldirilgan.
+  QISMAN_MOS_EMAS: tr('Qisman nomuvofiq'),
   NAMUNA_TAQDIM_ETILMADI: tr('Namuna taqdim etilmadi'),
   BEKOR_QILINDI: tr('Bekor qilindi'),
   KUTILMOQDA: tr('Natija kutilmoqda'),
   KORIB_CHIQISH: tr("Ko'rib chiqish kerak"),
 };
+
+// Tanlov ro'yxatlari uchun (QISMAN_MOS_EMAS olib tashlangan). Yozuvning joriy
+// qiymati ro'yxatda bo'lmasa (eski yozuv), u ham qo'shiladi — ko'rinib tursin.
+const RETIRED_RESULTS = new Set(['QISMAN_MOS_EMAS']);
+export const resultOptions = (current) =>
+  Object.entries(RESULT_LABELS)
+    .filter(([value]) => !RETIRED_RESULTS.has(value) || value === current)
+    .map(([value, label]) => ({ value, label }));
 
 export const RESULT_STYLES = {
   MOS: 'bg-emerald-100 text-emerald-700',
@@ -79,7 +88,7 @@ export const FIELD_LABELS = {
   protocolDate: tr('Bayonnoma sanasi'),
   directions: tr("Yo'nalishlar"),
   result: tr('Natija'),
-  nonconformingCount: tr('Mos emas namunalar'),
+  nonconformingCount: tr('Nomuvofiq namunalar'),
   cancelledBy: tr('Bekor qilgan tomon'),
   brand: tr('Marka'),
   locationId: tr('Joy'),

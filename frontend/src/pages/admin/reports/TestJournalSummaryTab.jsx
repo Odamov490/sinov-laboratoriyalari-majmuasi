@@ -222,7 +222,7 @@ export default function TestJournalSummaryTab({ showFinance }) {
             {showFinance && <StatCard icon={Wallet} label={tr("Summa, so'm")} value={formatMoney(data.totals.amount)} />}
             <StatCard
               icon={CheckCircle2}
-              label={tr('Mos / mos emas')}
+              label={tr('Muvofiq / nomuvofiq')}
               value={`${pct(data.totals.conformShare)} / ${pct(data.totals.nonconformShare)}`}
               hint={tr('Yakuniy natijali yozuvlar ichida')}
             />
