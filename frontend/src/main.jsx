@@ -1,3 +1,4 @@
+import { installChunkReload } from './utils/chunkReload.js';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -7,6 +8,9 @@ import './i18n/index.js';
 import './styles/index.css';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ToastProvider } from './context/ToastContext.jsx';
+
+// Deploy'dan keyin yo'qolgan eski bo'laklar: bir marta avtomatik qayta yuklash.
+installChunkReload();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
