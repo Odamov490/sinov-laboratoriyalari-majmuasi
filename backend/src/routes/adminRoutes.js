@@ -527,7 +527,17 @@ function mountDictionary(path, modelName, opts) {
 }
 mountDictionary('test-product-types', 'testProductType', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
 mountDictionary('test-locations', 'testLocation', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
-mountDictionary('certification-bodies', 'certificationBody', { searchFields: ['name'], orderBy: { name: 'asc' } });
+mountDictionary('certification-bodies', 'certificationBody', {
+  searchFields: ['name', 'fullName'],
+  orderBy: { name: 'asc' },
+  buildData: (body) => {
+    const data = { ...body };
+    delete data.records;
+    if ('name' in data) data.name = String(data.name || '').trim();
+    if ('fullName' in data) data.fullName = String(data.fullName || '').trim() || null;
+    return data;
+  },
+});
 // Sinov yo'nalishlari (BZ, EMM, EE, Shovqin, ...). Yozuvlar kod bo'yicha
 // bog'langan: kod faqat yaratishda beriladi va keyin o'zgarmaydi; yozuvlarda
 // ishlatilgan yo'nalish o'chirilmaydi (nofaol qilinadi).

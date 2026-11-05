@@ -1191,6 +1191,8 @@ model TestLocation {
 model CertificationBody {
   id        String              @id @default(uuid())
   name      String              @unique
+  // Rasmiy to'liq nomi (reyestrdagi kabi); jurnalda qisqa `name` ko'rsatiladi.
+  fullName  String?
   aliases   String[]            @default([])
   isActive  Boolean             @default(true)
   records   TestJournalRecord[]
