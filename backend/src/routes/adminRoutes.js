@@ -527,14 +527,34 @@ function mountDictionary(path, modelName, opts) {
 }
 mountDictionary('test-product-types', 'testProductType', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
 mountDictionary('test-locations', 'testLocation', { searchFields: ['code', 'nameUz'], orderBy: { nameUz: 'asc' } });
+// Admin panelda faqat to'liq rasmiy nomi kiritiladi. Jurnalda ko'rinadigan
+// qisqa nom (name, unikal) yangi idora uchun to'liq nomdagi qo'shtirnoq ichidan
+// olinadi (bo'lmasa — to'liq nomning o'zi); tahrirlashda o'zgarmaydi.
+const shortBodyName = (full) => {
+  const quoted = [...full.matchAll(/["“”«»„]([^"“”«»„]{2,})["“”«»„]/g)].map((m) => m[1].trim()).filter(Boolean);
+  return (quoted.length ? quoted.join(' / ') : full).slice(0, 200);
+};
 mountDictionary('certification-bodies', 'certificationBody', {
   searchFields: ['name', 'fullName'],
   orderBy: { name: 'asc' },
-  buildData: (body) => {
-    const data = { ...body };
-    delete data.records;
-    if ('name' in data) data.name = String(data.name || '').trim();
-    if ('fullName' in data) data.fullName = String(data.fullName || '').trim() || null;
+  buildData: async (body, { isUpdate }) => {
+    const data = {};
+    if ('fullName' in body) data.fullName = String(body.fullName || '').trim() || null;
+    if ('isActive' in body) data.isActive = Boolean(body.isActive);
+    if ('name' in body && String(body.name || '').trim()) data.name = String(body.name).trim();
+    if (!isUpdate) {
+      if (!data.fullName && !data.name) {
+        const err = new Error("To'liq nomini kiriting.");
+        err.status = 400;
+        throw err;
+      }
+      if (!data.name) {
+        const base = shortBodyName(data.fullName);
+        let name = base;
+        for (let i = 2; await prisma.certificationBody.findUnique({ where: { name }, select: { id: true } }); i += 1) name = `${base} (${i})`;
+        data.name = name;
+      }
+    }
     return data;
   },
 });

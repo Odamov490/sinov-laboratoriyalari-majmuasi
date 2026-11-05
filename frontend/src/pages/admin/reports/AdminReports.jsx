@@ -60,15 +60,11 @@ const DICTIONARY_CONFIGS = [
     path: 'certification-bodies',
     title: tr('Buyurtmachilar (sertifikatlashtirish idoralari)'),
     searchable: true,
-    columns: [
-      { key: 'name', label: tr('Qisqa nomi (jurnalda)') },
-      { key: 'fullName', label: tr("To'liq rasmiy nomi"), render: (i) => i.fullName || '—' },
-      { key: 'aliases', label: tr('Boshqa yozilishlari'), render: (i) => (i.aliases || []).join(', ') || '—' },
-      activeColumn,
-    ],
+    // Faqat to'liq rasmiy nomi ko'rsatiladi. Jurnaldagi qisqa nom (name) bazada
+    // qoladi; yangi idora uchun server uni to'liq nomdan o'zi oladi.
+    columns: [{ key: 'fullName', label: tr("To'liq rasmiy nomi"), render: (i) => i.fullName || i.name }, activeColumn],
     fields: [
-      { name: 'name', label: tr("Qisqa nomi (jurnalda ko'rinadi)"), required: true, fullWidth: true },
-      { name: 'fullName', label: tr("To'liq rasmiy nomi"), type: 'textarea', fullWidth: true },
+      { name: 'fullName', label: tr("To'liq rasmiy nomi"), type: 'textarea', required: true, fullWidth: true, fromItem: (i) => i.fullName || i.name || '' },
       { name: 'isActive', label: tr('Faol'), type: 'checkbox', default: true },
     ],
   },
