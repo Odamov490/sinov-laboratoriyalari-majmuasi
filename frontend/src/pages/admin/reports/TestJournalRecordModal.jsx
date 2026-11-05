@@ -4,7 +4,7 @@ import { Modal, ConfirmDialog } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalHistory from './TestJournalHistory.jsx';
-import { resultOptions, directionOptions, defaultDirections, PAYMENT_LABELS, CANCELLED_BY_LABELS, findUnitPrice, formatMoney } from './journalConstants';
+import { resultOptions, directionOptions, defaultDirections, PAYMENT_LABELS, CANCELLED_BY_LABELS } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 const EMPTY = {
@@ -139,27 +139,13 @@ export default function TestJournalRecordModal({
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  // Existing amounts are never overwritten automatically; a new row follows
-  // the price list until the user types an amount by hand.
-  const [amountTouched, setAmountTouched] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     if (record) setForm(toForm(record));
     else if (copyFrom) setForm({ ...toForm(copyFrom), ...COPY_RESET });
     else setForm({ ...EMPTY, directions: defaultDirections() });
-    setAmountTouched(Boolean(record));
   }, [open, record, copyFrom]);
-
-  const unitPrice = findUnitPrice(dictionaries.prices, form);
-  const sampleCount = Number(form.sampleCount) || 0;
-  const suggestedAmount = unitPrice !== null && sampleCount > 0 ? unitPrice * sampleCount : null;
-
-  useEffect(() => {
-    if (showFinance && !amountTouched && suggestedAmount !== null) {
-      setForm((f) => (Number(f.amount) === suggestedAmount ? f : { ...f, amount: suggestedAmount }));
-    }
-  }, [suggestedAmount, amountTouched, showFinance]);
 
   const set = (name, value) => setForm((f) => ({ ...f, [name]: value }));
   const toggleDirection = (value) =>
@@ -314,32 +300,8 @@ export default function TestJournalRecordModal({
                   step="0.01"
                   className="input-field"
                   value={form.amount ?? ''}
-                  onChange={(e) => {
-                    setAmountTouched(true);
-                    set('amount', e.target.value);
-                  }}
+                  onChange={(e) => set('amount', e.target.value)}
                 />
-                <p className="mt-1 text-xs text-slate-500">
-                  {unitPrice === null ? (
-                    tr("Bu mahsulot/sinov turi uchun narx spravochnikda yo'q — summani qo'lda kiriting.")
-                  ) : (
-                    <>
-                      {tr('Narx:')} {formatMoney(unitPrice)} × {sampleCount} = {formatMoney(suggestedAmount ?? 0)}
-                      {suggestedAmount !== null && Number(form.amount) !== suggestedAmount && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAmountTouched(false);
-                            set('amount', suggestedAmount);
-                          }}
-                          className="ml-2 text-primary hover:underline"
-                        >
-                          {tr("Qo'llash")}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </p>
               </Field>
               <Field label={tr("To'lov")}>
                 {select(

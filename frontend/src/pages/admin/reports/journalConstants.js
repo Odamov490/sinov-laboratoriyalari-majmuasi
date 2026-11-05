@@ -81,19 +81,6 @@ export const formatDate = (value) => {
 // FINANCE_ROLES in testJournalController).
 export const FINANCE_ROLES = ['SUPER_ADMIN', 'MANAGER'];
 
-// Unit price for a record: same product type and test kind (SHOVQIN or the
-// main BZ/EMM/EE tests), latest price whose validFrom is on/before the act
-// date (or today). Returns null when the price list has no match.
-export function findUnitPrice(prices, { productTypeId, directions, actDate }) {
-  if (!productTypeId) return null;
-  const kind = (directions || []).includes('SHOVQIN') ? 'SHOVQIN' : null;
-  const onDate = actDate || new Date().toISOString().slice(0, 10);
-  const match = prices
-    .filter((p) => p.productTypeId === productTypeId && (p.direction || null) === kind)
-    .filter((p) => String(p.validFrom).slice(0, 10) <= onDate)
-    .sort((a, b) => String(b.validFrom).localeCompare(String(a.validFrom)))[0];
-  return match ? Number(match.unitPrice) : null;
-}
 
 // Field names shown in the change history.
 export const FIELD_LABELS = {

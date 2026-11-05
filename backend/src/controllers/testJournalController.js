@@ -3,7 +3,6 @@ const { Prisma } = require('@prisma/client');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { buildSummary } = require('../utils/testJournalReport');
-const { validate, summarize, checkSummary, importToDb } = require('../services/testJournalImport');
 
 // Sinovlar jurnali (Hisobot bo'limi). Moliyaviy maydonlar — summa, shartnoma,
 // to'lov — faqat FINANCE_ROLES uchun: boshqalarga javobdan olib tashlanadi,
@@ -502,34 +501,9 @@ const updateLayout = asyncHandler(async (req, res) => {
 });
 
 // POST /admin/test-journal/import[?dryRun=1] — body: the journal JSON file.
-// Same checks as the CLI import (prisma/seed/importTestJournal.js); dryRun
-// only validates and returns the totals, nothing is written.
-const importJournal = asyncHandler(async (req, res) => {
-  const data = req.body;
-  const errors = validate(data);
-  if (errors.length) {
-    return res.status(400).json({ error: "Fayl tekshiruvdan o'tmadi.", errors: errors.slice(0, 50) });
-  }
-  const summary = summarize(data.records, (r) => r.sourceSheet);
-  const problems = checkSummary(summary, data);
-  if (problems.length) {
-    return res.status(400).json({ error: 'Fayl kutilgan raqamlarga mos emas.', errors: problems, summary });
-  }
-  if (req.query.dryRun === '1') return res.json({ dryRun: true, summary });
-
-  try {
-    const result = await importToDb(prisma, data);
-    res.json({ dryRun: false, created: result.created, skipped: result.skipped, summary: result.dbSummary, warnings: result.problems });
-  } catch (err) {
-    console.error('Test journal import failed:', err);
-    res.status(400).json({ error: `Import bekor qilindi: ${err.message}` });
-  }
-});
-
 module.exports = {
   getLayout,
   updateLayout,
-  importJournal,
   listRecords,
   getRecord,
   createRecord,

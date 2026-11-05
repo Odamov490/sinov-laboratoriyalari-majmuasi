@@ -7,43 +7,10 @@ import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import AdminCrudPage from '../AdminCrudPage.jsx';
 import TestJournalTab from './TestJournalTab.jsx';
 import TestJournalSummaryTab from './TestJournalSummaryTab.jsx';
-import JournalImportCard from './JournalImportCard.jsx';
-import { FINANCE_ROLES, formatMoney, formatDate, setDirectionTypes } from './journalConstants';
+import { FINANCE_ROLES, setDirectionTypes } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 const activeColumn = { key: 'isActive', label: tr('Faol'), render: (i) => (i.isActive ? tr('Ha') : tr("Yo'q")) };
-
-const PRICE_CONFIG = {
-  path: 'test-journal-prices',
-  title: tr('Narxlar (bir namuna uchun)'),
-  searchable: false,
-  columns: [
-    { key: 'productType', label: tr('Mahsulot turi'), render: (i) => i.productType?.nameUz || '—' },
-    { key: 'direction', label: tr('Sinov turi'), render: (i) => (i.direction === 'SHOVQIN' ? tr('Shovqin') : tr('Asosiy (BZ/EMM/EE)')) },
-    { key: 'unitPrice', label: tr("Narx, so'm"), render: (i) => formatMoney(i.unitPrice) },
-    { key: 'validFrom', label: tr('Amal qiladi'), render: (i) => tr('{0} dan', formatDate(i.validFrom)) },
-    { key: 'note', label: tr('Izoh'), render: (i) => i.note || '—' },
-  ],
-  fields: [
-    {
-      name: 'productTypeId',
-      label: tr('Mahsulot turi'),
-      type: 'async-select',
-      optionsResource: 'test-product-types',
-      optionsLabel: (item) => item.nameUz,
-      required: true,
-    },
-    {
-      name: 'direction',
-      label: tr("Sinov turi (bo'sh = asosiy BZ/EMM/EE)"),
-      type: 'select',
-      options: [{ value: 'SHOVQIN', label: tr('Shovqin') }],
-    },
-    { name: 'unitPrice', label: tr("Bir namuna narxi, so'm"), type: 'number', required: true },
-    { name: 'validFrom', label: tr('Qaysi sanadan amal qiladi'), type: 'date', required: true },
-    { name: 'note', label: tr('Izoh (masalan: 8 kg gacha)'), fullWidth: true },
-  ],
-};
 
 const DIRECTION_TYPES_CONFIG = {
   path: 'test-direction-types',
@@ -137,14 +104,13 @@ export default function AdminReports() {
       listAll('test-product-types'),
       listAll('test-locations'),
       listAll('certification-bodies'),
-      listAll('test-journal-prices'),
       adminTestJournal.suggestions(),
       adminTestJournal.layout(),
       listAll('test-direction-types'),
     ])
-      .then(([productTypes, locations, bodies, prices, suggestions, layout, directionTypes]) => {
+      .then(([productTypes, locations, bodies, suggestions, layout, directionTypes]) => {
         setDirectionTypes(directionTypes);
-        setDictionaries({ productTypes, locations, bodies, prices, suggestions, layout: layout.columns, directionTypes });
+        setDictionaries({ productTypes, locations, bodies, suggestions, layout: layout.columns, directionTypes });
       })
       .catch(() => setDictError(true));
   };
@@ -187,8 +153,7 @@ export default function AdminReports() {
 
       {tab === 'spravochniklar' ? (
         <div className="space-y-10">
-          <JournalImportCard />
-          {[PRICE_CONFIG, ...DICTIONARY_CONFIGS].map((config) => (
+          {DICTIONARY_CONFIGS.map((config) => (
             <AdminCrudPage key={config.path} config={config} />
           ))}
         </div>

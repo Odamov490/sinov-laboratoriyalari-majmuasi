@@ -508,7 +508,6 @@ router.get('/test-journal/:id', requireModule('reports'), testJournal.getRecord)
 router.get('/test-journal/:id/history', requireModule('reports'), testJournal.getHistory);
 router.post('/test-journal', requireModule('reports'), testJournal.createRecord);
 // Excel jurnalidan tayyorlangan JSON'ni admin paneldan import qilish (faqat SUPER_ADMIN).
-router.post('/test-journal/import', requireModule('reports_admin'), testJournal.importJournal);
 router.post('/test-journal/bulk-delete', requireModule('reports'), testJournal.bulkDeleteRecords);
 router.put('/test-journal/:id', requireModule('reports'), testJournal.updateRecord);
 router.delete('/test-journal/:id', requireModule('reports'), testJournal.deleteRecord);
@@ -576,20 +575,6 @@ mountDictionary('test-direction-types', 'testDirectionType', {
     });
     if ('order' in body) data.order = Number.parseInt(body.order, 10) || 0;
     if ('isActive' in body) data.isActive = Boolean(body.isActive);
-    return data;
-  },
-});
-// Bir namuna narxi (summani avtomatik hisoblash uchun). Formadan kelgan bo'sh
-// qiymatlar Prisma turlariga keltiriladi.
-mountDictionary('test-journal-prices', 'testJournalPrice', {
-  include: { productType: { select: { id: true, nameUz: true } } },
-  orderBy: [{ productTypeId: 'asc' }, { validFrom: 'desc' }],
-  buildData: (body) => {
-    const data = { ...body };
-    delete data.productType;
-    if ('direction' in data) data.direction = data.direction || null;
-    if ('unitPrice' in data) data.unitPrice = Number(data.unitPrice) || 0;
-    if ('note' in data) data.note = data.note || null;
     return data;
   },
 });
