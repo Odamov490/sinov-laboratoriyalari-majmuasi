@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import SEO from '../components/SEO.jsx';
 import Hero from '../components/Hero.jsx';
+import { parseHeroSlides, parseHeroInterval } from '../utils/heroSlides.js';
 import { LaboratoryCard, ServiceCard, NewsCard, DocumentCard } from '../components/Cards.jsx';
 import { CardSkeleton } from '../components/StateViews.jsx';
 import {
@@ -71,7 +72,7 @@ export default function Home() {
   return (
     <div>
       <SEO description={t('hero.tagline')} jsonLd={orgJsonLd} />
-      <Hero />
+      <Hero slides={parseHeroSlides(settings.hero_slides)} interval={parseHeroInterval(settings.hero_slide_interval)} />
 
       {/* Statistics */}
       <section className="section bg-bg-light">

@@ -39,7 +39,8 @@
     "title": "SINOV LABORATORIYALARI MAJMUASI",
     "tagline": "Mahsulotlaringiz sifati va xavfsizligini ishonchli sinovlar orqali baholaymiz.",
     "cta1": "Xizmatlarni ko‘rish",
-    "cta2": "Ariza yuborish"
+    "cta2": "Ariza yuborish",
+    "slide": "{{n}}-rasm"
   },
   "common": {
     "testModeBanner": "Diqqat: sayt hozircha sinov (test) rejimida ishlamoqda. Ma'lumotlar va funksiyalar o'zgarishi mumkin.",

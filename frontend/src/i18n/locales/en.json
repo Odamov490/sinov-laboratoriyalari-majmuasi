@@ -39,7 +39,8 @@
     "title": "TESTING LABORATORIES COMPLEX",
     "tagline": "We evaluate the quality and safety of your products through reliable testing.",
     "cta1": "View Services",
-    "cta2": "Submit Application"
+    "cta2": "Submit Application",
+    "slide": "Slide {{n}}"
   },
   "common": {
     "testModeBanner": "Notice: this site is currently running in test mode. Data and features may change.",
