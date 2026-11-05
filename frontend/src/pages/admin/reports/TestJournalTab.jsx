@@ -64,7 +64,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
   const [sort, setSort] = useState({ by: 'actDate', dir: 'desc' });
   const [data, setData] = useState(null);
   const [error, setError] = useState(false);
-  const [modal, setModal] = useState({ open: false, record: null, copyFrom: null });
+  const [modal, setModal] = useState({ open: false, record: null });
   const [exporting, setExporting] = useState(false);
   const [savingCell, setSavingCell] = useState(null);
   // Bir nechta qatorni belgilab o'chirish. allMatching — filtrga mos barcha
@@ -341,7 +341,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
             <button onClick={exportExcel} disabled={exporting || !data?.total} className="btn-secondary !py-2">
               <FileSpreadsheet className="h-4 w-4" /> {exporting ? tr('Tayyorlanmoqda...') : 'Excel'}
             </button>
-            <button onClick={() => setModal({ open: true, record: null, copyFrom: null })} className="btn-primary !py-2">
+            <button onClick={() => setModal({ open: true, record: null })} className="btn-primary !py-2">
               <Plus className="h-4 w-4" /> {tr('Yangi yozuv')}
             </button>
           </div>
@@ -437,7 +437,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
               {data.items.map((r, idx) => (
                 <tr
                   key={r.id}
-                  onClick={() => setModal({ open: true, record: r, copyFrom: null })}
+                  onClick={() => setModal({ open: true, record: r })}
                   className={`cursor-pointer hover:brightness-95 ${ROW_COLORS[r.result] || ''} ${
                     allMatching || selected.has(r.id) ? 'outline outline-2 -outline-offset-2 outline-red-400' : ''
                   }`}
@@ -522,14 +522,12 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
       <TestJournalRecordModal
         open={modal.open}
         record={modal.record}
-        copyFrom={modal.copyFrom}
         dictionaries={dictionaries}
         showFinance={showFinance}
-        onClose={() => setModal({ open: false, record: null, copyFrom: null })}
-        onCopy={(record) => setModal({ open: true, record: null, copyFrom: record })}
+        onClose={() => setModal({ open: false, record: null })}
         customColumns={resolveColumns(dictionaries.layout).filter((c) => c.custom)}
         onSaved={() => {
-          setModal({ open: false, record: null, copyFrom: null });
+          setModal({ open: false, record: null });
           load();
           onRecordsChanged?.();
         }}

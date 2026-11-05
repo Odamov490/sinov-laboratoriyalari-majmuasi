@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertTriangle, Trash2, Copy } from 'lucide-react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
 import { Modal, ConfirmDialog } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
@@ -36,19 +36,6 @@ const EMPTY = {
   customFields: {},
 };
 
-// Fields reset when a row is copied into a new one: the copy shares the act,
-// customer, product and dates, but its outcome is still to come.
-const COPY_RESET = {
-  protocolDate: '',
-  result: 'KUTILMOQDA',
-  nonconformingCount: '',
-  cancelledBy: '',
-  cancelledSampleCount: 0,
-  amount: '',
-  paymentStatus: '',
-  notes: '',
-  needsReview: false,
-};
 
 function toForm(record) {
   const form = { ...EMPTY, directions: [] };
@@ -122,18 +109,15 @@ function Field({ label, children, full }) {
   );
 }
 
-// Create/edit dialog for one journal row. `record` null = new row;
-// `copyFrom` prefills a new row from an existing one ("Nusxa olish").
+// Create/edit dialog for one journal row. `record` null = new row.
 export default function TestJournalRecordModal({
   open,
   record,
-  copyFrom,
   dictionaries,
   showFinance,
   customColumns = [],
   onClose,
   onSaved,
-  onCopy,
 }) {
   const { showToast } = useToast();
   const [form, setForm] = useState(EMPTY);
@@ -143,9 +127,8 @@ export default function TestJournalRecordModal({
   useEffect(() => {
     if (!open) return;
     if (record) setForm(toForm(record));
-    else if (copyFrom) setForm({ ...toForm(copyFrom), ...COPY_RESET });
     else setForm({ ...EMPTY, directions: defaultDirections() });
-  }, [open, record, copyFrom]);
+  }, [open, record]);
 
   const set = (name, value) => setForm((f) => ({ ...f, [name]: value }));
   const toggleDirection = (value) =>
@@ -214,7 +197,7 @@ export default function TestJournalRecordModal({
       <Modal
         open={open}
         onClose={onClose}
-        title={record ? tr('Yozuvni tahrirlash{0}', record.actNo ? ` — ${record.actNo}` : '') : copyFrom ? tr('Yangi yozuv (nusxa)') : tr('Yangi yozuv')}
+        title={record ? tr('Yozuvni tahrirlash{0}', record.actNo ? ` — ${record.actNo}` : '') : tr('Yangi yozuv')}
         size="xl"
       >
         {record?.needsReview && (
@@ -352,15 +335,6 @@ export default function TestJournalRecordModal({
             {record && (
               <button onClick={() => setConfirmDelete(true)} className="inline-flex items-center gap-1.5 text-sm text-red-600 hover:underline">
                 <Trash2 className="h-4 w-4" /> {tr("O'chirish")}
-              </button>
-            )}
-            {record && onCopy && (
-              <button
-                onClick={() => onCopy(record)}
-                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-                title={tr("Shu akt bo'yicha yangi qator ochish (masalan, shovqin sinovi uchun)")}
-              >
-                <Copy className="h-4 w-4" /> {tr('Nusxa olib yangi yozuv')}
               </button>
             )}
           </div>
