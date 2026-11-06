@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon, Columns3, Trash2 } from 'lucide-react';
+import { Plus, AlertTriangle, ArrowUp, ArrowDown, FileSpreadsheet, X as XIcon, Columns3, Trash2, PanelRightOpen } from 'lucide-react';
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../../components/StateViews.jsx';
 import { SearchBar, Pagination } from '../../../components/UI.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
 import { Modal } from '../../../components/Modal.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
+import EditableCell from './EditableCell.jsx';
 import { resultOptions, directionOptions, PAYMENT_LABELS, formatMoney } from './journalConstants';
 import { ROW_COLORS, resolveColumns } from './journalColumns.jsx';
 import ColumnSettingsModal from './ColumnSettingsModal.jsx';
@@ -76,7 +77,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
 
   const sheetProduct = dictionaries.productTypes.find((p) => p.id === sheet);
   const brandLabel = sheet === SHOVQIN_SHEET ? tr('Muzlatkich markasi') : sheetProduct ? tr('{0} markasi', sheetProduct.nameUz) : tr('Marka');
-  const ctx = { brandLabel, saveCell: null, savingCell };
+  const ctx = { brandLabel, saveCell: null, savingCell, dictionaries, notify: (msg) => showToast(msg, 'error') };
 
   // Shared layout (order, hidden, extra columns) set by SUPER_ADMIN; money
   // columns only to finance roles.
@@ -121,7 +122,27 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
-  // In-table edit of result / protocol date: saves at once and patches the row.
+  // Katakni joyida tahrirlash: bitta maydon saqlanadi va qator server javobi
+  // bilan yangilanadi. Jami summalarga ta'sir qiladigan maydonda ro'yxat qayta
+  // yuklanadi (JAMI qatori to'g'ri bo'lishi uchun).
+  const saveEdit = async (record, column, value) => {
+    const { edit } = column;
+    const payload = edit.custom
+      ? { customFields: { ...(record.customFields || {}), [edit.field]: value } }
+      : { [edit.field]: value };
+    setSavingCell(`${record.id}:${column.key}`);
+    try {
+      const updated = await adminTestJournal.update(record.id, payload);
+      setData((d) => ({ ...d, items: d.items.map((i) => (i.id === record.id ? { ...i, ...updated } : i)) }));
+      if (column.sum) load();
+    } catch (err) {
+      showToast(err?.response?.data?.error || tr('Saqlashda xatolik yuz berdi.'), 'error');
+    } finally {
+      setSavingCell(null);
+    }
+  };
+
+  // In-table edit of the result select: saves at once and patches the row.
   ctx.saveCell = async (record, field, value) => {
     setSavingCell(`${record.id}:${field}`);
     try {
@@ -438,6 +459,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                 <tr
                   key={r.id}
                   onClick={() => setModal({ open: true, record: r })}
+                  title={tr("Katakni bosib joyida tahrirlang; to'liq oyna — № yonidagi tugma")}
                   className={`cursor-pointer hover:brightness-95 ${ROW_COLORS[r.result] || ''} ${
                     allMatching || selected.has(r.id) ? 'outline outline-2 -outline-offset-2 outline-red-400' : ''
                   }`}
@@ -454,6 +476,18 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                   <td className={`${cell} text-center tabular-nums`}>
                     <span className="inline-flex items-center gap-1">
                       {(data.page - 1) * data.pageSize + idx + 1}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModal({ open: true, record: r });
+                        }}
+                        className="rounded p-0.5 text-slate-400 hover:bg-white hover:text-primary"
+                        aria-label={tr("To'liq oynada ochish")}
+                        title={tr("To'liq oynada ochish")}
+                      >
+                        <PanelRightOpen className="h-3.5 w-3.5" />
+                      </button>
                       {r.needsReview && (
                         <span title={tr('Tekshirish kerak: {0}', (r.reviewReasons || []).join('; '))}>
                           <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
@@ -464,12 +498,27 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                   {columns.map((c) => (
                     <td
                       key={c.key}
-                      onClick={c.render ? (e) => e.stopPropagation() : undefined}
+                      onClick={c.render || c.edit ? (e) => e.stopPropagation() : undefined}
                       className={`${cell} ${c.center ? 'text-center' : ''} ${c.right ? 'text-right tabular-nums whitespace-nowrap' : ''} ${
                         c.wide ? 'max-w-[260px]' : ''
                       }`}
                     >
-                      {c.render ? c.render(r, ctx) : c.display ? c.display(r) : c.text(r)}
+                      {c.render ? (
+                        c.render(r, ctx)
+                      ) : c.edit ? (
+                        <EditableCell
+                          edit={c.edit}
+                          record={r}
+                          ctx={ctx}
+                          display={c.display ? c.display(r) : c.text(r)}
+                          saving={savingCell === `${r.id}:${c.key}`}
+                          onSave={(value) => saveEdit(r, c, value)}
+                        />
+                      ) : c.display ? (
+                        c.display(r)
+                      ) : (
+                        c.text(r)
+                      )}
                     </td>
                   ))}
                 </tr>
@@ -518,6 +567,18 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
           </label>
         </div>
       )}
+
+      {/* Joyida tahrirlashda F.I.Sh va marka uchun takliflar */}
+      <datalist id="journal-executors">
+        {(dictionaries.suggestions?.executors || []).map((v) => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
+      <datalist id="journal-brands">
+        {(dictionaries.suggestions?.brands || []).map((v) => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
 
       <TestJournalRecordModal
         open={modal.open}
