@@ -1224,6 +1224,9 @@ model TestJournalRecord {
   protocolDate         DateTime?           @db.Date
   directions           String[]
   result               JournalResult
+  // Har bir yo'nalish bo'yicha natija: { "XAVFSIZLIK": "MOS", "EMC": "MOS_EMAS" }.
+  // Faqat 2+ yo'nalishli yozuvda; umumiy `result` shundan hisoblanadi.
+  directionResults     Json?
   nonconformingCount   Int?
   cancelledBy          JournalCancelledBy?
   brand                String?

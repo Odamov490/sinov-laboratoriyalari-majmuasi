@@ -83,8 +83,28 @@ export const formatDate = (value) => {
 export const FINANCE_ROLES = ['SUPER_ADMIN', 'MANAGER'];
 
 
+// Yo'nalishlar bo'yicha natija (2+ yo'nalishli yozuv): saqlangan qiymat yoki
+// hali kiritilmagan bo'lsa — umumiy natija. null = bitta umumiy natija.
+export function directionResultsOf(r) {
+  const dirs = r?.directions || [];
+  if (dirs.length < 2) return null;
+  const saved = r.directionResults || {};
+  return Object.fromEntries(dirs.map((d) => [d, saved[d] || r.result || 'KUTILMOQDA']));
+}
+
+// Matn ko'rinishi: hammasi bir xil bo'lsa — bitta nom, aks holda "EE: Muvofiq; EMM: Nomuvofiq".
+export function directionResultsText(map) {
+  if (!map) return '';
+  const values = Object.values(map);
+  if (values.every((v) => v === values[0])) return RESULT_LABELS[values[0]] || values[0];
+  return Object.entries(map)
+    .map(([d, v]) => `${directionShort(d)}: ${RESULT_LABELS[v] || v}`)
+    .join('; ');
+}
+
 // Field names shown in the change history.
 export const FIELD_LABELS = {
+  directionResults: tr("Yo'nalishlar bo'yicha natija"),
   journalYear: tr('Jurnal yili'),
   productTypeId: tr('Mahsulot turi'),
   certificationBodyId: tr('Buyurtmachi'),

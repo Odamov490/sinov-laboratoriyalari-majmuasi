@@ -184,6 +184,8 @@ const recordSchema = z.object({
   protocolDate: optDate,
   directions: z.array(z.string().regex(DIRECTION_CODE_RE)).max(30).optional(),
   result: z.enum(RESULTS),
+  // Yo'nalish kodi -> natija (2+ yo'nalishda). null — tozalash.
+  directionResults: z.record(z.string().regex(DIRECTION_CODE_RE), z.enum(RESULTS)).nullable().optional(),
   nonconformingCount: optInt,
   cancelledBy: z.enum(['ARIZACHI', 'ORGAN']).nullable().optional(),
   brand: optText,
@@ -234,9 +236,48 @@ async function checkDirections(data) {
   }
 }
 
+// Umumiy natija yo'nalishlar natijalaridan: eng "og'ir" holat ustun turadi
+// (bittasi nomuvofiq — nomuvofiq; hammasi muvofiq — muvofiq; ba'zisi kutilmoqda —
+// kutilmoqda; muvofiq + bekor qilingan — muvofiq).
+const RESULT_PRIORITY = ['MOS_EMAS', 'QISMAN_MOS_EMAS', 'KORIB_CHIQISH', 'KUTILMOQDA', 'MOS', 'NAMUNA_TAQDIM_ETILMADI', 'BEKOR_QILINDI'];
+const aggregateResult = (values) => RESULT_PRIORITY.find((r) => values.includes(r)) || 'KUTILMOQDA';
+
+// directionResults'ni yozuv yo'nalishlariga moslaydi va umumiy natijani hisoblaydi.
+//  - directionResults yuborilsa: har bir yo'nalish uchun qiymat (yo'q bo'lsa —
+//    umumiy natija), result = ulardan hisoblangan.
+//  - faqat result yuborilsa (bitta umumiy tanlov): yo'nalishlar natijasi tozalanadi.
+//  - faqat directions o'zgarsa: eski qiymatlar saqlanadi, yangi yo'nalishga umumiy natija.
+//  - 2 dan kam yo'nalish: alohida natija saqlanmaydi.
+function applyDirectionResults(data, before = null) {
+  const directions = data.directions ?? before?.directions ?? [];
+  const fallback = data.result ?? before?.result ?? 'KUTILMOQDA';
+  const build = (source) => {
+    if (directions.length < 2) {
+      if (directions.length === 1 && source?.[directions[0]]) data.result = source[directions[0]];
+      data.directionResults = Prisma.DbNull;
+      return;
+    }
+    const map = Object.fromEntries(directions.map((d) => [d, source?.[d] || fallback]));
+    data.directionResults = map;
+    data.result = aggregateResult(Object.values(map));
+  };
+  if (data.directionResults) return build(data.directionResults);
+  if (data.directionResults === null) {
+    data.directionResults = Prisma.DbNull;
+    return undefined;
+  }
+  delete data.directionResults;
+  if ('result' in data) {
+    if (before?.directionResults) data.directionResults = Prisma.DbNull;
+    return undefined;
+  }
+  if ('directions' in data && before?.directionResults) return build(before.directionResults);
+  return undefined;
+}
+
 // Comparable form of a field value (dates/decimals), for the change log.
 function comparable(value) {
-  if (value === undefined || value === null) return null;
+  if (value === undefined || value === null || value === Prisma.DbNull) return null;
   if (value instanceof Date) return value.toISOString().slice(0, 10);
   if (typeof value === 'object' && typeof value.toNumber === 'function') return value.toNumber();
   return value;
@@ -274,6 +315,7 @@ const createRecord = asyncHandler(async (req, res) => {
   const finance = canSeeFinance(req);
   const data = toData(req.body, finance, { partial: false });
   await checkDirections(data);
+  applyDirectionResults(data);
   const record = await prisma.$transaction(async (tx) => {
     const created = await tx.testJournalRecord.create({ data, include: INCLUDE });
     await logChange(tx, created.id, req, 'CREATE');
@@ -288,6 +330,7 @@ const updateRecord = asyncHandler(async (req, res) => {
   if (!before) return res.status(404).json({ error: 'Yozuv topilmadi.' });
   const data = toData(req.body, finance, { partial: true });
   await checkDirections(data);
+  applyDirectionResults(data, before);
   const changes = diff(before, data);
   const record = await prisma.$transaction(async (tx) => {
     const updated = await tx.testJournalRecord.update({ where: { id: req.params.id }, data, include: INCLUDE });
