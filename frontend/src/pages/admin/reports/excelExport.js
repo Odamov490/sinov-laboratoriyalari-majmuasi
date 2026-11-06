@@ -5,14 +5,15 @@
 export const HEADER_FILL = 'FFDBE5F1';
 const BORDER_COLOR = 'FF94A3B8';
 
-// Row fills matching ROW_COLORS on screen (tailwind tints over white).
+// Row fills matching ROW_COLORS on screen (same tailwind colors).
 export const RESULT_FILLS = {
-  MOS: 'FFC9F9D9',
-  MOS_EMAS: 'FFFDC0C0',
-  QISMAN_MOS_EMAS: 'FFFDC0C0',
-  KORIB_CHIQISH: 'FFFDC0C0',
-  NAMUNA_TAQDIM_ETILMADI: 'FFFEF196',
-  BEKOR_QILINDI: 'FFFEF196',
+  MOS: 'FFBBF7D0', // green-200
+  MOS_EMAS: 'FFFCA5A5', // red-300
+  QISMAN_MOS_EMAS: 'FFFED7AA', // orange-200
+  KORIB_CHIQISH: 'FFDDD6FE', // violet-200
+  NAMUNA_TAQDIM_ETILMADI: 'FFFEF08A', // yellow-200
+  BEKOR_QILINDI: 'FFCBD5E1', // slate-300
+  KUTILMOQDA: 'FFE0F2FE', // sky-100
 };
 
 const thin = { style: 'thin', color: { argb: BORDER_COLOR } };

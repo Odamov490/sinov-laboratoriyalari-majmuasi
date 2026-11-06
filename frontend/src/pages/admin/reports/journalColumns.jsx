@@ -19,16 +19,16 @@ export const resultText = (r) =>
   (RESULT_LABELS[r.result] || r.result) +
   (r.result === 'QISMAN_MOS_EMAS' && r.nonconformingCount ? (' ' + tr('({0} ta)', r.nonconformingCount)) : '');
 
-// Row colors of the Excel journal: green = muvofiq, red = nomuvofiq,
-// yellow = not submitted / cancelled; pending rows stay white.
+// Qator ranglari — har bir natija o'z rangida (Excel eksportda ham xuddi shu
+// ranglar: excelExport.RESULT_FILLS; hisobot belgilari: RESULT_STYLES).
 export const ROW_COLORS = {
-  MOS: 'bg-green-200/80',
-  MOS_EMAS: 'bg-red-300/70',
-  QISMAN_MOS_EMAS: 'bg-red-300/70',
-  KORIB_CHIQISH: 'bg-red-300/70',
-  NAMUNA_TAQDIM_ETILMADI: 'bg-yellow-200/90',
-  BEKOR_QILINDI: 'bg-yellow-200/90',
-  KUTILMOQDA: 'bg-white',
+  MOS: 'bg-green-200', // muvofiq — yashil
+  MOS_EMAS: 'bg-red-300', // nomuvofiq — qizil
+  QISMAN_MOS_EMAS: 'bg-orange-200', // qisman nomuvofiq — to'q sariq
+  KORIB_CHIQISH: 'bg-violet-200', // ko'rib chiqish kerak — binafsha
+  NAMUNA_TAQDIM_ETILMADI: 'bg-yellow-200', // namuna taqdim etilmadi — sariq
+  BEKOR_QILINDI: 'bg-slate-300', // bekor qilindi — kulrang
+  KUTILMOQDA: 'bg-sky-100', // natija kutilmoqda — och ko'k
 };
 
 // Joyida tahrirlash ta'riflari.

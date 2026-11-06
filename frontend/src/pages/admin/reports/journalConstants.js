@@ -21,14 +21,15 @@ export const resultOptions = (current) =>
     .filter(([value]) => !RETIRED_RESULTS.has(value) || value === current)
     .map(([value, label]) => ({ value, label }));
 
+// Hisobot belgilari — jadval qatorlari bilan bir xil rang oilasi (ROW_COLORS).
 export const RESULT_STYLES = {
-  MOS: 'bg-emerald-100 text-emerald-700',
-  MOS_EMAS: 'bg-red-100 text-red-700',
-  QISMAN_MOS_EMAS: 'bg-orange-100 text-orange-700',
-  NAMUNA_TAQDIM_ETILMADI: 'bg-slate-100 text-slate-600',
-  BEKOR_QILINDI: 'bg-slate-200 text-slate-600',
-  KUTILMOQDA: 'bg-sky-100 text-sky-700',
-  KORIB_CHIQISH: 'bg-amber-100 text-amber-800',
+  MOS: 'bg-green-200 text-green-900',
+  MOS_EMAS: 'bg-red-300 text-red-900',
+  QISMAN_MOS_EMAS: 'bg-orange-200 text-orange-900',
+  NAMUNA_TAQDIM_ETILMADI: 'bg-yellow-200 text-yellow-900',
+  BEKOR_QILINDI: 'bg-slate-300 text-slate-800',
+  KUTILMOQDA: 'bg-sky-100 text-sky-900',
+  KORIB_CHIQISH: 'bg-violet-200 text-violet-900',
 };
 
 // Sinov yo'nalishlari — Spravochniklar > "Sinov yo'nalishlari" dan keladi

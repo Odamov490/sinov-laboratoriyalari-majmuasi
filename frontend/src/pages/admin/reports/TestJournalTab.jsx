@@ -7,7 +7,7 @@ import { useToast } from '../../../context/ToastContext.jsx';
 import { Modal } from '../../../components/Modal.jsx';
 import TestJournalRecordModal from './TestJournalRecordModal.jsx';
 import EditableCell from './EditableCell.jsx';
-import { resultOptions, directionOptions, PAYMENT_LABELS, formatMoney } from './journalConstants';
+import { resultOptions, RESULT_LABELS, RESULT_STYLES, directionOptions, PAYMENT_LABELS, formatMoney } from './journalConstants';
 import { ROW_COLORS, resolveColumns } from './journalColumns.jsx';
 import ColumnSettingsModal from './ColumnSettingsModal.jsx';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
@@ -412,6 +412,23 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
           </button>
         </div>
       )}
+
+      {/* Natija ranglari izohi */}
+      <div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs">
+        {resultOptions().map(({ value }) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setFilter('result', filters.result === value ? '' : value)}
+            title={tr("Shu natija bo'yicha filtrlash")}
+            className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-medium ring-1 ring-black/5 transition ${RESULT_STYLES[value] || ''} ${
+              filters.result === value ? 'ring-2 ring-primary' : 'hover:brightness-95'
+            }`}
+          >
+            {RESULT_LABELS[value]}
+          </button>
+        ))}
+      </div>
 
       {/* Journal table */}
       <div className="card overflow-x-auto">
