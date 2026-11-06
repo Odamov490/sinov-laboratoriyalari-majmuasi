@@ -44,7 +44,6 @@ import AdminReports from './pages/admin/reports/AdminReports.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
 import AdminScanner from './pages/admin/AdminScanner.jsx';
-import AdminDls from './pages/admin/AdminDls.jsx';
 import AdminProfile from './pages/admin/AdminProfile.jsx';
 import AdminTasks from './pages/admin/AdminTasks.jsx';
 import AdminTestProgramBuilder from './pages/admin/AdminTestProgramBuilder.jsx';
@@ -171,7 +170,6 @@ export default function App() {
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="hisobot" element={<AdminReports />} />
         <Route path="skanerlash" element={<AdminScanner />} />
-        <Route path="dls" element={<AdminDls />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
         <Route path="mening-profilim" element={<AdminProfile />} />
         <Route path="vazifalar" element={<AdminTasks />} />
