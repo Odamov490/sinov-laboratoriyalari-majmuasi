@@ -32,6 +32,29 @@ export const ROW_COLORS = {
 const inlineInput =
   'w-full min-w-[7.5rem] rounded border border-transparent bg-transparent px-1 py-0.5 text-[13px] hover:border-slate-400 focus:border-primary focus:bg-white focus:outline-none';
 
+// Sana katagi: doim ko'rinadigan kalendar (Bayonnoma sanasi kabi). Kalendardan
+// tanlanganda yoki yil to'liq yozilganda saqlanadi; tozalansa — bo'sh.
+const isFullDate = (v) => v === '' || /^(19|20)\d\d-\d\d-\d\d$/.test(v);
+function dateCell(field, label, { get = (r) => r[field], payload } = {}) {
+  return (r, ctx) => {
+    const value = get(r) ? String(get(r)).slice(0, 10) : '';
+    return (
+      <input
+        key={`${r.id}:${field}:${value}`}
+        type="date"
+        defaultValue={value}
+        disabled={ctx.savingCell === `${r.id}:${field}`}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (isFullDate(v) && v !== value) ctx.saveCell(r, field, v, payload ? payload(r, v || null) : undefined);
+        }}
+        className={inlineInput}
+        aria-label={label()}
+      />
+    );
+  };
+}
+
 export const COLUMNS = [
   { key: 'productType', label: () => tr('Mahsulot turi'), text: (r) => r.productType?.nameUz || '' },
   {
@@ -41,7 +64,14 @@ export const COLUMNS = [
     wide: true,
   },
   { key: 'actNo', label: () => tr('Namuna tanlash dalolatnomasi raqami ID'), text: (r) => r.actNo || '', sortBy: 'actNo', center: true },
-  { key: 'actDate', label: () => tr('Namuna tanlash dalolatnomasi sanasi'), text: (r) => dateText(r.actDate), sortBy: 'actDate', center: true },
+  {
+    key: 'actDate',
+    label: () => tr('Namuna tanlash dalolatnomasi sanasi'),
+    text: (r) => dateText(r.actDate),
+    sortBy: 'actDate',
+    center: true,
+    render: dateCell('actDate', () => tr('Namuna tanlash dalolatnomasi sanasi')),
+  },
   { key: 'executorName', label: () => tr('Namuna tanlash dalolatnomasi F.I.Sh'), text: (r) => r.executorName || '', center: true },
   {
     key: 'sampleReceivedDate',
@@ -49,6 +79,7 @@ export const COLUMNS = [
     text: (r) => dateText(r.sampleReceivedDate),
     sortBy: 'sampleReceivedDate',
     center: true,
+    render: dateCell('sampleReceivedDate', () => tr('Namuna kelgan sanasi')),
   },
   { key: 'sampleReceivedTime', label: () => tr('Namuna kelgan vaqti'), text: (r) => r.sampleReceivedTime || '', center: true },
   { key: 'sampleCount', label: () => tr('Namuna(lar) soni'), text: (r) => r.sampleCount ?? '', sortBy: 'sampleCount', sum: true, center: true },
@@ -59,16 +90,7 @@ export const COLUMNS = [
     text: (r) => dateText(r.protocolDate),
     sortBy: 'protocolDate',
     center: true,
-    render: (r, ctx) => (
-      <input
-        type="date"
-        value={r.protocolDate || ''}
-        disabled={ctx.savingCell === `${r.id}:protocolDate`}
-        onChange={(e) => ctx.saveCell(r, 'protocolDate', e.target.value)}
-        className={inlineInput}
-        aria-label={tr('Bayonnoma sanasi')}
-      />
-    ),
+    render: dateCell('protocolDate', () => tr('Bayonnoma sanasi')),
   },
   {
     key: 'directions',
@@ -107,7 +129,14 @@ export const COLUMNS = [
     text: (r) => [r.location?.nameUz, r.isRepeat && 'povtor'].filter(Boolean).join(' '),
   },
   { key: 'contractNo', label: () => tr('Shartnoma №, (EEF)'), text: (r) => r.contractNo || '', finance: true },
-  { key: 'contractDate', label: () => tr('Shartnoma sanasi'), text: (r) => dateText(r.contractDate), finance: true, center: true },
+  {
+    key: 'contractDate',
+    label: () => tr('Shartnoma sanasi'),
+    text: (r) => dateText(r.contractDate),
+    finance: true,
+    center: true,
+    render: dateCell('contractDate', () => tr('Shartnoma sanasi')),
+  },
   {
     key: 'amount',
     label: () => tr('Shartnoma summasi (EEF)'),
@@ -159,6 +188,13 @@ export function customColumn(entry) {
     type: entry.type || 'text',
     label: () => layoutLabel(entry),
     text: (r) => customText(entry.type, r.customFields?.[entry.key]),
+    // "Sana" turidagi qo'shimcha ustun ham kalendar bilan (qiymat customFields ichida).
+    ...(entry.type === 'date' && {
+      render: dateCell(entry.key, () => layoutLabel(entry), {
+        get: (r) => r.customFields?.[entry.key],
+        payload: (r, v) => ({ customFields: { ...(r.customFields || {}), [entry.key]: v } }),
+      }),
+    }),
     center: entry.type === 'date',
     right: entry.type === 'number',
   };

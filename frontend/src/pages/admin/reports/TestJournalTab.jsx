@@ -122,10 +122,11 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
   }, [params]);
 
   // In-table edit of result / protocol date: saves at once and patches the row.
-  ctx.saveCell = async (record, field, value) => {
+  // payload — ixtiyoriy (masalan, qo'shimcha ustun: { customFields: {...} }).
+  ctx.saveCell = async (record, field, value, payload) => {
     setSavingCell(`${record.id}:${field}`);
     try {
-      const updated = await adminTestJournal.update(record.id, { [field]: value || null });
+      const updated = await adminTestJournal.update(record.id, payload || { [field]: value || null });
       setData((d) => ({ ...d, items: d.items.map((i) => (i.id === record.id ? { ...i, ...updated } : i)) }));
     } catch (err) {
       showToast(err?.response?.data?.error || tr('Saqlashda xatolik yuz berdi.'), 'error');
