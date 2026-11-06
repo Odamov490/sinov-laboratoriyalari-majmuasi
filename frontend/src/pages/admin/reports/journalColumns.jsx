@@ -32,6 +32,12 @@ export const ROW_COLORS = {
 const inlineInput =
   'w-full min-w-[7.5rem] rounded border border-transparent bg-transparent px-1 py-0.5 text-[13px] hover:border-slate-400 focus:border-primary focus:bg-white focus:outline-none';
 
+// To'lov holati katagi ranglari (qator rangi natijaga bog'liq, bu — faqat katakning o'zi).
+const PAYMENT_SELECT_STYLES = {
+  TOLANGAN: '!bg-emerald-500 !text-white font-semibold !border-emerald-600',
+  TOLANMAGAN: '!bg-red-500 !text-white font-semibold !border-red-600',
+};
+
 // Sana katagi: doim ko'rinadigan kalendar (Bayonnoma sanasi kabi). Kalendardan
 // tanlanganda yoki yil to'liq yozilganda saqlanadi; tozalansa — bo'sh.
 const isFullDate = (v) => v === '' || /^(19|20)\d\d-\d\d-\d\d$/.test(v);
@@ -147,7 +153,32 @@ export const COLUMNS = [
     sum: true,
     right: true,
   },
-  { key: 'paymentStatus', label: () => tr("To'lov"), text: (r) => (r.paymentStatus ? PAYMENT_LABELS[r.paymentStatus] : ''), finance: true },
+  {
+    key: 'paymentStatus',
+    label: () => tr("To'lov"),
+    text: (r) => (r.paymentStatus ? PAYMENT_LABELS[r.paymentStatus] : ''),
+    finance: true,
+    // Natija kabi: joyida tanlanadigan holat (bo'sh — kuzatilmagan).
+    render: (r, ctx) => (
+      <select
+        value={r.paymentStatus || ''}
+        disabled={ctx.savingCell === `${r.id}:paymentStatus`}
+        onChange={(e) => ctx.saveCell(r, 'paymentStatus', e.target.value)}
+        className={`${inlineInput} cursor-pointer ${PAYMENT_SELECT_STYLES[r.paymentStatus] || ''}`}
+        style={{ minWidth: `${Math.max(...Object.values(PAYMENT_LABELS).map((l) => l.length)) + 4}ch` }}
+        aria-label={tr("To'lov")}
+      >
+        <option value="" className="bg-white text-slate-900">
+          —
+        </option>
+        {Object.entries(PAYMENT_LABELS).map(([value, label]) => (
+          <option key={value} value={value} className="bg-white text-slate-900">
+            {label}
+          </option>
+        ))}
+      </select>
+    ),
+  },
   {
     key: 'cancelledSampleCount',
     label: () => tr('Bekor qilingan namunalar'),
