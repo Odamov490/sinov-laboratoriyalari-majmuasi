@@ -267,7 +267,8 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
   };
 
   const options = {
-    bodies: dictionaries.bodies.map((b) => ({ value: b.id, label: b.name })),
+    // Idoralar to'liq rasmiy nomi bilan (bo'lmasa — qisqa nomi).
+    bodies: dictionaries.bodies.map((b) => ({ value: b.id, label: b.fullName || b.name })),
     locations: dictionaries.locations.map((l) => ({ value: l.id, label: l.nameUz })),
     results: resultOptions(filters.result),
     directions: directionOptions(filters.direction ? [filters.direction] : []).map((d) => ({ value: d.value, label: d.short })),

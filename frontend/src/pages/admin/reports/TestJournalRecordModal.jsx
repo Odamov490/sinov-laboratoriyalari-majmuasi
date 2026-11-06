@@ -216,7 +216,7 @@ export default function TestJournalRecordModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={tr('Mahsulot turi *')}>{select('productTypeId', toOptions(dictionaries.productTypes, 'nameUz'), tr('Tanlang'))}</Field>
-          <Field label={tr('Buyurtmachi')}>{select('certificationBodyId', toOptions(dictionaries.bodies, 'name'))}</Field>
+          <Field label={tr('Buyurtmachi')}>{select('certificationBodyId', dictionaries.bodies.map((b) => ({ value: b.id, label: b.fullName || b.name })))}</Field>
           <Field label={tr('Akt ID')}>{input('actNo')}</Field>
           <Field label={tr('Akt sanasi')}>{input('actDate', 'date')}</Field>
           <Field label={tr('Ijrochi')}>{input('executorName', 'text', { list: 'journal-executors', autoComplete: 'off' })}</Field>
