@@ -86,6 +86,8 @@ export const COLUMNS = [
         disabled={ctx.savingCell === `${r.id}:result`}
         onChange={(e) => ctx.saveCell(r, 'result', e.target.value)}
         className={`${inlineInput} cursor-pointer`}
+        // Eng uzun holat nomi (joriy tilda) to'liq sig'ishi uchun: matn + strelka joyi.
+        style={{ minWidth: `${Math.max(...resultOptions(r.result).map((o) => o.label.length), resultText(r).length) + 4}ch` }}
         aria-label={tr('Natija')}
       >
         {resultOptions(r.result).map(({ value, label }) => (
