@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { adminTestJournal } from '../../../services/adminApi';
 import { Loading, ErrorState } from '../../../components/StateViews.jsx';
 import { useToast } from '../../../context/ToastContext.jsx';
-import { RESULT_LABELS, RESULT_STYLES, formatMoney } from './journalConstants';
+import { RESULT_LABELS, RESULT_STYLES, formatMoney, directionShort, directionName, directionOrder } from './journalConstants';
 import { RESULT_FILLS, addTableSheet, newWorkbook, downloadWorkbook } from './excelExport';
 import { tr } from '../../../i18n/tr.js';
 
@@ -30,6 +30,81 @@ function topBodies(rows) {
     { id: 'other', name: tr('Boshqalar ({0} ta)', rest.length), records: 0, samples: 0, amount: 0 }
   );
   return [...rows.slice(0, TOP_BODIES), other];
+}
+
+// Laboratoriya (sinov yo'nalishi) kesimidagi ustunlar: natija guruhlari.
+const DIRECTION_RESULT_COLS = [
+  { key: 'MOS', label: tr('Muvofiq'), keys: ['MOS'] },
+  { key: 'MOS_EMAS', label: tr('Nomuvofiq'), keys: ['MOS_EMAS', 'QISMAN_MOS_EMAS'] },
+  { key: 'KORIB_CHIQISH', label: tr("Ko'rib chiqish kerak"), keys: ['KORIB_CHIQISH'] },
+  { key: 'KUTILMOQDA', label: tr('Natija kutilmoqda'), keys: ['KUTILMOQDA'] },
+  { key: 'BEKOR', label: tr('Bekor / taqdim etilmagan'), keys: ['BEKOR_QILINDI', 'NAMUNA_TAQDIM_ETILMADI'] },
+];
+const resultCount = (row, col) => col.keys.reduce((acc, k) => acc + (row.results?.[k] || 0), 0);
+const sortDirections = (rows) => [...(rows || [])].sort((a, b) => directionOrder(a.direction) - directionOrder(b.direction));
+
+function DirectionTable({ rows }) {
+  const sum = (fn) => rows.reduce((acc, r) => acc + fn(r), 0);
+  return (
+    <div className="card p-5 overflow-x-auto">
+      <p className="text-sm font-semibold text-ink">{tr('Laboratoriyalar kesimida')}</p>
+      <p className="mb-3 text-xs text-slate-500">
+        {tr("Har bir yo'nalish o'z natijasi bilan hisoblanadi; bir yozuv bir necha yo'nalishga kirishi mumkin.")}
+      </p>
+      <table className="w-full text-sm min-w-[760px]">
+        <thead>
+          <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+            <th className="py-2 pr-2">{tr("Yo'nalish")}</th>
+            <th className="py-2 px-2 text-right">{tr('Yozuvlar')}</th>
+            <th className="py-2 px-2 text-right">{tr('Namunalar')}</th>
+            {DIRECTION_RESULT_COLS.map((c) => (
+              <th key={c.key} className="py-2 px-2 text-right">
+                {c.label}
+              </th>
+            ))}
+            <th className="py-2 pl-2 text-right">{tr('Muvofiqlik')}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {rows.map((r) => (
+            <tr key={r.direction}>
+              <td className="py-2 pr-2">
+                <span className="font-semibold text-ink">{directionShort(r.direction)}</span>{' '}
+                <span className="text-xs text-slate-500">{directionName(r.direction)}</span>
+              </td>
+              <td className="py-2 px-2 text-right tabular-nums">{fmtInt(r.records)}</td>
+              <td className="py-2 px-2 text-right tabular-nums">{fmtInt(r.samples)}</td>
+              {DIRECTION_RESULT_COLS.map((c) => (
+                <td key={c.key} className="py-2 px-2 text-right tabular-nums">
+                  {resultCount(r, c) ? (
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${RESULT_STYLES[c.keys[0]] || ''}`}>
+                      {fmtInt(resultCount(r, c))}
+                    </span>
+                  ) : (
+                    <span className="text-slate-300">0</span>
+                  )}
+                </td>
+              ))}
+              <td className="py-2 pl-2 text-right tabular-nums font-medium">{pct(r.conformShare)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr className="font-semibold text-ink border-t-2 border-border">
+            <td className="py-2 pr-2">{tr('Jami')}</td>
+            <td className="py-2 px-2 text-right tabular-nums">{fmtInt(sum((r) => r.records))}</td>
+            <td className="py-2 px-2 text-right tabular-nums">{fmtInt(sum((r) => r.samples))}</td>
+            {DIRECTION_RESULT_COLS.map((c) => (
+              <td key={c.key} className="py-2 px-2 text-right tabular-nums">
+                {fmtInt(sum((r) => resultCount(r, c)))}
+              </td>
+            ))}
+            <td className="py-2 pl-2" />
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
 }
 
 function StatCard({ icon: Icon, label, value, hint }) {
@@ -160,6 +235,29 @@ export default function TestJournalSummaryTab({ showFinance }) {
       sheet(tr('Mahsulot turlari'), data.byProductType, tr('Mahsulot turi'), (r) => r.name);
       sheet(tr('Buyurtmachilar'), data.byCertificationBody, tr('Buyurtmachi'), (r) => r.name);
       sheet(tr('Natijalar'), data.byResult, tr('Natija'), (r) => RESULT_LABELS[r.result] || r.result, (r) => RESULT_FILLS[r.result]);
+      const dirRows = sortDirections(data.byDirection);
+      if (dirRows.length) {
+        const sumOf = (fn) => dirRows.reduce((acc, r) => acc + fn(r), 0);
+        addTableSheet(wb, tr('Laboratoriyalar'), {
+          columns: [
+            { header: tr("Yo'nalish"), width: 36 },
+            { header: tr('Yozuvlar'), width: 12, align: 'right' },
+            { header: tr('Namunalar'), width: 12, align: 'right' },
+            ...DIRECTION_RESULT_COLS.map((c) => ({ header: c.label, width: 16, align: 'right' })),
+            { header: tr('Muvofiqlik, %'), width: 14, align: 'right' },
+          ],
+          rows: dirRows.map((r) => ({
+            values: [
+              `${directionShort(r.direction)} — ${directionName(r.direction)}`,
+              r.records,
+              r.samples,
+              ...DIRECTION_RESULT_COLS.map((c) => resultCount(r, c)),
+              r.conformShare === null ? '' : Math.round(r.conformShare * 1000) / 10,
+            ],
+          })),
+          total: ['JAMI', sumOf((r) => r.records), sumOf((r) => r.samples), ...DIRECTION_RESULT_COLS.map((c) => sumOf((r) => resultCount(r, c))), ''],
+        });
+      }
       const period = `${from || 'boshidan'}_${to || 'hozirgacha'}`;
       await downloadWorkbook(wb, tr('umumiy-hisobot_{0}.xlsx', period));
     } catch {
@@ -227,6 +325,8 @@ export default function TestJournalSummaryTab({ showFinance }) {
               hint={tr('Yakuniy natijali yozuvlar ichida')}
             />
           </div>
+
+          {data.byDirection?.length > 0 && <DirectionTable rows={sortDirections(data.byDirection)} />}
 
           {monthData.length > 0 && (
             <div className={`grid grid-cols-1 ${showFinance ? 'lg:grid-cols-2' : ''} gap-5`}>

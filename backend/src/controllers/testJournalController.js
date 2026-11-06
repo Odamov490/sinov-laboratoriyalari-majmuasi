@@ -481,6 +481,7 @@ const getSummary = asyncHandler(async (req, res) => {
       sampleReceivedDate: true,
       actDate: true,
       directions: true,
+      directionResults: true,
       productType: { select: { id: true, nameUz: true } },
       certificationBody: { select: { id: true, name: true } },
     },
@@ -501,6 +502,7 @@ const getSummary = asyncHandler(async (req, res) => {
     byProductType: summary.byProductType.map(strip),
     byCertificationBody: summary.byCertificationBody.map(strip),
     byResult: summary.byResult.map(strip),
+    byDirection: summary.byDirection,
   });
 });
 

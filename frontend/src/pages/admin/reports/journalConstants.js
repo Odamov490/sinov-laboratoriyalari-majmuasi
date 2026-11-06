@@ -53,6 +53,16 @@ export function directionShort(code) {
   return d ? tr(d.short) : code;
 }
 
+// To'liq nomi va spravochnikdagi tartibi (hisobot uchun).
+export function directionName(code) {
+  const d = directionTypes.find((x) => x.code === code);
+  return d ? tr(d.nameUz) : code;
+}
+export function directionOrder(code) {
+  const i = directionTypes.findIndex((x) => x.code === code);
+  return i === -1 ? 999 : i;
+}
+
 // Tanlov uchun: faol yo'nalishlar + yozuvda allaqachon belgilangan nofaollari.
 export function directionOptions(selected = []) {
   return directionTypes

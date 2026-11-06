@@ -50,8 +50,20 @@ function buildSummary(records, includeCancelled = false) {
   const byProductType = new Map();
   const byBody = new Map();
   const byResult = new Map();
+  // Laboratoriya (sinov yo'nalishi) kesimi: har bir yo'nalish o'z natijasi bilan
+  // (directionResults bo'lsa — o'sha, aks holda yozuvning umumiy natijasi).
+  // Namunalar: shu yo'nalish natijasi bekor/taqdim etilmagan bo'lsa — kirmaydi.
+  const byDirection = new Map();
 
   records.forEach((r) => {
+    (r.directions || []).forEach((dir) => {
+      const result = r.directionResults?.[dir] || r.result;
+      if (!byDirection.has(dir)) byDirection.set(dir, { direction: dir, records: 0, samples: 0, results: {} });
+      const b = byDirection.get(dir);
+      b.records += 1;
+      b.samples += reportSamples({ ...r, result }, includeCancelled);
+      b.results[result] = (b.results[result] || 0) + 1;
+    });
     const s = reportSamples(r, includeCancelled);
     const a = reportAmount(r, includeCancelled);
     totals.records += 1;
@@ -88,6 +100,15 @@ function buildSummary(records, includeCancelled = false) {
     byProductType: sorted(byProductType, (a, b) => b.samples - a.samples),
     byCertificationBody: sorted(byBody, (a, b) => b.samples - a.samples || b.records - a.records),
     byResult: sorted(byResult, (a, b) => b.records - a.records),
+    byDirection: [...byDirection.values()].map((d) => {
+      const n = (k) => d.results[k] || 0;
+      const done = n('MOS') + n('MOS_EMAS') + n('QISMAN_MOS_EMAS');
+      return {
+        ...d,
+        conformShare: done ? n('MOS') / done : null,
+        nonconformShare: done ? (n('MOS_EMAS') + n('QISMAN_MOS_EMAS')) / done : null,
+      };
+    }),
   };
 }
 
