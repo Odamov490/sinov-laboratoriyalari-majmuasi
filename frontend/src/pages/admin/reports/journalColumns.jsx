@@ -97,6 +97,20 @@ export const COLUMNS = [
     label: () => tr("Sinov o'tkazilishi kerak bo'lgan yo'nalish (BZ, EMM, EE)"),
     text: (r) => (r.directions || []).map(directionShort).join('+'),
     center: true,
+    passClick: true, // faqat ko'rinish — bosilganda to'liq oyna ochiladi
+    // 2+ yo'nalish: ustma-ust ro'yxat — har birining qarshisida (Natija katagida) o'z holati.
+    render: (r) =>
+      directionResultsOf(r) ? (
+        <div className="flex flex-col gap-0.5">
+          {Object.keys(directionResultsOf(r)).map((dir) => (
+            <span key={dir} className="flex h-6 items-center justify-center font-medium">
+              {directionShort(dir)}
+            </span>
+          ))}
+        </div>
+      ) : (
+        (r.directions || []).map(directionShort).join('+')
+      ),
   },
   {
     key: 'result',
@@ -107,8 +121,11 @@ export const COLUMNS = [
         // 2+ yo'nalish: har biriga alohida natija; umumiy natija (qator rangi) serverda hisoblanadi.
         <div className="flex flex-col gap-0.5">
           {Object.entries(directionResultsOf(r)).map(([dir, value]) => (
-            <label key={dir} className="flex items-center gap-1 whitespace-nowrap">
-              <span className="w-12 shrink-0 text-right text-[11px] font-semibold text-slate-600">{directionShort(dir)}</span>
+            <label key={dir} className="flex h-6 items-center gap-1 whitespace-nowrap">
+              {/* Yo'nalish ustuni yashirilgan bo'lsa — qisqa nomi shu yerda. */}
+              {!ctx.directionsVisible && (
+                <span className="w-12 shrink-0 text-right text-[11px] font-semibold text-slate-600">{directionShort(dir)}</span>
+              )}
               <select
                 value={value}
                 disabled={ctx.savingCell === `${r.id}:result`}
