@@ -57,6 +57,7 @@ import {
   UserCircle,
   MessageCircle,
   Star,
+  Globe,
 } from 'lucide-react';
 import { setNotifyPrefs } from '../utils/notifyPrefs';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -131,6 +132,7 @@ const MENU_GROUPS = [
       { to: '/admin/hisobot', label: tr('Hisobot'), icon: BarChart3, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/skanerlash', label: tr('Skanerlash'), icon: ScanLine, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/murojaatlar', label: tr('Murojaatlar'), icon: Mail, roles: ['SUPER_ADMIN', 'MANAGER'], badgeKey: 'unreadMessages' },
+      { to: '/admin/dls', label: tr('DLS tizimi'), icon: Globe, roles: ['SUPER_ADMIN', 'MANAGER'] },
     ],
   },
   {
