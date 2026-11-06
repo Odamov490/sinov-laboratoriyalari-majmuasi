@@ -76,12 +76,11 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
 
   const sheetProduct = dictionaries.productTypes.find((p) => p.id === sheet);
   const brandLabel = sheet === SHOVQIN_SHEET ? tr('Muzlatkich markasi') : sheetProduct ? tr('{0} markasi', sheetProduct.nameUz) : tr('Marka');
-  const ctx = { brandLabel, saveCell: null, savingCell, directionsVisible: false };
+  const ctx = { brandLabel, saveCell: null, savingCell };
 
   // Shared layout (order, hidden, extra columns) set by SUPER_ADMIN; money
   // columns only to finance roles.
   const columns = resolveColumns(dictionaries.layout, showFinance).filter((c) => !c.hidden);
-  ctx.directionsVisible = columns.some((c) => c.key === 'directions');
   const [layoutOpen, setLayoutOpen] = useState(false);
 
   const params = useMemo(() => {
@@ -466,7 +465,7 @@ export default function TestJournalTab({ dictionaries, showFinance, canEditLayou
                   {columns.map((c) => (
                     <td
                       key={c.key}
-                      onClick={c.render && !c.passClick ? (e) => e.stopPropagation() : undefined}
+                      onClick={c.render ? (e) => e.stopPropagation() : undefined}
                       className={`${cell} ${c.center ? 'text-center' : ''} ${c.right ? 'text-right tabular-nums whitespace-nowrap' : ''} ${
                         c.wide ? 'max-w-[260px]' : ''
                       }`}

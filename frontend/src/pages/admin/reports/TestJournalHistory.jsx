@@ -5,7 +5,6 @@ import {
   FIELD_LABELS,
   RESULT_LABELS,
   directionShort,
-  directionResultsText,
   PAYMENT_LABELS,
   CANCELLED_BY_LABELS,
   formatDate,
@@ -42,8 +41,6 @@ function formatValue(field, value, dictionaries) {
       return CANCELLED_BY_LABELS[value] || value;
     case 'directions':
       return value.map(directionShort).join('+');
-    case 'directionResults':
-      return directionResultsText(value);
     case 'amount':
       return tr("{0} so'm", formatMoney(value));
     default:

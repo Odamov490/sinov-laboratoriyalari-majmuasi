@@ -1,5 +1,5 @@
 import React from 'react';
-import { RESULT_LABELS, resultOptions, directionShort, directionResultsOf, directionResultsText, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
+import { RESULT_LABELS, resultOptions, directionShort, PAYMENT_LABELS, CANCELLED_BY_LABELS, formatDate, formatMoney } from './journalConstants';
 import { tr, currentLang } from '../../../i18n/tr.js';
 
 // Columns of the journal table, in the paper/Excel journal's order. The same
@@ -14,7 +14,7 @@ import { tr, currentLang } from '../../../i18n/tr.js';
 const dateText = (v) => (v ? formatDate(v) : '');
 
 export const resultText = (r) =>
-  (directionResultsOf(r) ? directionResultsText(directionResultsOf(r)) : RESULT_LABELS[r.result] || r.result) +
+  (RESULT_LABELS[r.result] || r.result) +
   (r.result === 'QISMAN_MOS_EMAS' && r.nonconformingCount ? (' ' + tr('({0} ta)', r.nonconformingCount)) : '');
 
 // Qator ranglari — har bir natija o'z rangida (Excel eksportda ham xuddi shu
@@ -97,55 +97,12 @@ export const COLUMNS = [
     label: () => tr("Sinov o'tkazilishi kerak bo'lgan yo'nalish (BZ, EMM, EE)"),
     text: (r) => (r.directions || []).map(directionShort).join('+'),
     center: true,
-    passClick: true, // faqat ko'rinish — bosilganda to'liq oyna ochiladi
-    // 2+ yo'nalish: ustma-ust ro'yxat — har birining qarshisida (Natija katagida) o'z holati.
-    render: (r) =>
-      directionResultsOf(r) ? (
-        <div className="flex flex-col gap-0.5">
-          {Object.keys(directionResultsOf(r)).map((dir) => (
-            <span key={dir} className="flex h-6 items-center justify-center font-medium">
-              {directionShort(dir)}
-            </span>
-          ))}
-        </div>
-      ) : (
-        (r.directions || []).map(directionShort).join('+')
-      ),
   },
   {
     key: 'result',
     label: () => tr('Natija'),
     text: resultText,
-    render: (r, ctx) =>
-      directionResultsOf(r) ? (
-        // 2+ yo'nalish: har biriga alohida natija; umumiy natija (qator rangi) serverda hisoblanadi.
-        <div className="flex flex-col gap-0.5">
-          {Object.entries(directionResultsOf(r)).map(([dir, value]) => (
-            <label key={dir} className="flex h-6 items-center gap-1 whitespace-nowrap">
-              {/* Yo'nalish ustuni yashirilgan bo'lsa — qisqa nomi shu yerda. */}
-              {!ctx.directionsVisible && (
-                <span className="w-12 shrink-0 text-right text-[11px] font-semibold text-slate-600">{directionShort(dir)}</span>
-              )}
-              <select
-                value={value}
-                disabled={ctx.savingCell === `${r.id}:result`}
-                onChange={(e) =>
-                  ctx.saveCell(r, 'result', e.target.value, { directionResults: { ...directionResultsOf(r), [dir]: e.target.value } })
-                }
-                className={`${inlineInput} !min-w-0 cursor-pointer`}
-                style={{ minWidth: `${Math.max(...resultOptions(value).map((o) => o.label.length)) + 4}ch` }}
-                aria-label={tr('{0} natijasi', directionShort(dir))}
-              >
-                {resultOptions(value).map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
-        </div>
-      ) : (
+    render: (r, ctx) => (
       <select
         value={r.result}
         disabled={ctx.savingCell === `${r.id}:result`}
@@ -161,7 +118,7 @@ export const COLUMNS = [
           </option>
         ))}
       </select>
-      ),
+    ),
   },
   { key: 'nonconformingCount', label: () => tr('Nomuvofiq namunalar soni'), text: (r) => r.nonconformingCount ?? '', center: true },
   { key: 'cancelledBy', label: () => tr('Bekor qilgan tomon'), text: (r) => (r.cancelledBy ? CANCELLED_BY_LABELS[r.cancelledBy] : '') },

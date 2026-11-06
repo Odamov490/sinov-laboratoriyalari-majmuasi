@@ -4,7 +4,7 @@ import { Modal, ConfirmDialog } from '../../../components/Modal.jsx';
 import { adminTestJournal } from '../../../services/adminApi';
 import { useToast } from '../../../context/ToastContext.jsx';
 import TestJournalHistory from './TestJournalHistory.jsx';
-import { resultOptions, directionOptions, directionResultsOf, directionShort, defaultDirections, PAYMENT_LABELS, CANCELLED_BY_LABELS } from './journalConstants';
+import { resultOptions, directionOptions, defaultDirections, PAYMENT_LABELS, CANCELLED_BY_LABELS } from './journalConstants';
 import { tr } from '../../../i18n/tr.js';
 
 const EMPTY = {
@@ -46,7 +46,6 @@ function toForm(record) {
   form.certificationBodyId = record.certificationBodyId || '';
   form.locationId = record.locationId || '';
   form.notes = (record.notes || []).join('\n');
-  form.directionResults = directionResultsOf(record) || {};
   form.customFields = { ...(record.customFields || {}) };
   return form;
 }
@@ -69,11 +68,6 @@ function toPayload(form, showFinance, customColumns) {
     protocolDate: form.protocolDate || null,
     directions: form.directions,
     result: form.result,
-    // 2+ yo'nalish: har biriga natija (umumiy natija serverda hisoblanadi).
-    directionResults:
-      form.directions.length > 1
-        ? Object.fromEntries(form.directions.map((d) => [d, form.directionResults?.[d] || form.result || 'KUTILMOQDA']))
-        : null,
     nonconformingCount: num(form.nonconformingCount),
     cancelledBy: form.cancelledBy || null,
     brand: str(form.brand),
@@ -250,42 +244,13 @@ export default function TestJournalRecordModal({
             </div>
           </Field>
 
-          {form.directions.length > 1 ? (
-            <Field label={tr("Natija (har bir yo'nalish bo'yicha)")} full>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {form.directions.map((d) => {
-                  const value = form.directionResults?.[d] || form.result || 'KUTILMOQDA';
-                  return (
-                    <label key={d} className="flex items-center gap-2 text-sm">
-                      <span className="w-16 shrink-0 font-semibold text-slate-600">{directionShort(d)}</span>
-                      <select
-                        className="input-field"
-                        value={value}
-                        onChange={(e) => setForm((f) => ({ ...f, directionResults: { ...(f.directionResults || {}), [d]: e.target.value } }))}
-                      >
-                        {resultOptions(value).map((o) => (
-                          <option key={o.value} value={o.value}>
-                            {o.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  );
-                })}
-              </div>
-              <p className="mt-1 text-xs text-slate-500">
-                {tr("Umumiy natija avtomatik: bittasi nomuvofiq bo'lsa — nomuvofiq, hammasi muvofiq bo'lsa — muvofiq.")}
-              </p>
-            </Field>
-          ) : (
-            <Field label={tr('Natija')}>
-              {select(
-                'result',
-                resultOptions(form.result),
-                tr('Tanlang')
-              )}
-            </Field>
-          )}
+          <Field label={tr('Natija')}>
+            {select(
+              'result',
+              resultOptions(form.result),
+              tr('Tanlang')
+            )}
+          </Field>
           <Field label={tr('Nomuvofiq namunalar soni')}>{input('nonconformingCount', 'number', { min: 0 })}</Field>
           <Field label={tr('Bekor qilgan tomon')}>
             {select(
