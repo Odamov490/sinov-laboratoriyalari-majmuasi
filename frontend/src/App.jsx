@@ -87,6 +87,8 @@ import {
   retentionPolicyConfig,
 } from './pages/admin/adminConfigs.js';
 
+import AdminSifat from './pages/admin/AdminSifat.jsx';
+
 // Chat alohida bo'lak (chunk) bo'lib, faqat ochilganda yuklanadi.
 const AdminChat = lazy(() => import('./pages/admin/chat/AdminChat.jsx'));
 
@@ -137,6 +139,7 @@ export default function App() {
         <Route path="galereya" element={<AdminCrudPage config={galleryConfig} />} />
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
+        <Route path="sifat" element={<AdminSifat />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
         <Route path="tnved-reglament" element={<AdminCrudPage config={tnVedRegulationConfig} />} />
         <Route path="korsatkichlar" element={<AdminCrudPage config={testIndicatorConfig} />} />

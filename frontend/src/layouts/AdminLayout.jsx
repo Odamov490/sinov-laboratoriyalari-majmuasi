@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   FlaskConical,
@@ -66,7 +66,6 @@ import ChangePasswordForm from '../components/admin/ChangePasswordForm.jsx';
 import AdminHeaderMenu from '../components/admin/AdminHeaderMenu.jsx';
 import AdminMenuGroup from '../components/admin/AdminMenuGroup.jsx';
 import Logo from '../components/Logo.jsx';
-import { smkConfinedLabId } from '../pages/admin/AdminSmkPage.jsx';
 import { tr, currentLang, LOADED_LANG } from '../i18n/tr.js';
 
 // Always shown at the very top, outside any collapsible group.
@@ -85,7 +84,7 @@ const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/chat', '/ad
 // keeps its own SMK, so these are rendered inside the Sifat group once per
 // lab, with `to` rewritten to /admin/smk/<lab-slug>/<module>. New SMK modules
 // go here.
-const SMK_MODULES = [
+export const SMK_MODULES = [
       { to: '/admin/smk/nomuvofiqliklar', label: tr('Nomuvofiqliklar (CAPA)'), icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/smk/shikoyatlar', label: tr('Sifat shikoyatlari'), icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
       { to: '/admin/smk/hujjatlar', label: tr('SMK Hujjatlar'), icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
@@ -111,8 +110,7 @@ const SMK_MODULES = [
 ];
 
 const SMK_PREFIX = '/admin/smk/';
-const smkGroupKey = (labSlug) => `smk:${labSlug}`;
-const smkItemsForLab = (labSlug, items) =>
+export const smkItemsForLab = (labSlug, items) =>
   items.map((item) => ({ ...item, to: item.to.replace(SMK_PREFIX, `${SMK_PREFIX}${labSlug}/`) }));
 
 // Sidebar groups. Each item keeps its own to/label/icon/roles/badgeKey; a
@@ -162,11 +160,12 @@ const MENU_GROUPS = [
     ],
   },
   {
-    // Akkreditatsiya + per-laboratory SMK subgroups (see SMK_MODULES).
+    // Akkreditatsiya; the header opens /admin/sifat — laboratories as a kanban
+    // board, each with its SMK modules (see SMK_MODULES, AdminSifat.jsx).
     key: 'sifat',
+    to: '/admin/sifat',
     label: tr('Sifat'),
     icon: Award,
-    smk: true,
     items: [
       { to: '/admin/akkreditatsiya', label: tr('Akkreditatsiya'), icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
     ],
@@ -206,13 +205,11 @@ const DEFAULT_OPEN_GROUP = 'operatsiyalar';
 
 const isItemActive = (item, pathname) => pathname === item.to || pathname.startsWith(`${item.to}/`);
 
-// Keys of the groups that hold the current page: a top-level group, plus the
-// lab subgroup for SMK pages (/admin/smk/<lab-slug>/...).
+const isSifatPath = (pathname) => pathname === '/admin/sifat' || pathname.startsWith(SMK_PREFIX);
+
+// Keys of the groups that hold the current page (SMK pages belong to Sifat).
 function findActiveGroupKeys(pathname) {
-  if (pathname.startsWith(SMK_PREFIX)) {
-    const labSlug = pathname.slice(SMK_PREFIX.length).split('/')[0];
-    return labSlug ? ['sifat', smkGroupKey(labSlug)] : ['sifat'];
-  }
+  if (isSifatPath(pathname)) return ['sifat'];
   const group = MENU_GROUPS.find((g) => g.items.some((item) => isItemActive(item, pathname)));
   return group ? [group.key] : [];
 }
@@ -237,6 +234,7 @@ export default function AdminLayout() {
     if (currentLang() !== LOADED_LANG) window.location.reload();
   }, []);
   const location = useLocation();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [myTasks, setMyTasks] = useState(0);
@@ -262,16 +260,6 @@ export default function AdminLayout() {
   }, [openGroups]);
 
   const toggleGroup = (key) => setOpenGroups((prev) => ({ ...prev, [key]: !prev[key] }));
-
-  // Laboratories for the per-lab SMK subgroups (only roles that see SMK).
-  const [labs, setLabs] = useState([]);
-  useEffect(() => {
-    if (!user || !SMK_MODULES.some((m) => m.roles.includes(user.role))) return;
-    adminResource('laboratories')
-      .list({ pageSize: 200 })
-      .then((d) => setLabs(d.items || []))
-      .catch(() => setLabs([]));
-  }, [user]);
 
   useEffect(() => {
     if (!user || !['SUPER_ADMIN', 'MANAGER'].includes(user.role)) return;
@@ -392,26 +380,13 @@ export default function AdminLayout() {
   const roleItems = menuItemsForRole(user.role);
   const favorites = (user.preferences?.favorites || []).map((k) => roleItems.find((i) => i.key === k)).filter(Boolean);
   const canSee = (item) => item.roles.includes(user.role);
-  // A lab-bound user only gets their own lab's SMK.
-  const smkModules = SMK_MODULES.filter(canSee);
-  const confinedLabId = smkConfinedLabId(user);
-  const smkLabs = !smkModules.length
-    ? []
-    : confinedLabId
-      ? labs.filter((l) => l.id === confinedLabId)
-      : labs;
+  // Sifat header (kanban of labs) is offered to roles that see some SMK module.
+  const seesSmk = SMK_MODULES.some(canSee);
   const groups = MENU_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter(canSee),
-    labGroups: group.smk
-      ? smkLabs.map((lab) => ({
-          key: smkGroupKey(lab.slug),
-          label: lab.nameUz,
-          icon: FlaskConical,
-          items: smkItemsForLab(lab.slug, smkModules),
-        }))
-      : [],
-  })).filter((group) => group.items.length > 0 || group.labGroups.length > 0);
+    to: group.to && seesSmk ? group.to : undefined,
+  })).filter((group) => group.items.length > 0 || group.to);
 
   const renderLink = (item) => {
     const badgeCount = item.badgeKey ? badgeValues[item.badgeKey] : 0;
@@ -472,20 +447,19 @@ export default function AdminLayout() {
               group={group}
               isOpen={Boolean(openGroups[group.key])}
               onToggle={() => toggleGroup(group.key)}
+              onNavigate={
+                group.to
+                  ? () => {
+                      navigate(group.to);
+                      setOpenGroups((prev) => withOpen(prev, [group.key]));
+                      setOpen(false);
+                    }
+                  : undefined
+              }
+              active={group.to ? isSifatPath(location.pathname) : false}
               badgeCount={group.items.reduce((sum, item) => sum + (item.badgeKey ? badgeValues[item.badgeKey] || 0 : 0), 0)}
             >
               {group.items.map((item) => renderLink(item))}
-              {group.labGroups.map((lab) => (
-                <AdminMenuGroup
-                  key={lab.key}
-                  group={lab}
-                  nested
-                  isOpen={Boolean(openGroups[lab.key])}
-                  onToggle={() => toggleGroup(lab.key)}
-                >
-                  {lab.items.map((item) => renderLink(item))}
-                </AdminMenuGroup>
-              ))}
             </AdminMenuGroup>
           ))}
           <button
