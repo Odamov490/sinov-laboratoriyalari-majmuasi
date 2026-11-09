@@ -35,7 +35,6 @@ const MENU_CATALOG = [
   { key: 'akkreditatsiya', label: 'Akkreditatsiya', roles: SM },
   { key: 'foydalanuvchilar', label: 'Foydalanuvchilar', roles: S },
   { key: 'sozlamalar', label: 'Sozlamalar', roles: S },
-  { key: 'tris-ulanishlar', label: 'Tris ulanishlari', roles: S },
   { key: 'chat-sozlamalari', label: 'Chat sozlamalari', roles: S },
   { key: 'stikerlar', label: 'Stikerlar', roles: S },
 ];

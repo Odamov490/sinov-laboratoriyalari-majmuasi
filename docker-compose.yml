@@ -34,21 +34,6 @@ services:
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
       CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID}
       CHAT_STORAGE_DIR: ${CHAT_STORAGE_DIR:-/app/chat-media}
-      # Tris integratsiyasi (OAuth 2.0 + PKCE). Qiymatlar serverdagi ildiz .env'da;
-      # bo'sh bo'lsa integratsiya "sozlanmagan" holatida, ilova ishlayveradi.
-      TRIS_API_BASE_URL: ${TRIS_API_BASE_URL:-https://api-laboratory.tris.uz}
-      TRIS_OAUTH_AUTHORIZE_URL: ${TRIS_OAUTH_AUTHORIZE_URL:-}
-      TRIS_OAUTH_TOKEN_URL: ${TRIS_OAUTH_TOKEN_URL:-}
-      TRIS_OAUTH_REVOKE_URL: ${TRIS_OAUTH_REVOKE_URL:-}
-      TRIS_OAUTH_USERINFO_URL: ${TRIS_OAUTH_USERINFO_URL:-}
-      TRIS_OAUTH_CLIENT_ID: ${TRIS_OAUTH_CLIENT_ID:-}
-      TRIS_OAUTH_CLIENT_SECRET: ${TRIS_OAUTH_CLIENT_SECRET:-}
-      TRIS_OAUTH_TOKEN_AUTH_METHOD: ${TRIS_OAUTH_TOKEN_AUTH_METHOD:-client_secret_basic}
-      TRIS_OAUTH_SCOPES: ${TRIS_OAUTH_SCOPES:-}
-      TRIS_OAUTH_REDIRECT_URI: ${TRIS_OAUTH_REDIRECT_URI:-https://s-lab.uz/api/tris/callback}
-      TRIS_OAUTH_PKCE: ${TRIS_OAUTH_PKCE:-true}
-      TRIS_TOKEN_ENCRYPTION_KEY: ${TRIS_TOKEN_ENCRYPTION_KEY:-}
-      TRIS_API_PING_PATH: ${TRIS_API_PING_PATH:-}
     depends_on:
       postgres:
         condition: service_healthy
