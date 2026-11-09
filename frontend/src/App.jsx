@@ -36,6 +36,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import AdminApplications from './pages/admin/AdminApplications.jsx';
 import AdminPrices from './pages/admin/AdminPrices.jsx';
 import AdminUsers from './pages/admin/AdminUsers.jsx';
+import AdminTrisConnections from './pages/admin/AdminTrisConnections.jsx';
 import AdminSettings from './pages/admin/AdminSettings.jsx';
 import AdminDeclarationInfo from './pages/admin/AdminDeclarationInfo.jsx';
 import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
@@ -171,6 +172,7 @@ export default function App() {
         <Route path="hisobot" element={<AdminReports />} />
         <Route path="skanerlash" element={<AdminScanner />} />
         <Route path="foydalanuvchilar" element={<AdminUsers />} />
+        <Route path="tris-ulanishlar" element={<AdminTrisConnections />} />
         <Route path="mening-profilim" element={<AdminProfile />} />
         <Route path="vazifalar" element={<AdminTasks />} />
         <Route

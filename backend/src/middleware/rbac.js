@@ -64,6 +64,8 @@ const MODULE_ACCESS = {
   inbox: ['SUPER_ADMIN', 'MANAGER'],
   // Ichki chat: hamma rollar; xonalarga kirish a'zolik bo'yicha tekshiriladi.
   chat: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
+  // Tris integratsiyasi: barcha ulanishlarni ko'rish va majburan uzish.
+  tris_admin: ['SUPER_ADMIN'],
 };
 
 // Deny by default: a module missing from MODULE_ACCESS is closed to everyone.

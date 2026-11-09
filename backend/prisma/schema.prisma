@@ -81,6 +81,9 @@ model User {
   stickerPacksCreated              StickerPack[]
   loginEvents                      LoginEvent[]
   sessions                         UserSession[]
+  trisConnection                   TrisConnection?
+  trisOAuthStates                  TrisOAuthState[]
+  trisConnectionEvents             TrisConnectionEvent[]
 }
 
 model Laboratory {
@@ -1687,4 +1690,82 @@ model UserSession {
   revokedAt        DateTime?
 
   @@index([userId, revokedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Tris integratsiyasi (OAuth 2.0 Authorization Code + PKCE). Xodim tris'ga
+// o'zi kiradi; SLM faqat cheklangan token oladi. Tokenlar AES-256-GCM bilan
+// shifrlangan (TRIS_TOKEN_ENCRYPTION_KEY), ochiq ko'rinishda hech qayerda
+// saqlanmaydi va API javobiga chiqmaydi.
+// ---------------------------------------------------------------------------
+
+enum TrisConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
+enum TrisConnectionEventType {
+  CONNECTED
+  DISCONNECTED
+  REFRESHED
+  REFRESH_FAILED
+  REVOKED_BY_ADMIN
+  ERROR
+}
+
+// Har bir foydalanuvchi uchun bitta ulanish; uzilganda qator o'chiriladi.
+model TrisConnection {
+  id              String               @id @default(uuid())
+  userId          String               @unique
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          TrisConnectionStatus @default(ACTIVE)
+  accessTokenEnc  String
+  refreshTokenEnc String?
+  keyVersion      Int                  @default(1)
+  tokenType       String               @default("Bearer")
+  scope           String?
+  accessExpiresAt DateTime?
+  // Tris tarafidagi hisob identifikatori (userinfo'dan). Bitta tris hisobi —
+  // bitta SLM foydalanuvchisi.
+  trisSubject     String?              @unique
+  trisDisplayName String?
+  connectedAt     DateTime             @default(now())
+  lastUsedAt      DateTime?
+  lastRefreshAt   DateTime?
+  // Xavfsiz qisqa kod (masalan REFRESH_REJECTED), provayder matni emas.
+  lastErrorCode   String?
+  updatedAt       DateTime             @updatedAt
+
+  @@index([status])
+}
+
+// Bog'lash jarayonidagi bir martalik state (10 daqiqa). state o'zi emas,
+// faqat SHA-256 xeshi; PKCE code_verifier shifrlangan.
+model TrisOAuthState {
+  id              String    @id @default(uuid())
+  stateHash       String    @unique
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeVerifierEnc String
+  createdAt       DateTime  @default(now())
+  expiresAt       DateTime
+  usedAt          DateTime?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// Ulanish tarixi (180 kundan eskilari cron bilan o'chiriladi).
+model TrisConnectionEvent {
+  id        String                  @id @default(uuid())
+  userId    String
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      TrisConnectionEventType
+  detail    String?
+  createdAt DateTime                @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
 }

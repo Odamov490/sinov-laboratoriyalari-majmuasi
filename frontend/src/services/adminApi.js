@@ -85,6 +85,19 @@ export const adminProfile = {
   correctionRequest: (message) => apiClient.post('/admin/profile/correction-request', { message }).then((r) => r.data),
 };
 
+// Tris integratsiyasi: o'z ulanishi (tokenlar hech qachon frontendga kelmaydi).
+export const adminTris = {
+  status: () => apiClient.get('/admin/profile/tris/status').then((r) => r.data),
+  connect: () => apiClient.post('/admin/profile/tris/connect').then((r) => r.data),
+  disconnect: () => apiClient.post('/admin/profile/tris/disconnect').then((r) => r.data),
+  test: () => apiClient.post('/admin/profile/tris/test').then((r) => r.data),
+  // SUPER_ADMIN
+  connections: () => apiClient.get('/admin/tris/connections').then((r) => r.data),
+  config: () => apiClient.get('/admin/tris/config').then((r) => r.data),
+  forceDisconnect: (userId) => apiClient.post(`/admin/tris/connections/${userId}/disconnect`).then((r) => r.data),
+  testUser: (userId) => apiClient.post(`/admin/tris/connections/${userId}/test`).then((r) => r.data),
+};
+
 export const getMyDashboard = () => apiClient.get('/admin/dashboard/my-activity').then((r) => r.data);
 
 // Murojaat/ariza xulosasi (SUPER_ADMIN/MANAGER) — sarlavhadagi qo'ng'iroqcha uchun.

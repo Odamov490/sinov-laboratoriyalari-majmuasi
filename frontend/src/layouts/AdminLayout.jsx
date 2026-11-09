@@ -57,6 +57,7 @@ import {
   UserCircle,
   MessageCircle,
   Star,
+  PlugZap,
 } from 'lucide-react';
 import { setNotifyPrefs } from '../utils/notifyPrefs';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -178,6 +179,7 @@ const MENU_GROUPS = [
     items: [
       { to: '/admin/foydalanuvchilar', label: tr('Foydalanuvchilar'), icon: Users, roles: ['SUPER_ADMIN'] },
       { to: '/admin/sozlamalar', label: tr('Sozlamalar'), icon: Settings, roles: ['SUPER_ADMIN'] },
+      { to: '/admin/tris-ulanishlar', label: tr('Tris ulanishlari'), icon: PlugZap, roles: ['SUPER_ADMIN'] },
     ],
   },
   {

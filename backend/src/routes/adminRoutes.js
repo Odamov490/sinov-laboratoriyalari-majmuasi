@@ -27,6 +27,7 @@ const notifications = require('../controllers/notificationController');
 const chatRoutes = require('./chatRoutes');
 const { syncUserSafe } = require('../services/chat/membership');
 const profile = require('../controllers/profileController');
+const tris = require('../controllers/trisController');
 const rateLimit = require('express-rate-limit');
 const { getMyDashboard, getNotifications } = require('../controllers/dashboardController');
 const {
@@ -278,6 +279,26 @@ router.get('/profile/logins', profile.listLogins);
 router.get('/profile/summary', profile.summary);
 router.get('/profile/activity', profile.activity);
 router.post('/profile/correction-request', profile.correctionRequest);
+
+// Tris integratsiyasi (o'z ulanishi; har doim req.user.sub). Vaqtinchalik
+// parol bilan kirganlar requireActiveAccount'da to'xtatiladi (403).
+const trisConnectLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `tris-connect:${req.user.sub}`,
+  message: { error: "Soatiga ko'pi bilan 10 marta bog'lashni boshlash mumkin." },
+});
+router.get('/profile/tris/status', requireModule('profile'), tris.getStatus);
+router.post('/profile/tris/connect', requireModule('profile'), trisConnectLimiter, tris.connect);
+router.post('/profile/tris/disconnect', requireModule('profile'), tris.disconnect);
+router.post('/profile/tris/test', requireModule('profile'), tris.test);
+// SUPER_ADMIN: barcha ulanishlar (tokenlarsiz), majburan uzish, sozlama holati.
+router.get('/tris/connections', requireModule('tris_admin'), tris.adminConnections);
+router.post('/tris/connections/:userId/disconnect', requireModule('tris_admin'), tris.adminDisconnect);
+router.post('/tris/connections/:userId/test', requireModule('tris_admin'), tris.adminTest);
+router.get('/tris/config', requireModule('tris_admin'), tris.adminConfig);
 
 // Personalized dashboard (own role-relevant stats + own recent activity)
 router.get('/dashboard/my-activity', requireModule('dashboard'), getMyDashboard);

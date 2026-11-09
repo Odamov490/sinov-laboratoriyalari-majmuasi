@@ -112,8 +112,21 @@ async function cleanupAuthHistory() {
   return { events: events.count, sessions: sessions.count };
 }
 
+// Tris: 180 kundan eski ulanish tarixi va muddati o'tgan / ishlatilgan
+// OAuth state'lar (bir kundan keyin).
+async function cleanupTrisHistory() {
+  const old = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+  const day = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [events, states] = await Promise.all([
+    prisma.trisConnectionEvent.deleteMany({ where: { createdAt: { lt: old } } }),
+    prisma.trisOAuthState.deleteMany({ where: { OR: [{ expiresAt: { lt: new Date() } }, { usedAt: { lt: day } }] } }),
+  ]);
+  return { events: events.count, states: states.count };
+}
+
 module.exports = {
   REFRESH_TTL_MS,
+  cleanupTrisHistory,
   createSession,
   setSessionToken,
   validateSession,

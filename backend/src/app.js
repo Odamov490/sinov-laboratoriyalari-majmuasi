@@ -21,6 +21,8 @@ const chatMediaRoutes = require('./routes/chatMediaRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const trisRoutes = require('./routes/trisRoutes');
+const { config: trisConfig } = require('./config/tris');
 
 const app = express();
 
@@ -36,6 +38,12 @@ app.use(
 app.use(cookieParser());
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
+// /api/tris/* (OAuth callback: ?code=&state=, mock) — URL so'rov parametrlari
+// logga yozilmaydi (bir martalik kod/state maxfiy hisoblanadi).
+morgan.token('url', (req) => {
+  const url = req.originalUrl || req.url;
+  return url.startsWith('/api/tris/') ? url.split('?')[0] : url;
+});
 app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 
 // Mounted before the rate limiter so search-engine crawlers refetching
@@ -51,6 +59,8 @@ app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISO
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+// Tris OAuth callback (ommaviy; himoya — bir martalik state).
+app.use('/api/tris', trisRoutes);
 // Chat media: imzolangan havola bilan (cookie talab qilinmaydi).
 app.use('/api/chat', chatMediaRoutes);
 app.use('/api', publicRoutes);
@@ -65,6 +75,14 @@ initChatSocket(server);
 
 server.listen(PORT, () => {
   console.log(`SLM backend running on port ${PORT} [${NODE_ENV}]`);
+  // Tris: faqat holat va yetishmayotgan sozlama NOMLARI (qiymatlar hech qachon).
+  if (trisConfig.mockRequested && !trisConfig.mock) {
+    console.warn("[tris] WARNING: TRIS_OAUTH_MOCK=true production muhitida e'tiborsiz qoldirildi — soxta provayder yuklanmadi.");
+  }
+  if (trisConfig.mock) console.warn('[tris] SOXTA provayder yoqilgan (/api/tris/mock) — faqat ishlab chiqish uchun.');
+  console.log(
+    trisConfig.configured ? '[tris] integration: configured' : `[tris] integration: not configured (missing: ${trisConfig.missing.join(', ')})`
+  );
   startTaskReminders();
   // Chat tizim xonalari a'zoligini hisoblar holatiga moslash.
   syncAllMemberships()

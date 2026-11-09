@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { UserCircle, ShieldCheck, Bell, SlidersHorizontal, Activity } from 'lucide-react';
+import { UserCircle, ShieldCheck, Bell, SlidersHorizontal, Activity, PlugZap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminProfile, fetchMe } from '../../services/adminApi';
@@ -10,16 +10,18 @@ import ProfileSecurity from './profile/ProfileSecurity.jsx';
 import ProfileNotifications from './profile/ProfileNotifications.jsx';
 import ProfileSettings from './profile/ProfileSettings.jsx';
 import ProfileActivity from './profile/ProfileActivity.jsx';
+import ProfileIntegrations from './profile/ProfileIntegrations.jsx';
 import { tr } from '../../i18n/tr.js';
 
 // Shaxsiy kabinet: har kim faqat o'z ma'lumotini ko'radi va o'zgartiradi.
-// Yorliq havolada: ?tab=umumiy|xavfsizlik|bildirishnomalar|sozlamalar|faoliyat
+// Yorliq havolada: ?tab=umumiy|xavfsizlik|bildirishnomalar|sozlamalar|faoliyat|integratsiyalar
 const TABS = [
   { key: 'umumiy', label: tr('Umumiy'), icon: UserCircle },
   { key: 'xavfsizlik', label: tr('Xavfsizlik'), icon: ShieldCheck },
   { key: 'bildirishnomalar', label: tr('Bildirishnomalar'), icon: Bell },
   { key: 'sozlamalar', label: tr('Sozlamalar'), icon: SlidersHorizontal },
   { key: 'faoliyat', label: tr('Faoliyatim'), icon: Activity },
+  { key: 'integratsiyalar', label: tr('Integratsiyalar'), icon: PlugZap },
 ];
 
 export default function AdminProfile() {
@@ -85,6 +87,7 @@ export default function AdminProfile() {
           {tab === 'bildirishnomalar' && <ProfileNotifications profile={profile} onChange={onChange} toast={toast} />}
           {tab === 'sozlamalar' && <ProfileSettings profile={profile} onChange={onChange} toast={toast} />}
           {tab === 'faoliyat' && <ProfileActivity />}
+          {tab === 'integratsiyalar' && <ProfileIntegrations toast={toast} />}
         </>
       )}
     </div>
