@@ -377,24 +377,12 @@ mountCrud('smk/documents', 'smk_documents', 'sMKDocument', {
   searchFields: ['code', 'titleUz', 'titleRu', 'titleEn'],
   orderBy: { createdAt: 'desc' },
 });
-mountCrud('smk/document-versions', 'smk_documents', 'sMKDocumentVersion', {
-  labScoped: true,
-  include: { document: true, approvedByUser: true },
-  searchFields: ['versionNumber', 'changeDescription'],
-  orderBy: { createdAt: 'desc' },
-});
 
 // SMK — FAZA 3: Auditlar
 mountCrud('smk/audits', 'smk_audits', 'internalAudit', {
   labScoped: true,
   include: { laboratory: true, auditorUser: true },
   orderBy: { plannedDate: 'desc' },
-});
-mountCrud('smk/audit-findings', 'smk_audits', 'auditFinding', {
-  labScoped: true,
-  include: { audit: true, linkedNonConformance: true },
-  searchFields: ['description'],
-  orderBy: { createdAt: 'desc' },
 });
 
 // SMK — FAZA 4: Texnik yadro
@@ -427,44 +415,8 @@ mountCrud('smk/uncertainty', 'smk_uncertainty', 'measurementUncertainty', {
   searchFields: ['testMethodName', 'unit'],
   orderBy: { updatedAt: 'desc' },
 });
-mountCrud('smk/methods', 'smk_methods', 'methodValidation', {
-  labScoped: true,
-  searchFields: ['methodName', 'standardReference'],
-  orderBy: { validationDate: 'desc' },
-});
-
-// SMK — FAZA 5: Tashkiliy
-mountCrud('smk/impartiality', 'smk_impartiality', 'impartialityDeclaration', {
-  labScoped: true,
-  include: { user: true },
-  orderBy: { declarationYear: 'desc' },
-});
-mountCrud('smk/suppliers', 'smk_suppliers', 'supplierEvaluation', {
-  labScoped: true,
-  searchFields: ['supplierName', 'category'],
-  orderBy: { evaluationDate: 'desc' },
-});
-mountCrud('smk/subcontractors', 'smk_subcontractors', 'subcontractor', {
-  labScoped: true,
-  searchFields: ['name'],
-  orderBy: { createdAt: 'desc' },
-});
-mountCrud('smk/environment', 'smk_environment', 'environmentLog', {
-  labScoped: true,
-  include: { laboratory: true },
-  orderBy: { recordedAt: 'desc' },
-});
-mountCrud('smk/acknowledgments', 'smk_acknowledgments', 'documentAcknowledgment', {
-  labScoped: true,
-  include: { documentVersion: { include: { document: true } }, user: true },
-  orderBy: { acknowledgedAt: 'desc' },
-});
 
 // SMK — FAZA 6: Strategik
-mountCrud('smk/reviews', 'smk_reviews', 'managementReview', {
-  labScoped: true,
-  orderBy: { reviewDate: 'desc' },
-});
 mountCrud('smk/risks', 'smk_risks', 'riskItem', {
   labScoped: true,
   include: { ownerUser: true },
@@ -478,22 +430,6 @@ mountCrud('smk/risks', 'smk_risks', 'riskItem', {
     const impact = Number(body.impact) || 0;
     return { ...body, likelihood, impact, riskScore: likelihood * impact };
   },
-});
-mountCrud('smk/objectives', 'smk_objectives', 'qualityObjective', {
-  labScoped: true,
-  searchFields: ['objectiveText'],
-  orderBy: { year: 'desc' },
-});
-mountCrud('smk/improvements', 'smk_improvements', 'improvementSuggestion', {
-  labScoped: true,
-  include: { submittedByUser: true },
-  searchFields: ['description'],
-  orderBy: { submittedDate: 'desc' },
-});
-mountCrud('smk/retention', 'smk_retention', 'retentionPolicy', {
-  labScoped: true,
-  searchFields: ['documentType'],
-  orderBy: { documentType: 'asc' },
 });
 
 // Hisobot: sinovlar jurnali. /summary va /suggestions /:id dan oldin turishi kerak.

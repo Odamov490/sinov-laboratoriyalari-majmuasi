@@ -57,13 +57,9 @@ model User {
   nonConformancesResponsible NonConformance[]
   complaintsResponsible      Complaint[]
   smkDocumentsOwned            SMKDocument[]
-  smkDocumentVersionsApproved   SMKDocumentVersion[]
   internalAuditsAsAuditor       InternalAudit[]
   trainingRecords                TrainingRecord[]
-  impartialityDeclarations       ImpartialityDeclaration[]
-  documentAcknowledgments         DocumentAcknowledgment[]
   riskItemsOwned                  RiskItem[]
-  improvementSuggestions           ImprovementSuggestion[]
   testJournalChanges               TestJournalChange[]
   tasksCreated                     Task[]             @relation("TaskCreator")
   taskAssignments                  TaskAssignee[]
@@ -116,26 +112,14 @@ model Laboratory {
   chatRoom                ChatRoom?
   qualityControlRecords   QualityControlRecord[]
   proficiencyTests        ProficiencyTest[]
-  environmentLogs         EnvironmentLog[]
   // SMK har bir laboratoriya uchun alohida yuritiladi.
   smkNonConformances          NonConformance[]
   smkComplaints               Complaint[]
   smkDocuments                SMKDocument[]
-  smkDocumentVersions         SMKDocumentVersion[]
-  smkAuditFindings            AuditFinding[]
   smkCalibrationRecords       CalibrationRecord[]
   smkTrainingRecords          TrainingRecord[]
   smkMeasurementUncertainties MeasurementUncertainty[]
-  smkMethodValidations        MethodValidation[]
-  smkImpartialityDeclarations ImpartialityDeclaration[]
-  smkSupplierEvaluations      SupplierEvaluation[]
-  smkSubcontractors           Subcontractor[]
-  smkDocumentAcknowledgments  DocumentAcknowledgment[]
-  smkManagementReviews        ManagementReview[]
   smkRiskItems                RiskItem[]
-  smkQualityObjectives        QualityObjective[]
-  smkImprovementSuggestions   ImprovementSuggestion[]
-  smkRetentionPolicies        RetentionPolicy[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -440,7 +424,6 @@ model SiteSetting {
   updatedAt     DateTime @updatedAt
 }
 
-
 enum SampleStatus {
   LABORATORIYADA
   TASHILMOQDA
@@ -696,7 +679,6 @@ model NonConformance {
   dueDate           DateTime?
   closedDate        DateTime?
   status            NonConformanceStatus @default(OCHIQ)
-  auditFindings     AuditFinding[]
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 
@@ -763,27 +745,8 @@ model SMKDocument {
   ownerUserId String?
   ownerUser   User?               @relation(fields: [ownerUserId], references: [id])
   status      SMKDocumentStatus   @default(QORALAMA)
-  versions    SMKDocumentVersion[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-
-  @@index([laboratoryId])
-}
-
-model SMKDocumentVersion {
-  id                String    @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  documentId        String
-  document          SMKDocument @relation(fields: [documentId], references: [id])
-  versionNumber     String
-  fileUrl           String?
-  changeDescription String?
-  approvedByUserId  String?
-  approvedByUser    User?     @relation(fields: [approvedByUserId], references: [id])
-  approvedAt        DateTime?
-  acknowledgments   DocumentAcknowledgment[]
-  createdAt         DateTime  @default(now())
 
   @@index([laboratoryId])
 }
@@ -806,30 +769,8 @@ model InternalAudit {
   auditorUser   User?               @relation(fields: [auditorUserId], references: [id])
   status        InternalAuditStatus @default(REJALASHTIRILGAN)
   summary       String?
-  findings      AuditFinding[]
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
-
-  @@index([laboratoryId])
-}
-
-enum AuditFindingSeverity {
-  KATTA
-  KICHIK
-  KUZATUV
-}
-
-model AuditFinding {
-  id                     String               @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  auditId                String
-  audit                  InternalAudit        @relation(fields: [auditId], references: [id])
-  description            String
-  severity               AuditFindingSeverity
-  linkedNonConformanceId String?
-  linkedNonConformance   NonConformance?      @relation(fields: [linkedNonConformanceId], references: [id])
-  createdAt              DateTime             @default(now())
 
   @@index([laboratoryId])
 }
@@ -925,112 +866,7 @@ model MeasurementUncertainty {
   @@index([laboratoryId])
 }
 
-enum MethodValidationStatus {
-  TASDIQLANGAN
-  JARAYONDA
-}
-
-model MethodValidation {
-  id                String                  @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  methodName        String
-  standardReference String?
-  validationDate    DateTime
-  validatedBy       String?
-  reportUrl         String?
-  status            MethodValidationStatus  @default(JARAYONDA)
-  createdAt         DateTime                @default(now())
-
-  @@index([laboratoryId])
-}
-
-// ===== SMK — FAZA 5: Tashkiliy =====
-
-model ImpartialityDeclaration {
-  id              String   @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  declarationYear Int
-  signedDate      DateTime
-  fileUrl         String?
-  createdAt       DateTime @default(now())
-
-  @@index([laboratoryId])
-}
-
-model SupplierEvaluation {
-  id                 String    @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  supplierName       String
-  category           String?
-  evaluationDate     DateTime
-  score              Int
-  notes              String?
-  nextEvaluationDate DateTime?
-  createdAt          DateTime  @default(now())
-
-  @@index([laboratoryId])
-}
-
-model Subcontractor {
-  id                String    @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  name              String
-  accreditationInfo String?
-  servicesProvided  String?
-  contractUrl       String?
-  validUntil        DateTime?
-  createdAt         DateTime  @default(now())
-
-  @@index([laboratoryId])
-}
-
-model EnvironmentLog {
-  id           String      @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  recordedAt   DateTime
-  temperature  Float?
-  humidity     Float?
-  withinLimits Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-
-  @@index([laboratoryId])
-}
-
-model DocumentAcknowledgment {
-  id                String             @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  documentVersionId String
-  documentVersion   SMKDocumentVersion @relation(fields: [documentVersionId], references: [id])
-  userId            String
-  user              User               @relation(fields: [userId], references: [id])
-  acknowledgedAt    DateTime           @default(now())
-
-  @@index([laboratoryId])
-}
-
 // ===== SMK — FAZA 6: Strategik =====
-
-model ManagementReview {
-  id             String    @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  reviewDate     DateTime
-  participants   String?
-  agendaItems    String?
-  decisions      String?
-  nextReviewDate DateTime?
-  createdAt      DateTime  @default(now())
-
-  @@index([laboratoryId])
-}
 
 enum RiskStatus {
   FAOL
@@ -1059,59 +895,6 @@ model RiskItem {
   @@index([laboratoryId])
 }
 
-enum QualityObjectiveStatus {
-  BAJARILMOQDA
-  BAJARILDI
-  BAJARILMADI
-}
-
-model QualityObjective {
-  id            String                  @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  year          Int
-  objectiveText String
-  targetValue   String?
-  actualValue   String?
-  status        QualityObjectiveStatus  @default(BAJARILMOQDA)
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
-
-  @@index([laboratoryId])
-}
-
-enum ImprovementSuggestionStatus {
-  KORIB_CHIQILMOQDA
-  QABUL_QILINDI
-  RAD_ETILDI
-}
-
-model ImprovementSuggestion {
-  id                  String                       @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  submittedByUserId   String?
-  submittedByUser     User?                        @relation(fields: [submittedByUserId], references: [id])
-  description         String
-  submittedDate       DateTime
-  status              ImprovementSuggestionStatus  @default(KORIB_CHIQILMOQDA)
-  implementationNotes String?
-  createdAt           DateTime                     @default(now())
-
-  @@index([laboratoryId])
-}
-
-model RetentionPolicy {
-  id             String   @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  documentType   String
-  retentionYears Int
-  notes          String?
-  createdAt      DateTime @default(now())
-
-  @@index([laboratoryId])
-}
 // Sayt sahifalarining kunlik ko'rishlar soni — frontend har bir sahifa
 // o'tishida (SPA ichida ham) yuboradi. Admin dashboarddagi "Eng ko'p
 // ko'rilgan sahifalar" shundan olinadi (Cloudflare SPA ichidagi o'tishlarni
