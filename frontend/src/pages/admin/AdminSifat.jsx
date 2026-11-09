@@ -9,7 +9,7 @@ import { smkConfinedLabId } from './AdminSmkPage.jsx';
 import { tr } from '../../i18n/tr.js';
 
 // Sifat bo'limi: har bir laboratoriya — kanban ustuni, ichida uning SMK
-// modullari kartochka sifatida (bosilganda /admin/smk/<lab>/<modul> ochiladi).
+// 10 ta asosiy (core) SMK moduli kartochka sifatida (bosilganda /admin/smk/<lab>/<modul> ochiladi).
 export default function AdminSifat() {
   const { user } = useAuth();
   const [labs, setLabs] = useState(null);
@@ -22,7 +22,7 @@ export default function AdminSifat() {
       .catch(() => setLabs([]));
   }, []);
 
-  const modules = useMemo(() => SMK_MODULES.filter((m) => m.roles.includes(user.role)), [user.role]);
+  const modules = useMemo(() => SMK_MODULES.filter((m) => m.core && m.roles.includes(user.role)), [user.role]);
   const q = query.trim().toLowerCase();
   const visible = useMemo(() => modules.filter((m) => !q || m.label.toLowerCase().includes(q)), [modules, q]);
 
