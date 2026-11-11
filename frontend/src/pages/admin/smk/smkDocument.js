@@ -65,14 +65,17 @@ export function useFormLogo() {
 }
 export const BLANK_ROWS = 10; // yozuv yo'q bo'lsa — bo'sh blank uchun
 
+// Yangi formaning dastlabki shapkasi (SMK hujjatlari namunasi bo'yicha). Har bir
+// formada keyin o'zgartirish mumkin; "Документ №" qiymati — forma kodi.
 export const DEFAULT_HEADER = () => ({
-  orgLines: ['SINOV LABORATORIYALARI MAJMUASI', '{laboratoriya}'],
+  orgLines: ['Комплекс испытательных лабораторий'],
   meta: [
-    { label: tr('Shakl kodi'), value: '{kod}' },
-    { label: tr('Versiya'), value: '01' },
-    { label: tr('Sana'), value: '' },
+    { label: 'Документ №', value: '{kod}' },
+    { label: 'Дата введения', value: '' },
+    { label: 'Ревизия', value: '' },
+    { label: 'Дата ревизии', value: '' },
   ],
-  orientation: 'landscape',
+  orientation: 'portrait',
 });
 
 export const normalizeHeader = (h) => {

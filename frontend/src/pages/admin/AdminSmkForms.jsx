@@ -343,7 +343,7 @@ function FormEditor({ initial, onClose, onSaved }) {
               {meta.map((m, i) => (
                 <div key={i} className="flex items-center gap-1">
                   <input
-                    className="input-field !w-2/5 !py-2"
+                    className="input-field !w-[48%] shrink-0 !py-2"
                     placeholder={tr('Nomi')}
                     value={m.label}
                     onChange={(e) => setHeader({ meta: meta.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
