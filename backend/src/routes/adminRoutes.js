@@ -352,6 +352,7 @@ router.post('/smk/forms', requireModule('smk_forms_admin'), smkForms.createForm)
 router.put('/smk/forms/:id', requireModule('smk_forms_admin'), smkForms.updateForm);
 router.delete('/smk/forms/:id', requireModule('smk_forms_admin'), smkForms.deleteForm);
 router.get('/smk/forms/:id/editor', requireModule('smk_forms'), onlyoffice.getEditorConfig);
+router.get('/smk/onlyoffice-status', requireModule('smk_forms'), onlyoffice.getStatus);
 router.get('/smk/board', requireModule('smk_forms'), smkForms.getBoard);
 router.get('/smk/staff-options', requireModule('smk_forms'), smkForms.staffOptions);
 router.put('/smk/labs/:labId/forms', requireModule('smk_forms'), smkForms.setLabForms);

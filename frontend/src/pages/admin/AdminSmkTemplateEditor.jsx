@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download, AlertTriangle } from 'lucide-react';
 import { adminSmk } from '../../services/adminApi';
 import { Loading, ErrorState } from '../../components/StateViews.jsx';
 import { tr, currentLang } from '../../i18n/tr.js';
@@ -58,7 +58,12 @@ export default function AdminSmkTemplateEditor() {
       })
       .catch((err) => {
         if (!alive) return;
-        const msg = err?.response?.data?.error;
+        const data = err?.response?.data;
+        if (data?.disabled) {
+          setState({ status: 'disabled', download: data.download });
+          return;
+        }
+        const msg = data?.error;
         setState({
           status: 'error',
           message: msg || (err?.message === 'load' || err?.message === 'no DocsAPI'
@@ -92,6 +97,17 @@ export default function AdminSmkTemplateEditor() {
         )}
       </div>
       {state.status === 'loading' && <Loading />}
+      {state.status === 'disabled' && (
+        <div className="mx-auto mt-10 max-w-md rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
+          <AlertTriangle className="mx-auto h-8 w-8 text-amber-500" />
+          <p className="mt-3 text-sm text-amber-800">{ONLINE_DISABLED_MSG()}</p>
+          {state.download?.url && (
+            <a href={state.download.url} download={state.download.name || undefined} className="btn-primary mt-4 !py-2.5">
+              <Download className="h-4 w-4" /> {tr('Shablonni yuklab olish')}
+            </a>
+          )}
+        </div>
+      )}
       {state.status === 'error' && <ErrorState message={state.message} onRetry={() => window.location.reload()} />}
       {state.status === 'ready' && (
         <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-white">
@@ -105,3 +121,22 @@ export default function AdminSmkTemplateEditor() {
 // Jadval/sarlavhadagi "Ochish" tugmasi uchun: onlayn ochiladigan fayl turlari.
 export const ONLINE_EXTS = ['docx', 'doc', 'xlsx', 'xls', 'pdf', 'odt', 'ods', 'rtf', 'txt', 'csv'];
 export const canOpenOnline = (url) => ONLINE_EXTS.includes(String(url || '').split('.').pop().toLowerCase());
+
+export const ONLINE_DISABLED_MSG = () => tr("Onlayn tahrirlash hozircha o'chirilgan, faylni yuklab olib tahrirlang.");
+
+// OnlyOffice holati (30 soniya keshlanadi): null — yuklanmoqda.
+let statusCache = { at: 0, promise: null };
+export function useOnlyOfficeStatus() {
+  const [status, setStatus] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    if (!statusCache.promise || Date.now() - statusCache.at > 30000) {
+      statusCache = { at: Date.now(), promise: adminSmk.onlyofficeStatus().catch(() => ({ available: false })) };
+    }
+    statusCache.promise.then((d) => alive && setStatus(d));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return status;
+}

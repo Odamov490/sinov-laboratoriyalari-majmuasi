@@ -51,8 +51,12 @@ services:
 
   # Onlayn ofis muharriri (Word/Excel). Tashqariga port ochilmaydi — faqat
   # frontend nginx orqali /onlyoffice/ yo'lida.
+  # Vaqtincha O'CHIQ (RAM yetmaydi: rasmiy talab alohida 4 GB RAM, 40 GB disk).
+  # Oddiy "docker compose up -d" uni ishga tushirmaydi. Yoqish:
+  #   docker compose --profile office up -d
   onlyoffice:
     image: onlyoffice/documentserver:8.2.2
+    profiles: ['office']
     restart: unless-stopped
     environment:
       JWT_ENABLED: 'true'

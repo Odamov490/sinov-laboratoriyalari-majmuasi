@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, X as XIcon, Download, ArrowLeft, FilePen } from 'lucide-react';
-import { canOpenOnline } from './AdminSmkTemplateEditor.jsx';
+import { canOpenOnline, useOnlyOfficeStatus, ONLINE_DISABLED_MSG } from './AdminSmkTemplateEditor.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminSmk, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -43,6 +43,7 @@ export default function AdminSmkForms() {
 
 function FormsLibrary() {
   const { showToast } = useToast();
+  const office = useOnlyOfficeStatus();
   const [items, setItems] = useState(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
@@ -91,6 +92,9 @@ function FormsLibrary() {
         </button>
       </div>
 
+      {office && !office.available && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">{ONLINE_DISABLED_MSG()}</p>
+      )}
       <input
         type="search"
         value={query}
@@ -125,11 +129,20 @@ function FormsLibrary() {
                   <td className="px-4 py-3">
                     {f.templateUrl ? (
                       <span className="flex flex-wrap items-center gap-3">
-                        {canOpenOnline(f.templateUrl) && (
-                          <Link to={`/admin/sifat/shablon/${f.id}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-                            <FilePen className="h-3.5 w-3.5" /> {tr('Ochish')}
-                          </Link>
-                        )}
+                        {canOpenOnline(f.templateUrl) &&
+                          (office?.available ? (
+                            <Link to={`/admin/sifat/shablon/${f.id}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+                              <FilePen className="h-3.5 w-3.5" /> {tr('Ochish')}
+                            </Link>
+                          ) : (
+                            <span
+                              aria-disabled="true"
+                              title={ONLINE_DISABLED_MSG()}
+                              className="inline-flex cursor-not-allowed items-center gap-1 text-slate-300"
+                            >
+                              <FilePen className="h-3.5 w-3.5" /> {tr('Ochish')}
+                            </span>
+                          ))}
                         <a href={f.templateUrl} download={f.templateName || undefined} className="inline-flex items-center gap-1 text-slate-500 hover:text-primary hover:underline">
                           <Download className="h-3.5 w-3.5" /> {tr('Yuklab olish')}
                         </a>

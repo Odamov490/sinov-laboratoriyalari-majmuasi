@@ -901,6 +901,7 @@
   "Ommaviy saytdagi \"/deklaratsiya-va-sertifikat\" sahifasining sarlavha va matnini uch tilda tahrirlang.": "Edit the title and text of the public \"/deklaratsiya-va-sertifikat\" page in three languages.",
   "onlayn": "online",
   "Onlayn muharrir (OnlyOffice) serveriga ulanib bo'lmadi.": "Could not connect to the online editor (OnlyOffice).",
+  "Onlayn tahrirlash hozircha o'chirilgan, faylni yuklab olib tahrirlang.": "Online editing is turned off for now — download the file and edit it.",
   "Operatsiyalar": "Operations",
   "Oraliq {0} kundan oshmasligi kerak.": "The range must not exceed {0} days.",
   "Organ": "Body",

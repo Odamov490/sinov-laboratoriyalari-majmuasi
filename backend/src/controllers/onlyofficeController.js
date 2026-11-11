@@ -21,16 +21,46 @@ const DOC_TYPES = {
 const EDITABLE = new Set(['docx', 'xlsx']);
 const LANGS = { uz: 'ru', ru: 'ru', en: 'en' };
 
+const DISABLED_MSG = "Onlayn tahrirlash hozircha o'chirilgan, faylni yuklab olib tahrirlang.";
+
+// OnlyOffice ishlayaptimi: kalit sozlangan va konteyner /healthcheck'ga "true"
+// javob beradi. Natija 30 soniya keshlanadi (konteyner o'chiq bo'lsa ham
+// so'rovlar tez qaytadi — 2 soniyalik timeout).
+let health = { at: 0, ok: false };
+async function isAvailable() {
+  if (!oo.ONLYOFFICE_ENABLED) return false;
+  if (Date.now() - health.at < 30000) return health.ok;
+  let ok = false;
+  try {
+    const r = await fetch(`${oo.ONLYOFFICE_INTERNAL_URL}/healthcheck`, { redirect: 'error', signal: AbortSignal.timeout(2000) });
+    ok = r.ok && (await r.text()).trim() === 'true';
+  } catch {
+    ok = false;
+  }
+  health = { at: Date.now(), ok };
+  return ok;
+}
+
+const getStatus = asyncHandler(async (req, res) => {
+  const available = await isAvailable();
+  res.json({ available, message: available ? null : DISABLED_MSG });
+});
+
 const extOf = (url) => path.extname(String(url || '')).slice(1).toLowerCase();
 const docKey = (form) => `${form.id}-v${form.templateVersion}`;
 
 const getEditorConfig = asyncHandler(async (req, res) => {
-  if (!oo.ONLYOFFICE_ENABLED) {
-    return res.status(503).json({ error: 'Onlayn muharrir (OnlyOffice) serverda sozlanmagan.' });
-  }
   const form = await prisma.smkForm.findUnique({ where: { id: req.params.id } });
   if (!form || !form.templateUrl || !form.templateUrl.startsWith('/uploads/')) {
     return res.status(404).json({ error: 'Shablon fayli topilmadi.' });
+  }
+  if (!(await isAvailable())) {
+    // Yuklab olish yo'li beriladi — fayl baribir tizimda.
+    return res.status(503).json({
+      error: DISABLED_MSG,
+      disabled: true,
+      download: { url: form.templateUrl, name: form.templateName || null },
+    });
   }
   const ext = extOf(form.templateUrl);
   const documentType = DOC_TYPES[ext];
@@ -154,4 +184,4 @@ const callback = asyncHandler(async (req, res) => {
   res.json({ error: 0 });
 });
 
-module.exports = { getEditorConfig, callback, internalDownloadUrl, docKey };
+module.exports = { getEditorConfig, getStatus, callback, internalDownloadUrl, docKey };

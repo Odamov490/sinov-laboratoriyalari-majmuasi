@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Plus, Pencil, Trash2, Download, Printer, ArrowLeft, FileText } from 'lucide-react';
-import { canOpenOnline } from './AdminSmkTemplateEditor.jsx';
+import { canOpenOnline, useOnlyOfficeStatus, ONLINE_DISABLED_MSG } from './AdminSmkTemplateEditor.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminSmk, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -56,6 +56,7 @@ export default function AdminSmkFormEntries() {
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null); // {id?, data}
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const office = useOnlyOfficeStatus();
 
   useEffect(() => {
     let alive = true;
@@ -141,11 +142,17 @@ export default function AdminSmkFormEntries() {
           {form.description && <p className="mt-1 max-w-3xl whitespace-pre-line text-sm text-slate-500">{form.description}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {form.templateUrl && canOpenOnline(form.templateUrl) && (
-            <Link to={`/admin/sifat/shablon/${form.id}`} className="btn-secondary !py-2.5">
-              <FileText className="h-4 w-4" /> {tr('Shablonni ochish')}
-            </Link>
-          )}
+          {form.templateUrl &&
+            canOpenOnline(form.templateUrl) &&
+            (office?.available ? (
+              <Link to={`/admin/sifat/shablon/${form.id}`} className="btn-secondary !py-2.5">
+                <FileText className="h-4 w-4" /> {tr('Shablonni ochish')}
+              </Link>
+            ) : (
+              <button type="button" disabled title={ONLINE_DISABLED_MSG()} className="btn-secondary !py-2.5 cursor-not-allowed opacity-50">
+                <FileText className="h-4 w-4" /> {tr('Shablonni ochish')}
+              </button>
+            ))}
           {form.templateUrl && (
             <a href={form.templateUrl} download={form.templateName || undefined} className="btn-secondary !py-2.5">
               <Download className="h-4 w-4" /> {tr('Shablonni yuklab olish')}
@@ -164,6 +171,9 @@ export default function AdminSmkFormEntries() {
         </div>
       </div>
 
+      {form.templateUrl && canOpenOnline(form.templateUrl) && office && !office.available && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">{ONLINE_DISABLED_MSG()}</p>
+      )}
       {fields.length === 0 ? (
         <EmptyState
           message={
