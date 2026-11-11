@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Printer, ArrowLeft, FileText, FileDown, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Printer, ArrowLeft, FileText, FileDown, Loader2, ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -9,15 +9,36 @@ import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
 import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo, mergeCells } from './smk/smkDocument.js';
 
-// "Bir xil kataklarni birlashtirish" tanlovi — forma bo'yicha brauzerda eslab qolinadi.
+// "Bir xil kataklarni birlashtirish" tanlovi — forma bo'yicha brauzerda eslab
+// qolinadi. Standart: ustun bo'ylab — yoqiq, qator bo'ylab — o'chiq.
 const mergeKey = (formId) => `smk-merge:${formId}`;
+const MERGE_DEFAULT = { vertical: true, horizontal: false };
 function loadMerge(formId) {
   try {
-    const v = JSON.parse(localStorage.getItem(mergeKey(formId)) || '{}');
+    const raw = localStorage.getItem(mergeKey(formId));
+    if (!raw) return { ...MERGE_DEFAULT };
+    const v = JSON.parse(raw);
     return { vertical: !!v.vertical, horizontal: !!v.horizontal };
   } catch {
-    return { vertical: false, horizontal: false };
+    return { ...MERGE_DEFAULT };
   }
+}
+
+// Yoqib/o'chiriladigan tugma (yoqilganda to'q rangli).
+function ToggleBtn({ on, onClick, icon, children, testId }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      data-testid={testId}
+      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors ${
+        on ? 'border-primary bg-primary text-white' : 'border-border bg-white text-slate-600 hover:border-primary/40 hover:text-primary'
+      }`}
+    >
+      {icon} {children}
+    </button>
+  );
 }
 
 // /admin/sifat/:labSlug/:formId — laboratoriya tanlagan forma: hujjat shapkasi
@@ -146,6 +167,15 @@ export default function AdminSmkFormEntries() {
         <div className="flex flex-wrap items-center gap-2">
           {fields.length > 0 && (
             <>
+              <div className="flex flex-wrap items-center gap-2" data-testid="smk-merge" title={tr("Bir xil qiymatli kataklarni birlashtirish — ekranda, Word, PDF va chop etishda.")}>
+                <ToggleBtn testId="merge-vertical" on={merge.vertical} onClick={() => toggleMerge('vertical')} icon={<ArrowDownUp className="h-4 w-4" />}>
+                  {tr("Ustun bo'ylab birlashtirish")}
+                </ToggleBtn>
+                <ToggleBtn testId="merge-horizontal" on={merge.horizontal} onClick={() => toggleMerge('horizontal')} icon={<ArrowLeftRight className="h-4 w-4" />}>
+                  {tr("Qator bo'ylab birlashtirish")}
+                </ToggleBtn>
+              </div>
+              <span className="mx-1 hidden h-8 w-px bg-border sm:block" />
               {exportBtn('word', <FileText className="h-4 w-4" />, 'Word')}
               {exportBtn('pdf', <FileDown className="h-4 w-4" />, 'PDF')}
               {exportBtn('print', <Printer className="h-4 w-4" />, tr('Chop etish'))}
@@ -167,18 +197,6 @@ export default function AdminSmkFormEntries() {
         <EmptyState message={tr("Bu formaga hali ustunlar qo'shilmagan.")} />
       ) : (
         <>
-          <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm" data-testid="smk-merge">
-            <span className="font-medium text-ink">{tr('Bir xil kataklarni birlashtirish')}:</span>
-            <label className="flex items-center gap-2 text-slate-600">
-              <input type="checkbox" checked={merge.vertical} onChange={() => toggleMerge('vertical')} className="h-4 w-4 rounded border-border text-primary" />
-              {tr("Vertikal (ustun bo'ylab)")}
-            </label>
-            <label className="flex items-center gap-2 text-slate-600">
-              <input type="checkbox" checked={merge.horizontal} onChange={() => toggleMerge('horizontal')} className="h-4 w-4 rounded border-border text-primary" />
-              {tr("Gorizontal (qator bo'ylab)")}
-            </label>
-            <span className="text-xs text-slate-400">{tr("Ekranda, Word, PDF va chop etishda qo'llanadi.")}</span>
-          </div>
           <div className="card overflow-x-auto">
             {data === null ? (
               <Loading />
