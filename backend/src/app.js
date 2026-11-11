@@ -17,6 +17,7 @@ const { startChatCleanup } = require('./services/chat/cleanup');
 const { startAuthCleanup } = require('./services/authCleanup');
 const { initChatSocket } = require('./socket/chatSocket');
 const chatMediaRoutes = require('./routes/chatMediaRoutes');
+const onlyofficeRoutes = require('./routes/onlyofficeRoutes');
 
 const publicRoutes = require('./routes/publicRoutes');
 const authRoutes = require('./routes/authRoutes');
@@ -53,6 +54,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 // Chat media: imzolangan havola bilan (cookie talab qilinmaydi).
 app.use('/api/chat', chatMediaRoutes);
+// OnlyOffice callback (SMK shablonlarini onlayn tahrirlash).
+app.use('/api/onlyoffice', onlyofficeRoutes);
 app.use('/api', publicRoutes);
 
 app.use(notFoundHandler);

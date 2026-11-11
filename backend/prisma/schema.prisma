@@ -1221,6 +1221,9 @@ model SmkForm {
   fields       Json           @default("[]")
   templateUrl  String?
   templateName String?
+  // OnlyOffice hujjat kaliti versiyasi: shablon yopilib saqlanganda yoki yangi fayl
+  // yuklanganda oshadi (kalit = <id>-v<versiya>).
+  templateVersion Int        @default(1)
   order        Int            @default(0)
   isActive     Boolean        @default(true)
   labs         SmkLabForm[]

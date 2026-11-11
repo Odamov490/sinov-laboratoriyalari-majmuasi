@@ -96,12 +96,14 @@ const createForm = asyncHandler(async (req, res) => {
 });
 
 const updateForm = asyncHandler(async (req, res) => {
-  const existing = await prisma.smkForm.findUnique({ where: { id: req.params.id }, select: { id: true } });
+  const existing = await prisma.smkForm.findUnique({ where: { id: req.params.id }, select: { id: true, templateUrl: true } });
   if (!existing) return res.status(404).json(NOT_FOUND);
   const { data, error } = formData(req.body || {});
   if (error) return bad(res, error);
   const clash = await prisma.smkForm.findFirst({ where: { code: data.code, NOT: { id: req.params.id } }, select: { id: true } });
   if (clash) return res.status(409).json({ error: 'Bu kodli forma allaqachon bor.' });
+  // Yangi shablon fayli — OnlyOffice uchun yangi hujjat kaliti.
+  if ((existing.templateUrl || null) !== data.templateUrl) data.templateVersion = { increment: 1 };
   const item = await prisma.smkForm.update({ where: { id: req.params.id }, data });
   res.json(item);
 });

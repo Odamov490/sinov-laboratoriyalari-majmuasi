@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Printer, ArrowLeft } from 'lucide-react';
+import { Plus, Pencil, Trash2, Download, Printer, ArrowLeft, FileText } from 'lucide-react';
+import { canOpenOnline } from './AdminSmkTemplateEditor.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminSmk, uploadFiles } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -140,6 +141,11 @@ export default function AdminSmkFormEntries() {
           {form.description && <p className="mt-1 max-w-3xl whitespace-pre-line text-sm text-slate-500">{form.description}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {form.templateUrl && canOpenOnline(form.templateUrl) && (
+            <Link to={`/admin/sifat/shablon/${form.id}`} className="btn-secondary !py-2.5">
+              <FileText className="h-4 w-4" /> {tr('Shablonni ochish')}
+            </Link>
+          )}
           {form.templateUrl && (
             <a href={form.templateUrl} download={form.templateName || undefined} className="btn-secondary !py-2.5">
               <Download className="h-4 w-4" /> {tr('Shablonni yuklab olish')}

@@ -67,6 +67,7 @@ import {
 import AdminSifat from './pages/admin/AdminSifat.jsx';
 import AdminSmkForms from './pages/admin/AdminSmkForms.jsx';
 import AdminSmkFormEntries from './pages/admin/AdminSmkFormEntries.jsx';
+import AdminSmkTemplateEditor from './pages/admin/AdminSmkTemplateEditor.jsx';
 
 // Chat alohida bo'lak (chunk) bo'lib, faqat ochilganda yuklanadi.
 const AdminChat = lazy(() => import('./pages/admin/chat/AdminChat.jsx'));
@@ -119,6 +120,7 @@ export default function App() {
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="sifat" element={<AdminSifat />} />
+        <Route path="sifat/shablon/:formId" element={<AdminSmkTemplateEditor />} />
         <Route path="sifat/:labSlug/:formId" element={<AdminSmkFormEntries />} />
         <Route path="sifat-formalar" element={<AdminSmkForms />} />
         {/* Eski SMK bo'limlari olib tashlangan: eski havolalar Sifat kanbaniga. */}
