@@ -7,7 +7,18 @@ import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx
 import { Pagination } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
-import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo } from './smk/smkDocument.js';
+import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo, mergeCells } from './smk/smkDocument.js';
+
+// "Bir xil kataklarni birlashtirish" tanlovi — forma bo'yicha brauzerda eslab qolinadi.
+const mergeKey = (formId) => `smk-merge:${formId}`;
+function loadMerge(formId) {
+  try {
+    const v = JSON.parse(localStorage.getItem(mergeKey(formId)) || '{}');
+    return { vertical: !!v.vertical, horizontal: !!v.horizontal };
+  } catch {
+    return { vertical: false, horizontal: false };
+  }
+}
 
 // /admin/sifat/:labSlug/:formId — laboratoriya tanlagan forma: hujjat shapkasi
 // va jadval (qatorlar = yozuvlar). Qator qo'shish/tahrirlash/o'chirish; tayyor
@@ -38,6 +49,17 @@ export default function AdminSmkFormEntries() {
   const [editing, setEditing] = useState(null); // {id?, data}
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [exporting, setExporting] = useState(null); // 'word' | 'pdf' | 'print'
+  const [merge, setMerge] = useState(() => loadMerge(formId));
+  const toggleMerge = (k) =>
+    setMerge((prev) => {
+      const next = { ...prev, [k]: !prev[k] };
+      try {
+        localStorage.setItem(mergeKey(formId), JSON.stringify(next));
+      } catch {
+        // saqlab bo'lmasa — faqat shu sahifa uchun
+      }
+      return next;
+    });
   const logo = useFormLogo();
 
   useEffect(() => {
@@ -91,7 +113,7 @@ export default function AdminSmkFormEntries() {
     setExporting(kind);
     try {
       const rows = await fetchAllRows(lab.id, form.id);
-      const doc = { form, lab, rows };
+      const doc = { form, lab, rows, merge };
       if (kind === 'word') await exportWord(doc);
       else if (kind === 'pdf') await exportPdf(doc);
       else await printDocument(doc, printWin);
@@ -145,6 +167,18 @@ export default function AdminSmkFormEntries() {
         <EmptyState message={tr("Bu formaga hali ustunlar qo'shilmagan.")} />
       ) : (
         <>
+          <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm" data-testid="smk-merge">
+            <span className="font-medium text-ink">{tr('Bir xil kataklarni birlashtirish')}:</span>
+            <label className="flex items-center gap-2 text-slate-600">
+              <input type="checkbox" checked={merge.vertical} onChange={() => toggleMerge('vertical')} className="h-4 w-4 rounded border-border text-primary" />
+              {tr("Vertikal (ustun bo'ylab)")}
+            </label>
+            <label className="flex items-center gap-2 text-slate-600">
+              <input type="checkbox" checked={merge.horizontal} onChange={() => toggleMerge('horizontal')} className="h-4 w-4 rounded border-border text-primary" />
+              {tr("Gorizontal (qator bo'ylab)")}
+            </label>
+            <span className="text-xs text-slate-400">{tr("Ekranda, Word, PDF va chop etishda qo'llanadi.")}</span>
+          </div>
           <div className="card overflow-x-auto">
             {data === null ? (
               <Loading />
@@ -165,15 +199,30 @@ export default function AdminSmkFormEntries() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {data.items.map((e, i) => (
+                  {(() => {
+                    // Shu sahifadagi qatorlar bo'yicha birlashtirish (hujjat bilan bir xil qoida).
+                    const texts = data.items.map((e) => fields.map((f) => displayValue(f, e.data?.[f.key])));
+                    const { span } = mergeCells(texts, data.items.map(() => true), merge);
+                    return data.items.map((e, i) => (
                     <tr key={e.id} className="hover:bg-bg-light/60">
                       {/* Jurnal raqami (Word/PDF bilan bir xil): 1, 2, 3 … */}
                       <td className="px-4 py-3 text-slate-400">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                      {fields.map((f) => (
-                        <td key={f.key} className="max-w-[260px] truncate px-4 py-3 text-ink" title={displayValue(f, e.data?.[f.key])}>
-                          {displayValue(f, e.data?.[f.key]) || '—'}
-                        </td>
-                      ))}
+                      {fields.map((f, c) => {
+                        const sp = span[i][c];
+                        if (!sp || sp.v) return null;
+                        const merged = sp.cs > 1 || sp.rs > 1;
+                        return (
+                          <td
+                            key={f.key}
+                            colSpan={sp.cs > 1 ? sp.cs : undefined}
+                            rowSpan={sp.rs > 1 ? sp.rs : undefined}
+                            className={`max-w-[260px] truncate px-4 py-3 text-ink ${merged ? 'border-x border-border bg-white text-center align-middle' : ''}`}
+                            title={texts[i][c]}
+                          >
+                            {texts[i][c] || '—'}
+                          </td>
+                        );
+                      })}
                       <td className="whitespace-nowrap px-4 py-3 text-slate-500">
                         {e.createdBy?.fullName || '—'}
                         <span className="block text-xs text-slate-400">{fmtDate(e.createdAt)}</span>
@@ -189,7 +238,8 @@ export default function AdminSmkFormEntries() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    ));
+                  })()}
                 </tbody>
               </table>
             )}

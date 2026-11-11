@@ -54,11 +54,12 @@ function blockXml(b) {
     .join('');
 }
 
-function cell(width, content, { vMerge, shade, vAlign = 'center' } = {}) {
+function cell(width, content, { vMerge, shade, vAlign = 'center', gridSpan = 1 } = {}) {
   const merge = vMerge ? `<w:vMerge${vMerge === 'restart' ? ' w:val="restart"' : ''}/>` : '';
   const shd = shade ? `<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>` : '';
-  // Bo'sh katakda ham kamida bitta paragraf bo'lishi shart.
-  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${merge}${shd}<w:vAlign w:val="${vAlign}"/></w:tcPr>${content || para('')}</w:tc>`;
+  const gs = gridSpan > 1 ? `<w:gridSpan w:val="${gridSpan}"/>` : '';
+  // tcPr tartibi: tcW, gridSpan, vMerge, shd, vAlign. Bo'sh katakda ham paragraf shart.
+  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${gs}${merge}${shd}<w:vAlign w:val="${vAlign}"/></w:tcPr>${content || para('')}</w:tc>`;
 }
 
 function table(gridWidths, rowsXml) {
@@ -94,7 +95,7 @@ function split(total, n) {
   return Array.from({ length: n }, (_, i) => base + (i < total - base * n ? 1 : 0));
 }
 
-export function buildDocumentXml({ header, fields, rows, logo }) {
+export function buildDocumentXml({ header, fields, rows, spans, logo }) {
   const page = PAGE[header.orientation] || PAGE.landscape;
   const content = page.w - MARGIN * 2;
 
@@ -136,7 +137,21 @@ export function buildDocumentXml({ header, fields, rows, logo }) {
       (r, i) =>
         `<w:tr><w:trPr><w:cantSplit/></w:trPr>` +
         cell(numW, para(run(r ? String(i + 1) : ''), { align: 'center' }), { vAlign: 'top' }) +
-        fields.map((f, j) => cell(fieldW[j], para(run(r ? r[j] : '')), { vAlign: 'top' })).join('') +
+        fields
+          .map((f, j) => {
+            // Birlashtirish: gridSpan (gorizontal), vMerge (vertikal); gorizontal ichidagi katak yozilmaydi.
+            const s = spans ? spans[i][j] : { rs: 1, cs: 1 };
+            if (!s) return '';
+            if (s.v) return cell(fieldW[j], '', { vMerge: 'continue' });
+            const w = fieldW.slice(j, j + s.cs).reduce((a, b) => a + b, 0);
+            const merged = s.cs > 1 || s.rs > 1;
+            return cell(w, para(run(r ? r[j] : ''), { align: merged ? 'center' : 'left' }), {
+              vAlign: merged ? 'center' : 'top',
+              gridSpan: s.cs,
+              vMerge: s.rs > 1 ? 'restart' : undefined,
+            });
+          })
+          .join('') +
         `</w:tr>`
     )
     .join('');
@@ -229,7 +244,7 @@ export function zipStore(files) {
   });
 }
 
-export function buildDocx({ header, fields, rows, logo }) {
+export function buildDocx({ header, fields, rows, spans, logo }) {
   const ext = logo.ext === 'jpeg' ? 'jpeg' : 'png';
   return zipStore([
     {
@@ -260,7 +275,7 @@ export function buildDocx({ header, fields, rows, logo }) {
         `<Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.${ext}"/>` +
         '</Relationships>',
     },
-    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, logo }) },
+    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, spans, logo }) },
     { name: `word/media/logo.${ext}`, data: logo.bytes },
   ]);
 }

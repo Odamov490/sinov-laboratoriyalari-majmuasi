@@ -193,7 +193,57 @@ function blockHtml(b) {
 // qo'sh chiziq chiqmaydi): logo va markaz kataklari rekvizit qatorlari bo'ylab
 // birlashtiriladi. Ikkala jadval ham table-layout:fixed — uzun matn katakni
 // kengaytirmaydi, qatorga o'raladi.
-export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS }) {
+// Bir xil qiymatli kataklarni birlashtirish (№ ustunidan tashqari, bo'sh kataklar
+// birlashtirilmaydi). Avval gorizontal (qator ichida yonma-yon), keyin vertikal
+// (ustun bo'ylab, faqat gorizontal birlashmagan kataklar) — natija doim to'g'ri
+// to'rtburchaklar. Qaytaradi: span[i][c] = { rs, cs } | null (gorizontal ichida)
+// | { v: true } (yuqoridagi katak ichida); breakAfter[i] — shu qatordan keyin
+// sahifa bo'linishi mumkinmi (vertikal birlashma kesilmasin).
+export function mergeCells(texts, present, { vertical = false, horizontal = false } = {}) {
+  const R = texts.length;
+  const C = R ? texts[0].length : 0;
+  const span = texts.map((row) => row.map(() => ({ rs: 1, cs: 1 })));
+  if (horizontal) {
+    for (let i = 0; i < R; i += 1) {
+      if (!present[i]) continue;
+      for (let c = 0; c < C; ) {
+        if (texts[i][c] === '') {
+          c += 1;
+          continue;
+        }
+        let j = c + 1;
+        while (j < C && texts[i][j] === texts[i][c]) j += 1;
+        if (j - c > 1) {
+          span[i][c].cs = j - c;
+          for (let k = c + 1; k < j; k += 1) span[i][k] = null;
+        }
+        c = j;
+      }
+    }
+  }
+  if (vertical) {
+    for (let c = 0; c < C; c += 1) {
+      for (let i = 0; i < R; ) {
+        const cell = span[i][c];
+        if (!present[i] || !cell || cell.cs !== 1 || texts[i][c] === '') {
+          i += 1;
+          continue;
+        }
+        let j = i + 1;
+        while (j < R && present[j] && span[j][c] && span[j][c].cs === 1 && texts[j][c] === texts[i][c]) j += 1;
+        if (j - i > 1) {
+          cell.rs = j - i;
+          for (let k = i + 1; k < j; k += 1) span[k][c] = { v: true };
+        }
+        i = j;
+      }
+    }
+  }
+  const breakAfter = texts.map((_, i) => i === R - 1 || span[i + 1].every((s) => !s || !s.v));
+  return { span, breakAfter };
+}
+
+export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS, merge }) {
   const h = headerModel({ form, lab });
   const fields = form.fields || [];
   const n = Math.max(1, h.meta.length);
@@ -221,11 +271,20 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
   const list = rows.length ? rows : Array.from({ length: blankRows }, () => null);
   const td = (content, extra = '') =>
     `<td style="${B}padding:4px 6px;font-size:10pt;${LH}vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;${extra}">${content}</td>`;
+  const texts = list.map((r) => fields.map((f) => (r ? displayValue(f, r.data?.[f.key]) : '')));
+  const { span, breakAfter } = mergeCells(texts, list.map(Boolean), merge);
+  // data-row="1" — shu qatordan keyin sahifa bo'linishi mumkin (birlashma kesilmaydi).
   const body = list
     .map(
       (r, i) =>
-        `<tr data-row="1">${td(r ? String(i + 1) : '&nbsp;', 'text-align:center')}${fields
-          .map((f) => td(`${r ? esc(displayValue(f, r.data?.[f.key])) : ''}&nbsp;`))
+        `<tr data-row="${breakAfter[i] ? 1 : 0}">${td(r ? String(i + 1) : '&nbsp;', 'text-align:center')}${fields
+          .map((f, c) => {
+            const s = span[i][c];
+            if (!s || s.v) return '';
+            const attr = (s.cs > 1 ? ` colspan="${s.cs}"` : '') + (s.rs > 1 ? ` rowspan="${s.rs}"` : '');
+            const extra = s.cs > 1 || s.rs > 1 ? 'vertical-align:middle;text-align:center' : '';
+            return td(`${esc(texts[i][c])}&nbsp;`, extra).replace('<td', `<td${attr}`);
+          })
           .join('')}</tr>`
     )
     .join('');
@@ -261,18 +320,19 @@ function saveBlob(blob, name) {
 
 // Word: haqiqiy .docx (smkDocx.js) — jadval enlari, chegaralar, logo va sahifa
 // yo'nalishi Word'ning o'z formatida, shuning uchun hech narsa siljimaydi.
-export async function exportWord({ form, lab, rows }) {
+export async function exportWord({ form, lab, rows, merge }) {
   const logo = await getFormLogo();
   const res = await fetch(logo.src);
   const bytes = new Uint8Array(await res.arrayBuffer());
   const isJpeg = /jpe?g/i.test(res.headers.get('content-type') || '') || /\.jpe?g$/i.test(logo.src);
   const { buildDocx } = await import('./smkDocx.js');
+  const list = rows.length ? rows : Array.from({ length: BLANK_ROWS }, () => null);
+  const texts = list.map((r) => (form.fields || []).map((f) => (r ? displayValue(f, r.data?.[f.key]) : '')));
   const blob = buildDocx({
     header: headerModel({ form, lab }),
     fields: form.fields || [],
-    rows: (rows.length ? rows : Array.from({ length: BLANK_ROWS }, () => null)).map((r) =>
-      r ? (form.fields || []).map((f) => displayValue(f, r.data?.[f.key])) : null
-    ),
+    rows: list.map((r, i) => (r ? texts[i] : null)),
+    spans: mergeCells(texts, list.map(Boolean), merge).span,
     logo: { bytes, ext: isJpeg ? 'jpeg' : 'png', width: logo.width, height: logo.height },
   });
   saveBlob(blob, `${fileBase(form, lab)}.docx`);
@@ -281,9 +341,9 @@ export async function exportWord({ form, lab, rows }) {
 // PDF: hujjat ekrandan tashqarida chiziladi (html2canvas), sahifalarga qator
 // chegarasidan bo'linadi (qator ikki sahifaga yorilmaydi), jadval sarlavhasi
 // har bir keyingi sahifada takrorlanadi.
-export async function exportPdf({ form, lab, rows }) {
+export async function exportPdf({ form, lab, rows, merge }) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logo: await getFormLogo() });
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, merge, logo: await getFormLogo() });
   const land = orientation === 'landscape';
   const widthPx = land ? 1100 : 760;
   const box = document.createElement('div');
@@ -318,7 +378,7 @@ export async function exportPdf({ form, lab, rows }) {
     // Matn bloklari (jadvaldan keyingilari ham) ham yorilmaydi.
     const breaks = [
       px(thead.bottom),
-      ...[...box.querySelectorAll('tr[data-row], [data-block]')].map((el) => px(el.getBoundingClientRect().bottom)),
+      ...[...box.querySelectorAll('tr[data-row="1"], [data-block]')].map((el) => px(el.getBoundingClientRect().bottom)),
     ].sort((a, b) => a - b);
 
     const pdf = new jsPDF(land ? 'l' : 'p', 'mm', 'a4');
@@ -366,10 +426,10 @@ export async function exportPdf({ form, lab, rows }) {
 // Chop etish: hujjat yangi oynada (brauzer orqali). Oyna tugma bosilgan
 // zahoti ochilib beriladi (`w`) — aks holda ma'lumot yuklangach ochilgan
 // oynani brauzer popup sifatida bloklashi mumkin.
-export async function printDocument({ form, lab, rows }, w) {
+export async function printDocument({ form, lab, rows, merge }, w) {
   if (!w) return;
   const logo = await getFormLogo();
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logo: { ...logo, src: new URL(logo.src, window.location.origin).href } });
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, merge, logo: { ...logo, src: new URL(logo.src, window.location.origin).href } });
   w.document.write(
     `<!doctype html><html><head><meta charset="utf-8"><title>${esc(form.title)}</title>` +
       `<style>@page{size:A4 ${orientation};margin:10mm} body{margin:0;color:#000} thead{display:table-header-group} tr{page-break-inside:avoid}</style>` +
