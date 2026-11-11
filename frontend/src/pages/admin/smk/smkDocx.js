@@ -95,7 +95,7 @@ function split(total, n) {
   return Array.from({ length: n }, (_, i) => base + (i < total - base * n ? 1 : 0));
 }
 
-export function buildDocumentXml({ header, fields, rows, spans, footer = [], logo }) {
+export function buildDocumentXml({ header, fields, rows, footer = [], logo }) {
   const page = PAGE[header.orientation] || PAGE.landscape;
   const content = page.w - MARGIN * 2;
 
@@ -137,21 +137,7 @@ export function buildDocumentXml({ header, fields, rows, spans, footer = [], log
       (r, i) =>
         `<w:tr><w:trPr><w:cantSplit/></w:trPr>` +
         cell(numW, para(run(r ? String(i + 1) : ''), { align: 'center' }), { vAlign: 'top' }) +
-        fields
-          .map((f, j) => {
-            // Birlashtirish: gridSpan (gorizontal), vMerge (vertikal); gorizontal ichidagi katak yozilmaydi.
-            const s = spans ? spans[i][j] : { rs: 1, cs: 1 };
-            if (!s) return '';
-            if (s.v) return cell(fieldW[j], '', { vMerge: 'continue' });
-            const w = fieldW.slice(j, j + s.cs).reduce((a, b) => a + b, 0);
-            const merged = s.cs > 1 || s.rs > 1;
-            return cell(w, para(run(r ? r[j] : ''), { align: merged ? 'center' : 'left' }), {
-              vAlign: merged ? 'center' : 'top',
-              gridSpan: s.cs,
-              vMerge: s.rs > 1 ? 'restart' : undefined,
-            });
-          })
-          .join('') +
+        fields.map((f, j) => cell(fieldW[j], para(run(r ? r[j] : '')), { vAlign: 'top' })).join('') +
         `</w:tr>`
     )
     .join('');
@@ -255,7 +241,7 @@ export function zipStore(files) {
   });
 }
 
-export function buildDocx({ header, fields, rows, spans, footer, logo }) {
+export function buildDocx({ header, fields, rows, footer, logo }) {
   const ext = logo.ext === 'jpeg' ? 'jpeg' : 'png';
   return zipStore([
     {
@@ -286,7 +272,7 @@ export function buildDocx({ header, fields, rows, spans, footer, logo }) {
         `<Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.${ext}"/>` +
         '</Relationships>',
     },
-    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, spans, footer, logo }) },
+    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, footer, logo }) },
     { name: `word/media/logo.${ext}`, data: logo.bytes },
   ]);
 }
