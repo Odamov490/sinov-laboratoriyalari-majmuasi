@@ -54,12 +54,6 @@ model User {
   deletedAt    DateTime?
   sampleMovements SampleMovement[]
   testItemsAdded  ApplicationTestItem[]
-  nonConformancesResponsible NonConformance[]
-  complaintsResponsible      Complaint[]
-  smkDocumentsOwned            SMKDocument[]
-  internalAuditsAsAuditor       InternalAudit[]
-  trainingRecords                TrainingRecord[]
-  riskItemsOwned                  RiskItem[]
   testJournalChanges               TestJournalChange[]
   tasksCreated                     Task[]             @relation("TaskCreator")
   taskAssignments                  TaskAssignee[]
@@ -77,6 +71,7 @@ model User {
   stickerPacksCreated              StickerPack[]
   loginEvents                      LoginEvent[]
   sessions                         UserSession[]
+  smkFormEntriesCreated            SmkFormEntry[]
 }
 
 model Laboratory {
@@ -107,19 +102,11 @@ model Laboratory {
   users               User[]
   testIndicators      TestIndicator[]
   products            Product[]
-  internalAudits          InternalAudit[]
   tasks                   Task[]
   chatRoom                ChatRoom?
-  qualityControlRecords   QualityControlRecord[]
-  proficiencyTests        ProficiencyTest[]
-  // SMK har bir laboratoriya uchun alohida yuritiladi.
-  smkNonConformances          NonConformance[]
-  smkComplaints               Complaint[]
-  smkDocuments                SMKDocument[]
-  smkCalibrationRecords       CalibrationRecord[]
-  smkTrainingRecords          TrainingRecord[]
-  smkMeasurementUncertainties MeasurementUncertainty[]
-  smkRiskItems                RiskItem[]
+  // SMK: laboratoriya tanlagan formalar va ularning yozuvlari.
+  smkForms            SmkLabForm[]
+  smkFormEntries      SmkFormEntry[]
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   deletedAt           DateTime?
@@ -156,7 +143,6 @@ model Service {
   prices          Price[]
   applications    Application[]
   testItems       ApplicationTestItem[]
-  measurementUncertainties MeasurementUncertainty[]
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -299,7 +285,6 @@ model Equipment {
   photo          String?
   laboratoryId   String?
   laboratory     Laboratory? @relation(fields: [laboratoryId], references: [id])
-  calibrationRecords CalibrationRecord[]
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   deletedAt      DateTime?
@@ -361,7 +346,6 @@ model Application {
   samples         Sample[]
   files             ApplicationFile[]
   testItems         ApplicationTestItem[]
-  complaints        Complaint[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -644,256 +628,8 @@ model ProductIndicatorAssignment {
   createdAt         DateTime @default(now())
 }
 
-// ===== SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — FAZA 1 =====
 // Muammo boshqaruvi: nomuvofiqliklar/CAPA va rasmiy sifat shikoyatlari.
 // Qolgan 18 modul keyingi fazalarda shu bo'limga qo'shiladi.
-
-enum NonConformanceSource {
-  AUDIT
-  SHIKOYAT
-  ICHKI_KUZATUV
-  NAMUNA_MUAMMOSI
-}
-
-enum NonConformanceStatus {
-  OCHIQ
-  JARAYONDA
-  YOPILDI
-  TASDIQLANDI
-}
-
-// code avtomatik "NC-<yil>-<tartib>" shaklida generatsiya qilinadi (backend
-// crudFactory buildData orqali, adminRoutes.js'da).
-model NonConformance {
-  id                String               @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  code              String               @unique
-  source            NonConformanceSource
-  description       String
-  detectedDate      DateTime
-  responsibleUserId String?
-  responsibleUser   User?                @relation(fields: [responsibleUserId], references: [id])
-  rootCauseAnalysis String?
-  correctiveAction  String?
-  dueDate           DateTime?
-  closedDate        DateTime?
-  status            NonConformanceStatus @default(OCHIQ)
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-
-  @@index([laboratoryId])
-}
-
-enum ComplaintStatus {
-  QABUL_QILINDI
-  TEKSHIRILMOQDA
-  HAL_QILINDI
-}
-
-// Rasmiy ISO shikoyat protsedurasi — mavjud ContactMessage'dan farqli:
-// ContactMessage umumiy murojaatlar uchun, bu esa rasmiy tekshiruv/yechim
-// jarayoni kuzatib boriladigan sifat shikoyatlari uchun. code avtomatik
-// "SHK-<yil>-<tartib>" shaklida generatsiya qilinadi.
-model Complaint {
-  id                    String          @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  code                  String          @unique
-  fullName              String
-  phone                 String?
-  email                 String?
-  relatedApplicationId  String?
-  relatedApplication    Application?    @relation(fields: [relatedApplicationId], references: [id])
-  description           String
-  receivedDate          DateTime
-  investigationNotes    String?
-  resolution            String?
-  responsibleUserId     String?
-  responsibleUser       User?           @relation(fields: [responsibleUserId], references: [id])
-  status                ComplaintStatus @default(QABUL_QILINDI)
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-
-  @@index([laboratoryId])
-}
-
-// ===== SMK — FAZA 2: Hujjat boshqaruvi =====
-
-enum SMKDocumentCategory {
-  PROTSEDURA
-  KORSATMA
-  FORMA
-  JURNAL
-}
-
-enum SMKDocumentStatus {
-  AMALDA
-  QORALAMA
-  BEKOR_QILINGAN
-}
-
-model SMKDocument {
-  id          String              @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  code        String              @unique
-  titleUz     String
-  titleRu     String
-  titleEn     String
-  category    SMKDocumentCategory
-  ownerUserId String?
-  ownerUser   User?               @relation(fields: [ownerUserId], references: [id])
-  status      SMKDocumentStatus   @default(QORALAMA)
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
-
-  @@index([laboratoryId])
-}
-
-// ===== SMK — FAZA 3: Auditlar =====
-
-enum InternalAuditStatus {
-  REJALASHTIRILGAN
-  OTKAZILDI
-  YAKUNLANDI
-}
-
-model InternalAudit {
-  id            String              @id @default(uuid())
-  plannedDate   DateTime
-  actualDate    DateTime?
-  laboratoryId  String?
-  laboratory    Laboratory?         @relation(fields: [laboratoryId], references: [id])
-  auditorUserId String?
-  auditorUser   User?               @relation(fields: [auditorUserId], references: [id])
-  status        InternalAuditStatus @default(REJALASHTIRILGAN)
-  summary       String?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-
-  @@index([laboratoryId])
-}
-
-// ===== SMK — FAZA 4: Texnik yadro =====
-
-// CalibrationRecord'da "status" atayin saqlanmaydi — u nextDueDate'ga
-// nisbatan har doim hozirgi sanadan hisoblanadi (frontend'da), shuning
-// uchun uni DB ustuniga aylantirish uni yangilab turish uchun alohida fon
-// vazifasini (cron) talab qilardi, bu esa hozircha loyihada yo'q.
-model CalibrationRecord {
-  id              String    @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  equipmentId     String
-  equipment       Equipment @relation(fields: [equipmentId], references: [id])
-  calibrationDate DateTime
-  nextDueDate     DateTime
-  certificateUrl  String?
-  performedBy     String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  @@index([laboratoryId])
-}
-
-model TrainingRecord {
-  id              String    @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  userId          String
-  user            User      @relation(fields: [userId], references: [id])
-  trainingTitle   String
-  trainingDate    DateTime
-  provider        String?
-  certificateUrl  String?
-  expiryDate      DateTime?
-  createdAt       DateTime  @default(now())
-
-  @@index([laboratoryId])
-}
-
-model QualityControlRecord {
-  id            String      @id @default(uuid())
-  laboratoryId  String?
-  laboratory    Laboratory? @relation(fields: [laboratoryId], references: [id])
-  testType      String
-  controlDate   DateTime
-  expectedValue String?
-  actualValue   String?
-  deviation     String?
-  withinLimits  Boolean     @default(true)
-  notes         String?
-  createdAt     DateTime    @default(now())
-
-  @@index([laboratoryId])
-}
-
-enum ProficiencyResultStatus {
-  QONIQARLI
-  QONIQARSIZ
-  OGOHLANTIRISH
-}
-
-model ProficiencyTest {
-  id           String                   @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory?              @relation(fields: [laboratoryId], references: [id])
-  testProgram  String
-  providerName String
-  testDate     DateTime
-  resultStatus ProficiencyResultStatus
-  reportUrl    String?
-  createdAt    DateTime                 @default(now())
-
-  @@index([laboratoryId])
-}
-
-model MeasurementUncertainty {
-  id                String   @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  serviceId         String?
-  service           Service? @relation(fields: [serviceId], references: [id])
-  testMethodName    String?
-  uncertaintyValue  String
-  unit              String?
-  calculationMethod String?
-  documentUrl       String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@index([laboratoryId])
-}
-
-// ===== SMK — FAZA 6: Strategik =====
-
-enum RiskStatus {
-  FAOL
-  NAZORAT_OSTIDA
-  YOPILDI
-}
-
-// riskScore = likelihood * impact, backend tomonidan avtomatik hisoblanadi
-// (adminRoutes.js'dagi buildData orqali) — admin qo'lda kiritmaydi.
-model RiskItem {
-  id             String     @id @default(uuid())
-  laboratoryId String?
-  laboratory   Laboratory? @relation(fields: [laboratoryId], references: [id])
-  description    String
-  category       String?
-  likelihood     Int
-  impact         Int
-  riskScore      Int
-  mitigationPlan String?
-  ownerUserId    String?
-  ownerUser      User?      @relation(fields: [ownerUserId], references: [id])
-  status         RiskStatus @default(FAOL)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-
-  @@index([laboratoryId])
-}
 
 // Sayt sahifalarining kunlik ko'rishlar soni — frontend har bir sahifa
 // o'tishida (SPA ichida ham) yuboradi. Admin dashboarddagi "Eng ko'p
@@ -1470,4 +1206,54 @@ model UserSession {
   revokedAt        DateTime?
 
   @@index([userId, revokedAt])
+}
+
+// ===== SMK (Sifat menejmenti, ISO/IEC 17025): elektron formalar =====
+// Formalar kutubxonasi (SUPER_ADMIN yuritadi). `fields` — maydonlar ro'yxati:
+// [{ key, label, type, required, options }], type: text | textarea | number |
+// date | select | checkbox | staff | file. templateUrl — asl shablon fayli
+// (Word/Excel/PDF), yuklab olish uchun.
+model SmkForm {
+  id           String         @id @default(uuid())
+  code         String         @unique
+  title        String
+  description  String?
+  fields       Json           @default("[]")
+  templateUrl  String?
+  templateName String?
+  order        Int            @default(0)
+  isActive     Boolean        @default(true)
+  labs         SmkLabForm[]
+  entries      SmkFormEntry[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+// Laboratoriya o'ziga kerakli formalarni tanlaydi (Sifat kanbanidagi kartochkalar).
+model SmkLabForm {
+  laboratoryId String
+  laboratory   Laboratory @relation(fields: [laboratoryId], references: [id], onDelete: Cascade)
+  formId       String
+  form         SmkForm    @relation(fields: [formId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+
+  @@id([laboratoryId, formId])
+  @@index([formId])
+}
+
+// To'ldirilgan forma (bitta yozuv). data — { [field.key]: qiymat }.
+model SmkFormEntry {
+  id           String     @id @default(uuid())
+  formId       String
+  form         SmkForm    @relation(fields: [formId], references: [id])
+  laboratoryId String
+  laboratory   Laboratory @relation(fields: [laboratoryId], references: [id])
+  data         Json       @default("{}")
+  createdById  String?
+  createdBy    User?      @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([formId, laboratoryId, createdAt])
+  @@index([laboratoryId])
 }

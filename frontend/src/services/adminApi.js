@@ -183,3 +183,21 @@ export const adminSamples = {
   attach: (id, payload) => apiClient.post(`/admin/samples/${id}/attach`, payload).then((r) => r.data),
   stats: () => apiClient.get('/admin/samples/stats').then((r) => r.data),
 };
+
+// SMK elektron formalari.
+export const adminSmk = {
+  listForms: (params) => apiClient.get('/admin/smk/forms', { params }).then((r) => r.data),
+  createForm: (data) => apiClient.post('/admin/smk/forms', data).then((r) => r.data),
+  updateForm: (id, data) => apiClient.put(`/admin/smk/forms/${id}`, data).then((r) => r.data),
+  removeForm: (id) => apiClient.delete(`/admin/smk/forms/${id}`).then((r) => r.data),
+  board: () => apiClient.get('/admin/smk/board').then((r) => r.data),
+  staffOptions: () => apiClient.get('/admin/smk/staff-options').then((r) => r.data),
+  setLabForms: (labId, formIds) => apiClient.put(`/admin/smk/labs/${labId}/forms`, { formIds }).then((r) => r.data),
+  labForm: (labId, formId) => apiClient.get(`/admin/smk/labs/${labId}/forms/${formId}`).then((r) => r.data),
+  entries: (labId, formId, params) =>
+    apiClient.get(`/admin/smk/labs/${labId}/forms/${formId}/entries`, { params }).then((r) => r.data),
+  createEntry: (labId, formId, data) =>
+    apiClient.post(`/admin/smk/labs/${labId}/forms/${formId}/entries`, { data }).then((r) => r.data),
+  updateEntry: (id, data) => apiClient.put(`/admin/smk/entries/${id}`, { data }).then((r) => r.data),
+  removeEntry: (id) => apiClient.delete(`/admin/smk/entries/${id}`).then((r) => r.data),
+};

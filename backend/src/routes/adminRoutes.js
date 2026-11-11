@@ -42,7 +42,7 @@ const {
   removeProductIndicator,
   reorderProductIndicators,
 } = require('../controllers/testProgramAdminController');
-const { nextSequentialCode } = require('../utils/sequentialCode');
+const smkForms = require('../controllers/smkFormController');
 const prisma = require('../config/prisma');
 const { asyncHandler } = require('../middleware/errorHandler');
 const fs = require('fs');
@@ -345,92 +345,19 @@ router.post('/products/:id/indicators', requireModule('testPrograms'), addProduc
 router.post('/products/:id/indicators/reorder', requireModule('testPrograms'), reorderProductIndicators);
 router.delete('/products/:id/indicators/:assignmentId', requireModule('testPrograms'), removeProductIndicator);
 
-// SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — FAZA 1: muammo
-// boshqaruvi. `code` har ikkalasida ham server tomonidan avtomatik
-// generatsiya qilinadi (Application.applicationNumber kabi), shuning uchun
-// admin formasida tahrirlanmaydi — faqat ro'yxatda ko'rinadi.
-mountCrud('smk/nonconformances', 'smk_nonconformances', 'nonConformance', {
-  labScoped: true,
-  include: { responsibleUser: true },
-  searchFields: ['code', 'description'],
-  orderBy: { createdAt: 'desc' },
-  buildData: async (body, { isUpdate }) => {
-    if (isUpdate) return body;
-    return { ...body, code: await nextSequentialCode('nonConformance', 'NC') };
-  },
-});
-mountCrud('smk/complaints', 'smk_complaints', 'complaint', {
-  labScoped: true,
-  include: { responsibleUser: true, relatedApplication: true },
-  searchFields: ['code', 'fullName', 'phone', 'description'],
-  orderBy: { createdAt: 'desc' },
-  buildData: async (body, { isUpdate }) => {
-    if (isUpdate) return body;
-    return { ...body, code: await nextSequentialCode('complaint', 'SHK') };
-  },
-});
-
-// SMK — FAZA 2: Hujjat boshqaruvi
-mountCrud('smk/documents', 'smk_documents', 'sMKDocument', {
-  labScoped: true,
-  include: { ownerUser: true },
-  searchFields: ['code', 'titleUz', 'titleRu', 'titleEn'],
-  orderBy: { createdAt: 'desc' },
-});
-
-// SMK — FAZA 3: Auditlar
-mountCrud('smk/audits', 'smk_audits', 'internalAudit', {
-  labScoped: true,
-  include: { laboratory: true, auditorUser: true },
-  orderBy: { plannedDate: 'desc' },
-});
-
-// SMK — FAZA 4: Texnik yadro
-mountCrud('smk/calibration', 'smk_calibration', 'calibrationRecord', {
-  labScoped: true,
-  include: { equipment: true },
-  orderBy: { nextDueDate: 'asc' },
-});
-mountCrud('smk/training', 'smk_training', 'trainingRecord', {
-  labScoped: true,
-  include: { user: true },
-  searchFields: ['trainingTitle', 'provider'],
-  orderBy: { trainingDate: 'desc' },
-});
-mountCrud('smk/qc', 'smk_qc', 'qualityControlRecord', {
-  labScoped: true,
-  include: { laboratory: true },
-  searchFields: ['testType'],
-  orderBy: { controlDate: 'desc' },
-});
-mountCrud('smk/proficiency-tests', 'smk_pt', 'proficiencyTest', {
-  labScoped: true,
-  include: { laboratory: true },
-  searchFields: ['testProgram', 'providerName'],
-  orderBy: { testDate: 'desc' },
-});
-mountCrud('smk/uncertainty', 'smk_uncertainty', 'measurementUncertainty', {
-  labScoped: true,
-  include: { service: true },
-  searchFields: ['testMethodName', 'unit'],
-  orderBy: { updatedAt: 'desc' },
-});
-
-// SMK — FAZA 6: Strategik
-mountCrud('smk/risks', 'smk_risks', 'riskItem', {
-  labScoped: true,
-  include: { ownerUser: true },
-  searchFields: ['description', 'category'],
-  orderBy: { riskScore: 'desc' },
-  // riskScore admin qo'lda kiritmaydi — likelihood * impact dan avtomatik
-  // hisoblanadi, shu jumladan tahrirlashda ham (ikkalasi o'zgarganida
-  // qayta hisoblanishi kerak).
-  buildData: (body) => {
-    const likelihood = Number(body.likelihood) || 0;
-    const impact = Number(body.impact) || 0;
-    return { ...body, likelihood, impact, riskScore: likelihood * impact };
-  },
-});
+// SMK: elektron formalar (kutubxona, laboratoriyaga biriktirish, yozuvlar).
+router.get('/smk/forms', requireModule('smk_forms'), smkForms.listForms);
+router.post('/smk/forms', requireModule('smk_forms_admin'), smkForms.createForm);
+router.put('/smk/forms/:id', requireModule('smk_forms_admin'), smkForms.updateForm);
+router.delete('/smk/forms/:id', requireModule('smk_forms_admin'), smkForms.deleteForm);
+router.get('/smk/board', requireModule('smk_forms'), smkForms.getBoard);
+router.get('/smk/staff-options', requireModule('smk_forms'), smkForms.staffOptions);
+router.put('/smk/labs/:labId/forms', requireModule('smk_forms'), smkForms.setLabForms);
+router.get('/smk/labs/:labId/forms/:formId', requireModule('smk_forms'), smkForms.getLabForm);
+router.get('/smk/labs/:labId/forms/:formId/entries', requireModule('smk_forms'), smkForms.listEntries);
+router.post('/smk/labs/:labId/forms/:formId/entries', requireModule('smk_forms'), smkForms.createEntry);
+router.put('/smk/entries/:id', requireModule('smk_forms'), smkForms.updateEntry);
+router.delete('/smk/entries/:id', requireModule('smk_forms'), smkForms.deleteEntry);
 
 // Hisobot: sinovlar jurnali. /summary va /suggestions /:id dan oldin turishi kerak.
 router.get('/test-journal/summary', requireModule('reports'), testJournal.getSummary);

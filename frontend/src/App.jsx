@@ -39,7 +39,6 @@ import AdminUsers from './pages/admin/AdminUsers.jsx';
 import AdminSettings from './pages/admin/AdminSettings.jsx';
 import AdminDeclarationInfo from './pages/admin/AdminDeclarationInfo.jsx';
 import AdminCrudPage from './pages/admin/AdminCrudPage.jsx';
-import AdminSmkPage, { AdminSmkLegacyRedirect } from './pages/admin/AdminSmkPage.jsx';
 import AdminReports from './pages/admin/reports/AdminReports.jsx';
 import AdminSamples from './pages/admin/AdminSamples.jsx';
 import AdminSampleDetail from './pages/admin/AdminSampleDetail.jsx';
@@ -63,19 +62,11 @@ import {
   tnVedRegulationConfig,
   testIndicatorConfig,
   productConfig,
-  nonConformanceConfig,
-  complaintConfig,
-  smkDocumentConfig,
-  internalAuditConfig,
-  calibrationRecordConfig,
-  trainingRecordConfig,
-  qualityControlRecordConfig,
-  proficiencyTestConfig,
-  measurementUncertaintyConfig,
-  riskItemConfig,
 } from './pages/admin/adminConfigs.js';
 
 import AdminSifat from './pages/admin/AdminSifat.jsx';
+import AdminSmkForms from './pages/admin/AdminSmkForms.jsx';
+import AdminSmkFormEntries from './pages/admin/AdminSmkFormEntries.jsx';
 
 // Chat alohida bo'lak (chunk) bo'lib, faqat ochilganda yuklanadi.
 const AdminChat = lazy(() => import('./pages/admin/chat/AdminChat.jsx'));
@@ -128,23 +119,16 @@ export default function App() {
         <Route path="faq" element={<AdminCrudPage config={faqConfig} />} />
         <Route path="akkreditatsiya" element={<AdminCrudPage config={accreditationConfig} />} />
         <Route path="sifat" element={<AdminSifat />} />
+        <Route path="sifat/:labSlug/:formId" element={<AdminSmkFormEntries />} />
+        <Route path="sifat-formalar" element={<AdminSmkForms />} />
+        {/* Eski SMK bo'limlari olib tashlangan: eski havolalar Sifat kanbaniga. */}
+        <Route path="smk/*" element={<Navigate to="/admin/sifat" replace />} />
         <Route path="murojaatlar" element={<AdminCrudPage config={contactMessageConfig} />} />
         <Route path="tnved-reglament" element={<AdminCrudPage config={tnVedRegulationConfig} />} />
         <Route path="korsatkichlar" element={<AdminCrudPage config={testIndicatorConfig} />} />
         <Route path="sinov-dasturlari" element={<AdminCrudPage config={productConfig} />} />
         <Route path="sinov-dasturlari/:id" element={<AdminTestProgramBuilder />} />
         <Route path="deklaratsiya-sertifikat" element={<AdminDeclarationInfo />} />
-        <Route path="smk/:labSlug/nomuvofiqliklar" element={<AdminSmkPage config={nonConformanceConfig} />} />
-        <Route path="smk/:labSlug/shikoyatlar" element={<AdminSmkPage config={complaintConfig} />} />
-        <Route path="smk/:labSlug/hujjatlar" element={<AdminSmkPage config={smkDocumentConfig} />} />
-        <Route path="smk/:labSlug/auditlar" element={<AdminSmkPage config={internalAuditConfig} />} />
-        <Route path="smk/:labSlug/kalibrlash" element={<AdminSmkPage config={calibrationRecordConfig} />} />
-        <Route path="smk/:labSlug/treninglar" element={<AdminSmkPage config={trainingRecordConfig} />} />
-        <Route path="smk/:labSlug/qc" element={<AdminSmkPage config={qualityControlRecordConfig} />} />
-        <Route path="smk/:labSlug/malakaviy-sinovlar" element={<AdminSmkPage config={proficiencyTestConfig} />} />
-        <Route path="smk/:labSlug/olchov-noaniqligi" element={<AdminSmkPage config={measurementUncertaintyConfig} />} />
-        <Route path="smk/:labSlug/risklar" element={<AdminSmkPage config={riskItemConfig} />} />
-        <Route path="smk/:module" element={<AdminSmkLegacyRedirect />} />
         <Route path="namunalar" element={<AdminSamples />} />
          <Route path="namunalar/:id" element={<AdminSampleDetail />} />
         <Route path="hisobot" element={<AdminReports />} />

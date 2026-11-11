@@ -26,16 +26,7 @@ import {
   ClipboardList,
   Layers,
   Award,
-  AlertTriangle,
-  MessageSquare,
   FileCheck,
-  ClipboardCheck,
-  Gauge,
-  GraduationCap,
-  CheckSquare,
-  Target,
-  Calculator,
-  AlertOctagon,
   Briefcase,
   Library,
   PenLine,
@@ -68,30 +59,12 @@ const PERSONAL_ITEMS = [
 // A STAFF user may open only these; any other /admin address goes to the dashboard.
 const STAFF_PATHS = ['/admin/dashboard', '/admin/vazifalar', '/admin/chat', '/admin/mening-profilim'];
 
-// SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) modules. Each laboratory
-// keeps its own SMK, so these are rendered inside the Sifat group once per
-// lab, with `to` rewritten to /admin/smk/<lab-slug>/<module>. New SMK modules
-// go here.
-export const SMK_MODULES = [
-      { to: '/admin/smk/nomuvofiqliklar', label: tr('Nomuvofiqliklar (CAPA)'), icon: AlertTriangle, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/shikoyatlar', label: tr('Sifat shikoyatlari'), icon: MessageSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/hujjatlar', label: tr('SMK Hujjatlar'), icon: FileCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/auditlar', label: tr('Ichki auditlar'), icon: ClipboardCheck, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/kalibrlash', label: tr('Uskunalar kalibrlash'), icon: Gauge, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/treninglar', label: tr('Xodimlar treningi'), icon: GraduationCap, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/qc', label: tr('Ichki sifat nazorati'), icon: CheckSquare, roles: ['SUPER_ADMIN', 'MANAGER'] },
-      { to: '/admin/smk/malakaviy-sinovlar', label: tr('Malakaviy sinovlar'), icon: Target, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/olchov-noaniqligi', label: tr("O'lchov noaniqligi"), icon: Calculator, roles: ['SUPER_ADMIN'] },
-      { to: '/admin/smk/risklar', label: tr('Risklar reestri'), icon: AlertOctagon, roles: ['SUPER_ADMIN'] },
-];
-
-const SMK_PREFIX = '/admin/smk/';
-export const smkItemsForLab = (labSlug, items) =>
-  items.map((item) => ({ ...item, to: item.to.replace(SMK_PREFIX, `${SMK_PREFIX}${labSlug}/`) }));
+// Sifat (SMK elektron formalari): kanban va formalar kutubxonasi.
+const SIFAT_ROLES = ['SUPER_ADMIN', 'MANAGER'];
 
 // Sidebar groups. Each item keeps its own to/label/icon/roles/badgeKey; a
 // group whose items are all hidden for the current role is not rendered.
-// New modules go into the fitting group's items (SMK modules -> 'sifat');
+// New modules go into the fitting group's items (SMK -> 'sifat');
 // anything that fits nowhere goes into 'boshqa' so it never drops out of the
 // menu.
 const MENU_GROUPS = [
@@ -136,14 +109,15 @@ const MENU_GROUPS = [
     ],
   },
   {
-    // Akkreditatsiya; the header opens /admin/sifat — laboratories as a kanban
-    // board, each with its SMK modules (see SMK_MODULES, AdminSifat.jsx).
+    // Akkreditatsiya + formalar kutubxonasi; the header opens /admin/sifat —
+    // laboratories as a kanban board, each with the SMK forms it chose.
     key: 'sifat',
     to: '/admin/sifat',
     label: tr('Sifat'),
     icon: Award,
     items: [
       { to: '/admin/akkreditatsiya', label: tr('Akkreditatsiya'), icon: ShieldCheck, roles: ['SUPER_ADMIN', 'MANAGER'] },
+      { to: '/admin/sifat-formalar', label: tr('Formalar kutubxonasi'), icon: FileCheck, roles: ['SUPER_ADMIN'] },
     ],
   },
   {
@@ -181,9 +155,9 @@ const DEFAULT_OPEN_GROUP = 'operatsiyalar';
 
 const isItemActive = (item, pathname) => pathname === item.to || pathname.startsWith(`${item.to}/`);
 
-const isSifatPath = (pathname) => pathname === '/admin/sifat' || pathname.startsWith(SMK_PREFIX);
+const isSifatPath = (pathname) => pathname === '/admin/sifat' || pathname.startsWith('/admin/sifat/');
 
-// Keys of the groups that hold the current page (SMK pages belong to Sifat).
+// Keys of the groups that hold the current page (lab form pages belong to Sifat).
 function findActiveGroupKeys(pathname) {
   if (isSifatPath(pathname)) return ['sifat'];
   const group = MENU_GROUPS.find((g) => g.items.some((item) => isItemActive(item, pathname)));
@@ -356,8 +330,8 @@ export default function AdminLayout() {
   const roleItems = menuItemsForRole(user.role);
   const favorites = (user.preferences?.favorites || []).map((k) => roleItems.find((i) => i.key === k)).filter(Boolean);
   const canSee = (item) => item.roles.includes(user.role);
-  // Sifat header (kanban of labs) is offered to roles that see some SMK module.
-  const seesSmk = SMK_MODULES.some(canSee);
+  // Sifat header (kanban of labs) is offered to SUPER_ADMIN / MANAGER.
+  const seesSmk = SIFAT_ROLES.includes(user.role);
   const groups = MENU_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter(canSee),

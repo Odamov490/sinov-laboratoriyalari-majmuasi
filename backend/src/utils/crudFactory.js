@@ -131,3 +131,4 @@ function crudFactory(modelName, opts = {}) {
 }
 
 module.exports = crudFactory;
+module.exports.confinedLabId = confinedLabId;

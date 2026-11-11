@@ -27,17 +27,10 @@ const MODULE_ACCESS = {
   // Hisobot spravochniklari (mahsulot turi, joy, buyurtmachi, narxlar)ni o'zgartirish.
   reports_admin: ['SUPER_ADMIN'],
 
-  // SMK (Sifat Menejmenti Kompleksi, ISO/IEC 17025) — 10 ta asosiy quyi-modul.
-  smk_nonconformances: ['SUPER_ADMIN', 'MANAGER'],
-  smk_complaints: ['SUPER_ADMIN', 'MANAGER'],
-  smk_documents: ['SUPER_ADMIN', 'MANAGER'],
-  smk_audits: ['SUPER_ADMIN'],
-  smk_calibration: ['SUPER_ADMIN', 'MANAGER'],
-  smk_training: ['SUPER_ADMIN', 'MANAGER'],
-  smk_qc: ['SUPER_ADMIN', 'MANAGER'],
-  smk_pt: ['SUPER_ADMIN'],
-  smk_uncertainty: ['SUPER_ADMIN'],
-  smk_risks: ['SUPER_ADMIN'],
+  // SMK elektron formalari: ko'rish, laboratoriyaga biriktirish, to'ldirish.
+  smk_forms: ['SUPER_ADMIN', 'MANAGER'],
+  // Formalar kutubxonasini yuritish (yaratish, maydonlar, shablon).
+  smk_forms_admin: ['SUPER_ADMIN'],
 
   // Xodim (STAFF) faqat shu uchta modulga kiradi; boshqa hamma joyda yo'q.
   tasks: ['SUPER_ADMIN', 'MANAGER', 'EDITOR', 'STAFF'],
