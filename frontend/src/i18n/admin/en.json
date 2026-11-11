@@ -7,6 +7,7 @@
   "· Bajarildi: {0}": "· Done: {0}",
   "· parol hali almashtirilmagan": "· password not changed yet",
   "· PNG, WebP, GIF, SVG — har biri ko'pi bilan 512 KB": "· PNG, WebP, GIF, SVG — up to 512 KB each",
+  "\"{0}\" formasi va uning {1} ta to'ldirilgan yozuvi butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi. Davom etasizmi?": "The form \"{0}\" and its {1} filled-in records will be permanently deleted. This cannot be undone. Continue?",
   "\"{0}\" formasini o'chirasizmi?": "Delete the form \"{0}\"?",
   "\"{0}\" holati: {1} ({2})": "\"{0}\" status: {1} ({2})",
   "\"Ha\" va \"Yo'q\" variantlari avtomatik qo'shiladi — o'zingiz alohida yaratmaysiz.": "“Yes” and “No” options are added automatically — no need to create them.",

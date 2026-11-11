@@ -177,7 +177,15 @@ function FormsLibrary() {
         open={!!confirmDelete}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => remove(confirmDelete.id)}
-        message={tr('"{0}" formasini o\'chirasizmi?', confirmDelete ? `${confirmDelete.code} ${confirmDelete.title}` : '')}
+        message={
+          confirmDelete?.entryCount > 0
+            ? tr(
+                "\"{0}\" formasi va uning {1} ta to'ldirilgan yozuvi butunlay o'chiriladi. Bu amalni qaytarib bo'lmaydi. Davom etasizmi?",
+                `${confirmDelete.code} ${confirmDelete.title}`,
+                confirmDelete.entryCount
+              )
+            : tr('"{0}" formasini o\'chirasizmi?', confirmDelete ? `${confirmDelete.code} ${confirmDelete.title}` : '')
+        }
       />
     </div>
   );

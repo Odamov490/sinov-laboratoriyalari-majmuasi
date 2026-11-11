@@ -115,16 +115,16 @@ const updateForm = asyncHandler(async (req, res) => {
   res.json(item);
 });
 
+// Forma har doim o'chiriladi: uning barcha yozuvlari (hamma laboratoriyalarda)
+// ham birga o'chadi; laboratoriyalarga biriktirish — cascade. Frontend oldin
+// yozuvlar sonini ko'rsatib tasdiq so'raydi.
 const deleteForm = asyncHandler(async (req, res) => {
-  const form = await prisma.smkForm.findUnique({
-    where: { id: req.params.id },
-    include: { _count: { select: { entries: true } } },
-  });
+  const form = await prisma.smkForm.findUnique({ where: { id: req.params.id }, select: { id: true } });
   if (!form) return res.status(404).json(NOT_FOUND);
-  if (form._count.entries > 0) {
-    return res.status(409).json({ error: "Bu formada to'ldirilgan yozuvlar bor. O'chirish o'rniga uni nofaol qiling." });
-  }
-  await prisma.smkForm.delete({ where: { id: form.id } });
+  await prisma.$transaction([
+    prisma.smkFormEntry.deleteMany({ where: { formId: form.id } }),
+    prisma.smkForm.delete({ where: { id: form.id } }),
+  ]);
   res.status(204).send();
 });
 
