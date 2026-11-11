@@ -1,10 +1,42 @@
+import { useEffect, useState } from 'react';
 import { tr, locName } from '../../../i18n/tr.js';
+import { getSettings } from '../../../services/publicApi';
 
 // SMK formasi = hujjat: shapka (logo + tashkilot qatorlari + forma nomi +
 // rekvizitlar) va jadval (ustunlar = forma maydonlari, qatorlar = yozuvlar).
 // Bitta HTML ham ekranda (oldindan ko'rish), ham Word (.doc) va PDF'da ishlatiladi.
 
-export const LOGO_URL = '/logo.png';
+export const LOGO_URL = '/logo.png'; // standart logo (sozlamada boshqasi tanlanmagan bo'lsa)
+export const FORM_LOGO_KEY = 'form_logo_url';
+
+// Forma logosi: Sozlamalar -> "Forma logosi" (SiteSetting form_logo_url), bo'lmasa standart.
+let logoPromise = null;
+export function getFormLogoUrl() {
+  if (!logoPromise) {
+    logoPromise = getSettings()
+      .then((s) => (/^\/uploads\/[\w.-]+\.(png|jpe?g)$/i.test(s?.[FORM_LOGO_KEY] || '') ? s[FORM_LOGO_KEY] : LOGO_URL))
+      .catch(() => {
+        logoPromise = null;
+        return LOGO_URL;
+      });
+  }
+  return logoPromise;
+}
+// Sozlamada logo almashtirilganda keshni tozalash.
+export const resetFormLogoCache = () => {
+  logoPromise = null;
+};
+export function useFormLogo() {
+  const [url, setUrl] = useState(LOGO_URL);
+  useEffect(() => {
+    let alive = true;
+    getFormLogoUrl().then((u) => alive && setUrl(u));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return url;
+}
 export const BLANK_ROWS = 10; // yozuv yo'q bo'lsa — bo'sh blank uchun
 
 export const DEFAULT_HEADER = () => ({
@@ -122,8 +154,10 @@ function bytesToBase64(bytes) {
 
 // Word: MHTML (.doc) — rasm (logo) fayl ichiga joylanadi, Word to'g'ridan-to'g'ri ochadi.
 export async function exportWord({ form, lab, rows }) {
-  const logo = new Uint8Array(await (await fetch(LOGO_URL)).arrayBuffer());
-  const LOGO_LOC = 'file:///C:/slm/logo.png';
+  const logoRes = await fetch(await getFormLogoUrl());
+  const logo = new Uint8Array(await logoRes.arrayBuffer());
+  const logoType = /jpe?g/i.test(logoRes.headers.get('content-type') || '') ? 'image/jpeg' : 'image/png';
+  const LOGO_LOC = `file:///C:/slm/logo.${logoType === 'image/jpeg' ? 'jpg' : 'png'}`;
   const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: LOGO_LOC });
   const land = orientation === 'landscape';
   const page = land
@@ -148,7 +182,7 @@ export async function exportWord({ form, lab, rows }) {
     bytesToBase64(new TextEncoder().encode(doc)),
     '',
     `--${boundary}`,
-    'Content-Type: image/png',
+    `Content-Type: ${logoType}`,
     'Content-Transfer-Encoding: base64',
     `Content-Location: ${LOGO_LOC}`,
     '',
@@ -165,7 +199,7 @@ export async function exportWord({ form, lab, rows }) {
 // har bir keyingi sahifada takrorlanadi.
 export async function exportPdf({ form, lab, rows }) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows });
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: await getFormLogoUrl() });
   const land = orientation === 'landscape';
   const widthPx = land ? 1100 : 760;
   const box = document.createElement('div');
@@ -229,11 +263,13 @@ export async function exportPdf({ form, lab, rows }) {
   }
 }
 
-// Chop etish: yangi oynada hujjat (brauzer orqali).
-export function printDocument({ form, lab, rows }) {
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: new URL(LOGO_URL, window.location.origin).href });
-  const w = window.open('', '_blank');
+// Chop etish: hujjat yangi oynada (brauzer orqali). Oyna tugma bosilgan
+// zahoti ochilib beriladi (`w`) — aks holda ma'lumot yuklangach ochilgan
+// oynani brauzer popup sifatida bloklashi mumkin.
+export async function printDocument({ form, lab, rows }, w) {
   if (!w) return;
+  const logo = await getFormLogoUrl();
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: new URL(logo, window.location.origin).href });
   w.document.write(
     `<!doctype html><html><head><meta charset="utf-8"><title>${esc(form.title)}</title>` +
       `<style>@page{size:A4 ${orientation};margin:10mm} body{margin:0;color:#000} thead{display:table-header-group} tr{page-break-inside:avoid}</style>` +

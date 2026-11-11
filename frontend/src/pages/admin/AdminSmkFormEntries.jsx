@@ -7,7 +7,7 @@ import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx
 import { Pagination } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
-import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument } from './smk/smkDocument.js';
+import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo } from './smk/smkDocument.js';
 
 // /admin/sifat/:labSlug/:formId — laboratoriya tanlagan forma: hujjat shapkasi
 // va jadval (qatorlar = yozuvlar). Qator qo'shish/tahrirlash/o'chirish; tayyor
@@ -38,6 +38,7 @@ export default function AdminSmkFormEntries() {
   const [editing, setEditing] = useState(null); // {id?, data}
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [exporting, setExporting] = useState(null); // 'word' | 'pdf' | 'print'
+  const logoSrc = useFormLogo();
 
   useEffect(() => {
     let alive = true;
@@ -82,17 +83,20 @@ export default function AdminSmkFormEntries() {
   if (!lab || !form) return <Loading />;
 
   const fields = form.fields || [];
-  const headerHtml = buildDocumentHtml({ form, lab, rows: [] }).headerHtml;
+  const headerHtml = buildDocumentHtml({ form, lab, rows: [], logoSrc }).headerHtml;
 
   const runExport = async (kind) => {
+    // Chop etish oynasi bosish paytida ochiladi (popup bloklanmasin).
+    const printWin = kind === 'print' ? window.open('', '_blank') : null;
     setExporting(kind);
     try {
       const rows = await fetchAllRows(lab.id, form.id);
       const doc = { form, lab, rows };
       if (kind === 'word') await exportWord(doc);
       else if (kind === 'pdf') await exportPdf(doc);
-      else printDocument(doc);
+      else await printDocument(doc, printWin);
     } catch {
+      printWin?.close();
       showToast(tr('Xatolik yuz berdi.'), 'error');
     } finally {
       setExporting(null);

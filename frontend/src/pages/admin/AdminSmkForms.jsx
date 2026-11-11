@@ -7,7 +7,7 @@ import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr } from '../../i18n/tr.js';
-import { DEFAULT_HEADER, normalizeHeader, buildDocumentHtml } from './smk/smkDocument.js';
+import { DEFAULT_HEADER, normalizeHeader, buildDocumentHtml, useFormLogo } from './smk/smkDocument.js';
 
 // SMK formalar kutubxonasi (SUPER_ADMIN). Har bir forma — jadval: ustunlar
 // (qo'shiladi, olib tashlanadi, tartiblanadi) va o'z shapkasi (logo hammasida
@@ -230,6 +230,7 @@ function FormEditor({ initial, onClose, onSaved }) {
     setForm((p) => ({ ...p, fields: [...p.fields, { key: newKey(p.fields), label: '', type: 'text', required: false, optionsText: '' }] }));
 
   const { orgLines, meta, orientation } = form.header;
+  const logoSrc = useFormLogo();
 
   // Jonli ko'rinish: shapka + ustun sarlavhalari + 2 ta bo'sh qator.
   const previewHtml = useMemo(
@@ -239,8 +240,9 @@ function FormEditor({ initial, onClose, onSaved }) {
         lab: PREVIEW_LAB,
         rows: [],
         blankRows: 2,
+        logoSrc,
       }).html,
-    [form]
+    [form, logoSrc]
   );
 
   const save = async () => {

@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, ImagePlus, Settings, SlidersHorizontal, Smile, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Image as ImageIcon, ImagePlus, Settings, SlidersHorizontal, Smile, Trash2 } from 'lucide-react';
 import { getSettings } from '../../services/publicApi';
 import { updateSettings, uploadFiles } from '../../services/adminApi';
 import { Loading } from '../../components/StateViews.jsx';
@@ -27,11 +27,13 @@ const FIELDS = [
 
 const AdminChatSettings = lazy(() => import('./chat/AdminChatSettings.jsx'));
 const AdminStickers = lazy(() => import('./chat/AdminStickers.jsx'));
+const AdminFormLogoSettings = lazy(() => import('./AdminFormLogoSettings.jsx'));
 
-// Yorliq havolada: ?tab=umumiy|chat|stikerlar
+// Yorliq havolada: ?tab=umumiy|logo|chat|stikerlar
 // (eski /admin/chat-sozlamalari va /admin/stikerlar shu yerga yo'naltiriladi).
 const TABS = [
   { key: 'umumiy', label: tr('Umumiy'), icon: Settings },
+  { key: 'logo', label: tr('Forma logosi'), icon: ImageIcon, superOnly: true },
   { key: 'chat', label: tr('Chat sozlamalari'), icon: SlidersHorizontal, superOnly: true },
   { key: 'stikerlar', label: tr('Stikerlar'), icon: Smile, superOnly: true },
 ];
@@ -67,6 +69,7 @@ export default function AdminSettings() {
 
       {tab === 'umumiy' && <GeneralSettings />}
       <Suspense fallback={<Loading />}>
+        {tab === 'logo' && <AdminFormLogoSettings />}
         {tab === 'chat' && <AdminChatSettings embedded />}
         {tab === 'stikerlar' && <AdminStickers embedded />}
       </Suspense>
