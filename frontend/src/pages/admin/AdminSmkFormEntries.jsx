@@ -7,7 +7,7 @@ import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx
 import { Pagination } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
-import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo, mergeCells } from './smk/smkDocument.js';
+import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo, mergeCells, footerRows } from './smk/smkDocument.js';
 
 // "Bir xil kataklarni birlashtirish" tanlovi — forma bo'yicha brauzerda eslab qolinadi.
 const mergeKey = (formId) => `smk-merge:${formId}`;
@@ -241,6 +241,21 @@ export default function AdminSmkFormEntries() {
                     ));
                   })()}
                 </tbody>
+                {/* "Итого": yig'indi barcha qatorlar bo'yicha (serverdan), sahifadan qat'i nazar. */}
+                {footerRows({ form, rows: data.items, totals: data.totals || {} }).length > 0 && (
+                  <tfoot data-testid="smk-footer">
+                    {footerRows({ form, rows: data.items, totals: data.totals || {} }).map((fr, k) => (
+                      <tr key={k} className="border-t border-border bg-bg-light/70 font-semibold text-ink">
+                        <td colSpan={fr.span} className="px-4 py-3">{fr.label}</td>
+                        {fr.cells.map((t, j) => (
+                          <td key={j} className="px-4 py-3">{t}</td>
+                        ))}
+                        <td />
+                        <td />
+                      </tr>
+                    ))}
+                  </tfoot>
+                )}
               </table>
             )}
           </div>
@@ -357,8 +372,8 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
                 </label>
               ) : (
                 <input
-                  type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
-                  step={f.type === 'number' ? 'any' : undefined}
+                  type={f.type === 'number' || f.type === 'money' ? 'number' : f.type === 'date' ? 'date' : 'text'}
+                  step={f.type === 'number' ? 'any' : f.type === 'money' ? '0.01' : undefined}
                   className="input-field"
                   value={values[f.key]}
                   onChange={(e) => set(f.key, e.target.value)}

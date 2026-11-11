@@ -85,6 +85,7 @@ export const normalizeHeader = (h) => {
     orgLines: Array.isArray(h.orgLines) ? h.orgLines : d.orgLines,
     meta: Array.isArray(h.meta) ? h.meta : d.meta,
     blocks: Array.isArray(h.blocks) ? h.blocks : [],
+    footer: Array.isArray(h.footer) ? h.footer : [],
     orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape',
   };
 };
@@ -134,11 +135,58 @@ export function resolveTokens(text, { form, lab }) {
     .replace(/\{sana\}/gi, today());
 }
 
+// Pul: 2 xonali kasr, minglar bo'shliq bilan, kasr — vergul: 1 250 000,50.
+export function fmtMoney(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '';
+  const [int, dec] = Math.abs(v).toFixed(2).split('.');
+  return `${v < 0 ? '-' : ''}${int.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')},${dec}`;
+}
+export const NUMERIC_TYPES = ['number', 'money'];
+const fmtNumber = (n) => (Number.isFinite(Number(n)) ? String(Number(Number(n).toFixed(6))) : '');
+
 export function displayValue(field, value) {
   if (field.type === 'checkbox') return value === undefined || value === null ? '' : value ? tr('Ha') : tr("Yo'q");
   if (value === null || value === undefined || value === '') return '';
   if (field.type === 'date') return fmtDate(value);
+  if (field.type === 'money') return fmtMoney(value);
   return String(value);
+}
+
+// Raqamli ustun yig'indisi (berilgan qatorlar bo'yicha); qiymat bo'lmasa null.
+export function sumField(rows, f) {
+  let sum = 0;
+  let any = false;
+  for (const r of rows) {
+    const v = r?.data?.[f.key];
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      sum += v;
+      any = true;
+    }
+  }
+  return any ? sum : null;
+}
+
+// "Итого" qatorlari: [{ label, span, cells: [matn] }]. span — birinchi nechta
+// ustun (№ bilan) birlashtirilgan; qolgan ustunlarda belgilanganlar yig'indisi.
+// totals berilsa (server, barcha qatorlar bo'yicha) — shundan, aks holda rows'dan.
+export function footerRows({ form, rows, totals }) {
+  const fields = form.fields || [];
+  const nCols = fields.length + 1;
+  return normalizeHeader(form.header).footer.map((fr) => {
+    const span = Math.min(nCols, Math.max(1, Number(fr.labelSpan) || 1));
+    const cells = [];
+    for (let col = span; col < nCols; col += 1) {
+      const f = fields[col - 1];
+      let text = '';
+      if (NUMERIC_TYPES.includes(f.type) && (fr.sums || []).includes(f.key)) {
+        const v = totals ? totals[f.key] : sumField(rows, f);
+        if (v !== null && v !== undefined) text = f.type === 'money' ? fmtMoney(v) : fmtNumber(v);
+      }
+      cells.push(text);
+    }
+    return { label: fr.label || '', span, cells };
+  });
 }
 
 export const esc = (s) =>
@@ -243,7 +291,7 @@ export function mergeCells(texts, present, { vertical = false, horizontal = fals
   return { span, breakAfter };
 }
 
-export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS, merge }) {
+export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS, merge, totals }) {
   const h = headerModel({ form, lab });
   const fields = form.fields || [];
   const n = Math.max(1, h.meta.length);
@@ -273,6 +321,15 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
     `<td style="${B}padding:4px 6px;font-size:10pt;${LH}vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;${extra}">${content}</td>`;
   const texts = list.map((r) => fields.map((f) => (r ? displayValue(f, r.data?.[f.key]) : '')));
   const { span, breakAfter } = mergeCells(texts, list.map(Boolean), merge);
+  // "Итого" qatorlari (yig'indi — shu hujjatdagi barcha qatorlar bo'yicha).
+  const foot = footerRows({ form, rows, totals })
+    .map(
+      (fr) =>
+        `<tr data-row="1">${td(esc(fr.label) || '&nbsp;', 'font-weight:bold').replace('<td', fr.span > 1 ? `<td colspan="${fr.span}"` : '<td')}` +
+        fr.cells.map((t) => td(`${esc(t)}&nbsp;`, 'font-weight:bold')).join('') +
+        `</tr>`
+    )
+    .join('');
   // data-row="1" — shu qatordan keyin sahifa bo'linishi mumkin (birlashma kesilmaydi).
   const body = list
     .map(
@@ -290,7 +347,7 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
     .join('');
   const tableHtml =
     `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
-    `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}</tbody></table>`;
+    `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}${foot}</tbody></table>`;
   const beforeHtml = h.blocks.filter((b) => b.position === 'before').map(blockHtml).join('');
   const afterHtml = h.blocks.filter((b) => b.position === 'after').map(blockHtml).join('');
   const afterWrap = afterHtml ? `<div style="margin-top:12px">${afterHtml}</div>` : '';
@@ -333,6 +390,7 @@ export async function exportWord({ form, lab, rows, merge }) {
     fields: form.fields || [],
     rows: list.map((r, i) => (r ? texts[i] : null)),
     spans: mergeCells(texts, list.map(Boolean), merge).span,
+    footer: footerRows({ form, rows }),
     logo: { bytes, ext: isJpeg ? 'jpeg' : 'png', width: logo.width, height: logo.height },
   });
   saveBlob(blob, `${fileBase(form, lab)}.docx`);

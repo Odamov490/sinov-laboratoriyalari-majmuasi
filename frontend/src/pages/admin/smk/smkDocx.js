@@ -95,7 +95,7 @@ function split(total, n) {
   return Array.from({ length: n }, (_, i) => base + (i < total - base * n ? 1 : 0));
 }
 
-export function buildDocumentXml({ header, fields, rows, spans, logo }) {
+export function buildDocumentXml({ header, fields, rows, spans, footer = [], logo }) {
   const page = PAGE[header.orientation] || PAGE.landscape;
   const content = page.w - MARGIN * 2;
 
@@ -155,7 +155,18 @@ export function buildDocumentXml({ header, fields, rows, spans, logo }) {
         `</w:tr>`
     )
     .join('');
-  const dataTable = table([numW, ...fieldW], thRow + bodyRows);
+  // "Итого" qatorlari: birinchi `span` ustun birlashtirilgan (gridSpan), yig'indilar qalin.
+  const colW = [numW, ...fieldW];
+  const footRows = footer
+    .map(
+      (fr) =>
+        `<w:tr><w:trPr><w:cantSplit/></w:trPr>` +
+        cell(colW.slice(0, fr.span).reduce((a, b) => a + b, 0), para(run(fr.label, { bold: true })), { gridSpan: fr.span }) +
+        fr.cells.map((t, k) => cell(colW[fr.span + k], para(run(t, { bold: true })))).join('') +
+        `</w:tr>`
+    )
+    .join('');
+  const dataTable = table(colW, thRow + bodyRows + footRows);
 
   const blocks = header.blocks || [];
   const before = blocks.filter((b) => b.position === 'before').map(blockXml).join('');
@@ -244,7 +255,7 @@ export function zipStore(files) {
   });
 }
 
-export function buildDocx({ header, fields, rows, spans, logo }) {
+export function buildDocx({ header, fields, rows, spans, footer, logo }) {
   const ext = logo.ext === 'jpeg' ? 'jpeg' : 'png';
   return zipStore([
     {
@@ -275,7 +286,7 @@ export function buildDocx({ header, fields, rows, spans, logo }) {
         `<Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.${ext}"/>` +
         '</Relationships>',
     },
-    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, spans, logo }) },
+    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, spans, footer, logo }) },
     { name: `word/media/logo.${ext}`, data: logo.bytes },
   ]);
 }

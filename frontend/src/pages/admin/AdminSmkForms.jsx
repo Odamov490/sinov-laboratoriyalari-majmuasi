@@ -17,6 +17,7 @@ export const FIELD_TYPES = [
   { value: 'text', label: tr('Matn') },
   { value: 'textarea', label: tr('Uzun matn') },
   { value: 'number', label: tr('Raqam') },
+  { value: 'money', label: tr('Pul (summa)') },
   { value: 'date', label: tr('Sana') },
   { value: 'select', label: tr("Ro'yxatdan tanlash") },
   { value: 'checkbox', label: tr("Ha / Yo'q") },
@@ -233,6 +234,10 @@ function FormEditor({ initial, onClose, onSaved }) {
   const blocks = form.header.blocks || [];
   const setBlocks = (next) => setHeader({ blocks: next });
   const setBlock = (i, patch) => setBlocks(blocks.map((b, j) => (j === i ? { ...b, ...patch } : b)));
+  const footer = form.header.footer || [];
+  const setFooter = (next) => setHeader({ footer: next });
+  const setFooterRow = (i, patch) => setFooter(footer.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const numericFields = form.fields.filter((f) => f.type === 'number' || f.type === 'money');
   const logo = useFormLogo();
 
   // Jonli ko'rinish: shapka + ustun sarlavhalari + 2 ta bo'sh qator.
@@ -507,6 +512,74 @@ function FormEditor({ initial, onClose, onSaved }) {
             {tr("Bu formada yozuvlar bor: ustun o'chirilsa yoki turi o'zgarsa, eski yozuvlardagi shu qiymat keyingi saqlashda yo'qoladi.")}
           </p>
         )}
+      </section>
+
+      {/* --- Yakuniy qatorlar (Итого) --- */}
+      <section className="mt-6 rounded-xl border border-border p-4" data-testid="smk-footer-editor">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <h4 className="font-semibold text-ink">{tr('Yakuniy qatorlar (Итого)')} ({footer.length})</h4>
+          {footer.length < 5 && (
+            <button
+              type="button"
+              onClick={() => setFooter([...footer, { label: 'Итого:', labelSpan: Math.min(2, form.fields.length + 1), sums: numericFields.map((f) => f.key) }])}
+              className="btn-secondary !py-2 text-sm"
+            >
+              <Plus className="h-4 w-4" /> {tr("Yakuniy qator qo'shish")}
+            </button>
+          )}
+        </div>
+        <p className="mb-3 text-xs text-slate-400">
+          {tr("Jadval oxiridagi qator: birinchi bir nechta katak birlashtirilib matn yoziladi, belgilangan son/pul ustunlarida yig'indi avtomatik hisoblanadi.")}
+        </p>
+        <div className="space-y-2">
+          {footer.map((r, i) => (
+            <div key={i} className="rounded-lg border border-border bg-slate-50 p-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <input
+                  className="input-field !w-auto min-w-[160px] flex-1 !py-2"
+                  placeholder="Итого:"
+                  value={r.label}
+                  onChange={(e) => setFooterRow(i, { label: e.target.value })}
+                />
+                <label className="flex items-center gap-2 text-xs text-slate-600">
+                  {tr('Birlashtirilgan kataklar')}
+                  <select
+                    className="input-field !w-auto !py-1.5 text-xs"
+                    value={Math.min(r.labelSpan || 1, form.fields.length + 1)}
+                    onChange={(e) => setFooterRow(i, { labelSpan: Number(e.target.value) })}
+                  >
+                    {Array.from({ length: form.fields.length + 1 }, (_, k) => k + 1).map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </label>
+                <div className="ml-auto flex items-center">
+                  <IconBtn danger onClick={() => setFooter(footer.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></IconBtn>
+                </div>
+              </div>
+              {numericFields.length > 0 ? (
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-600">
+                  <span>{tr("Yig'indi:")}</span>
+                  {numericFields.map((f) => (
+                    <label key={f.key} className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={(r.sums || []).includes(f.key)}
+                        onChange={(e) =>
+                          setFooterRow(i, { sums: e.target.checked ? [...(r.sums || []), f.key] : (r.sums || []).filter((k) => k !== f.key) })
+                        }
+                        className="h-4 w-4 rounded border-border text-primary"
+                      />
+                      {f.label || '…'}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-xs text-slate-400">{tr("Yig'indi uchun ustun turi \"Raqam\" yoki \"Pul (summa)\" bo'lishi kerak.")}</p>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
 
       </div>

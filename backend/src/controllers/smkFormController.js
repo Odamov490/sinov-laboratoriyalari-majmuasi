@@ -9,7 +9,9 @@ const { confinedLabId } = require('../utils/crudFactory');
 // Laboratoriyaga biriktirilgan (User.labId) SUPER_ADMIN bo'lmagan foydalanuvchi
 // faqat o'z laboratoriyasi bilan ishlaydi (crudFactory bilan bir xil qoida).
 
-const FIELD_TYPES = new Set(['text', 'textarea', 'number', 'date', 'select', 'checkbox', 'staff']);
+const FIELD_TYPES = new Set(['text', 'textarea', 'number', 'money', 'date', 'select', 'checkbox', 'staff']);
+// Yig'indi hisoblanadigan (raqamli) ustun turlari: son va pul.
+const NUMERIC_TYPES = new Set(['number', 'money']);
 const MAX_FIELDS = 100;
 const NOT_FOUND = { error: "Ma'lumot topilmadi." };
 
@@ -68,7 +70,16 @@ function normalizeHeader(raw) {
     }))
     .filter((b) => b.text.trim())
     .slice(0, 20);
-  return { orgLines, meta, blocks, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
+  // Yakuniy qatorlar ("Итого"): birinchi `labelSpan` ustun birlashtirilib matn
+  // yoziladi, `sums` dagi raqamli ustunlarda yig'indi avtomatik hisoblanadi.
+  const footer = (Array.isArray(h.footer) ? h.footer : [])
+    .map((r) => ({
+      label: str(r?.label, 200),
+      labelSpan: Math.min(101, Math.max(1, Math.trunc(Number(r?.labelSpan)) || 1)),
+      sums: [...new Set((Array.isArray(r?.sums) ? r.sums : []).map((k) => String(k)).filter((k) => /^[a-z0-9_]{1,40}$/.test(k)))].slice(0, 100),
+    }))
+    .slice(0, 5);
+  return { orgLines, meta, blocks, footer, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
 }
 
 function formData(body) {
@@ -220,10 +231,11 @@ function normalizeEntry(form, raw) {
     let v = input[f.key];
     if (f.type === 'checkbox') v = Boolean(v);
     else if (v === undefined || v === null || v === '') v = null;
-    else if (f.type === 'number') {
-      const n = Number(String(v).replace(',', '.'));
+    else if (NUMERIC_TYPES.has(f.type)) {
+      // "1 250 000,50" kabi yozuvlar ham qabul qilinadi (bo'shliqlar olib tashlanadi).
+      const n = Number(String(v).replace(/[\s\u00a0]/g, '').replace(',', '.'));
       if (!Number.isFinite(n)) return { error: `"${f.label}" raqam bo'lishi kerak.` };
-      v = n;
+      v = f.type === 'money' ? Math.round(n * 100) / 100 : n;
     } else if (f.type === 'date') {
       const s = String(v).slice(0, 10);
       if (!/^\d{4}-\d{2}-\d{2}$/.test(s) || Number.isNaN(Date.parse(s))) return { error: `"${f.label}" sanasi noto'g'ri.` };
@@ -260,7 +272,25 @@ const listEntries = asyncHandler(async (req, res) => {
     prisma.smkFormEntry.findMany({ where, include: entryInclude, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], skip: (page - 1) * take, take }),
     prisma.smkFormEntry.count({ where }),
   ]);
-  res.json({ items, total, page, pageSize: take });
+  // Raqamli ustunlar yig'indisi (barcha qatorlar bo'yicha) — "Итого" qatori uchun.
+  const numKeys = (form.fields || []).filter((f) => NUMERIC_TYPES.has(f.type)).map((f) => f.key);
+  const totals = {};
+  if (numKeys.length && total) {
+    const all = await prisma.smkFormEntry.findMany({ where, select: { data: true } });
+    for (const k of numKeys) {
+      let sum = 0;
+      let any = false;
+      for (const e of all) {
+        const v = e.data?.[k];
+        if (typeof v === 'number' && Number.isFinite(v)) {
+          sum += v;
+          any = true;
+        }
+      }
+      totals[k] = any ? Number(sum.toFixed(6)) : null;
+    }
+  }
+  res.json({ items, total, page, pageSize: take, totals });
 });
 
 const createEntry = asyncHandler(async (req, res) => {
