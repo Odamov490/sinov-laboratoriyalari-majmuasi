@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowLeft, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowLeft } from 'lucide-react';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
@@ -71,18 +71,6 @@ function FormsLibrary() {
     }
   };
 
-  // Nusxa: shapka va ustunlar saqlanadi, kod/nom yangilanadi.
-  const duplicate = (f) =>
-    setEditing({
-      ...emptyForm(),
-      ...f,
-      id: undefined,
-      entryCount: 0,
-      code: `${f.code}-2`,
-      title: `${f.title} (${tr('nusxa')})`,
-      fields: (f.fields || []).map((x) => ({ ...x })),
-    });
-
   if (error) return <ErrorState onRetry={load} />;
   if (items === null) return <Loading />;
 
@@ -146,9 +134,6 @@ function FormsLibrary() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => duplicate(f)} className="rounded-lg p-2 text-slate-500 hover:bg-bg-light" title={tr('Nusxa olish')}>
-                        <Copy className="h-4 w-4" />
-                      </button>
                       <button onClick={() => setEditing({ ...emptyForm(), ...f })} className="rounded-lg p-2 text-primary hover:bg-bg-light" title={tr('Tahrirlash')}>
                         <Pencil className="h-4 w-4" />
                       </button>
