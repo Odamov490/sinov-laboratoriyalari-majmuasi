@@ -45,7 +45,9 @@ function normalizeFields(raw) {
 }
 
 // Hujjat shapkasi: tashkilot qatorlari (markazda), o'ngdagi rekvizitlar
-// (Shakl kodi, Versiya, ...), sahifa yo'nalishi. Logo hammasida bir xil (frontend).
+// (Shakl kodi, Versiya, ...), matn bloklari, sahifa yo'nalishi. Logo hammasida bir xil (frontend).
+const BLOCK_ALIGNS = new Set(['left', 'center', 'right', 'justify']);
+
 function normalizeHeader(raw) {
   const h = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
   const orgLines = (Array.isArray(h.orgLines) ? h.orgLines : []).map((l) => str(l, 300)).filter(Boolean).slice(0, 6);
@@ -53,7 +55,20 @@ function normalizeHeader(raw) {
     .map((m) => ({ label: str(m?.label, 100), value: str(m?.value, 200) }))
     .filter((m) => m.label)
     .slice(0, 8);
-  return { orgLines, meta, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
+  // Matn bloklari (shapkadan keyin yoki jadvaldan keyin): «УТВЕРЖДАЮ», sarlavha,
+  // akt matni, imzolar va h.k.
+  const blocks = (Array.isArray(h.blocks) ? h.blocks : [])
+    .map((b) => ({
+      text: typeof b?.text === 'string' ? b.text.replace(/\r\n?/g, '\n').replace(/\s+$/, '').slice(0, 4000) : '',
+      align: BLOCK_ALIGNS.has(b?.align) ? b.align : 'left',
+      bold: Boolean(b?.bold),
+      size: b?.size === 'large' ? 'large' : 'normal',
+      indent: Boolean(b?.indent),
+      position: b?.position === 'after' ? 'after' : 'before',
+    }))
+    .filter((b) => b.text.trim())
+    .slice(0, 20);
+  return { orgLines, meta, blocks, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
 }
 
 function formData(body) {

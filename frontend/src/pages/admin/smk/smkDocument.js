@@ -84,9 +84,44 @@ export const normalizeHeader = (h) => {
   return {
     orgLines: Array.isArray(h.orgLines) ? h.orgLines : d.orgLines,
     meta: Array.isArray(h.meta) ? h.meta : d.meta,
+    blocks: Array.isArray(h.blocks) ? h.blocks : [],
     orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape',
   };
 };
+
+// Matn bloklari namunalari (formaga tez qo'shish uchun). Bo'sh joylar — "____".
+export const BLOCK_PRESETS = () => [
+  {
+    key: 'approve',
+    label: tr('«Tasdiqlayman» bloki'),
+    block: {
+      text: '«УТВЕРЖДАЮ»\nДиректор\nГУ «Узбекский институт стандартов»\n_______________ Ф.И.О.\n«___» __________ 20___ г.',
+      align: 'right',
+      bold: true,
+      size: 'normal',
+      indent: false,
+      position: 'before',
+    },
+  },
+  { key: 'title', label: tr('Sarlavha'), block: { text: 'Акт', align: 'center', bold: true, size: 'large', indent: false, position: 'before' } },
+  {
+    key: 'paragraph',
+    label: tr('Matn (xatboshi)'),
+    block: { text: '', align: 'justify', bold: false, size: 'normal', indent: true, position: 'before' },
+  },
+  {
+    key: 'signatures',
+    label: tr('Imzolar'),
+    block: {
+      text: 'Председатель комиссии: _______________ Ф.И.О.\nЧлены комиссии: _______________ Ф.И.О.\n_______________ Ф.И.О.',
+      align: 'left',
+      bold: false,
+      size: 'normal',
+      indent: false,
+      position: 'after',
+    },
+  },
+];
 
 const fmtDate = (v) => (v ? String(v).slice(0, 10).split('-').reverse().join('.') : '');
 const today = () => new Date().toISOString().slice(0, 10).split('-').reverse().join('.');
@@ -130,7 +165,28 @@ export function headerModel({ form, lab }) {
     meta: header.meta
       .filter((m) => String(m.label || '').trim())
       .map((m) => ({ label: resolveTokens(m.label, ctx), value: resolveTokens(m.value, ctx) })),
+    blocks: header.blocks
+      .filter((b) => String(b?.text || '').trim())
+      .map((b) => ({
+        text: resolveTokens(b.text, ctx),
+        align: ['left', 'center', 'right', 'justify'].includes(b.align) ? b.align : 'left',
+        bold: Boolean(b.bold),
+        size: b.size === 'large' ? 'large' : 'normal',
+        indent: Boolean(b.indent),
+        position: b.position === 'after' ? 'after' : 'before',
+      })),
   };
+}
+
+// Matn bloki HTML'i. "right" blok — o'ng tomonda alohida ustun kabi (matn
+// qatorlari o'ngga tekislanadi), "justify" — ikki tomonga, xatboshi bilan.
+function blockHtml(b) {
+  const style =
+    `margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35;` +
+    `font-family:'Times New Roman',Times,serif;text-align:${b.align};` +
+    `font-size:${b.size === 'large' ? '13pt' : '11pt'};font-weight:${b.bold ? 'bold' : 'normal'};` +
+    (b.indent ? 'text-indent:1.25cm;' : '');
+  return `<div data-block="1" style="${style}">${esc(b.text)}</div>`;
 }
 
 // Shapka + jadval. Shapka — BITTA jadval (ichma-ich jadval yo'q, shuning uchun
@@ -176,7 +232,17 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
   const tableHtml =
     `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
     `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}</tbody></table>`;
-  return { headerHtml, tableHtml, html: headerHtml + tableHtml, orientation: h.orientation };
+  const beforeHtml = h.blocks.filter((b) => b.position === 'before').map(blockHtml).join('');
+  const afterHtml = h.blocks.filter((b) => b.position === 'after').map(blockHtml).join('');
+  const afterWrap = afterHtml ? `<div style="margin-top:12px">${afterHtml}</div>` : '';
+  return {
+    headerHtml,
+    beforeHtml,
+    afterHtml,
+    tableHtml,
+    html: headerHtml + beforeHtml + tableHtml + afterWrap,
+    orientation: h.orientation,
+  };
 }
 
 const fileBase = (form, lab) =>
@@ -249,7 +315,11 @@ export async function exportPdf({ form, lab, rows }) {
     const theadTop = px(thead.top);
     const theadH = px(thead.bottom) - theadTop;
     // Bo'linish mumkin bo'lgan nuqtalar: shapka va thead oxiri, har bir qator oxiri.
-    const breaks = [px(thead.bottom), ...[...box.querySelectorAll('tr[data-row]')].map((tr) => px(tr.getBoundingClientRect().bottom))];
+    // Matn bloklari (jadvaldan keyingilari ham) ham yorilmaydi.
+    const breaks = [
+      px(thead.bottom),
+      ...[...box.querySelectorAll('tr[data-row], [data-block]')].map((el) => px(el.getBoundingClientRect().bottom)),
+    ].sort((a, b) => a - b);
 
     const pdf = new jsPDF(land ? 'l' : 'p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();

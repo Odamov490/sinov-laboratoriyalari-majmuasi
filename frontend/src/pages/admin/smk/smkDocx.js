@@ -32,8 +32,26 @@ function run(text, { bold = false, size = 20 } = {}) {
     .join('');
 }
 
-function para(content, { align = 'left', after = 0, before = 0 } = {}) {
-  return `<w:p><w:pPr><w:spacing w:before="${before}" w:after="${after}" w:line="240" w:lineRule="auto"/><w:jc w:val="${align}"/></w:pPr>${content}</w:p>`;
+function para(content, { align = 'left', after = 0, before = 0, firstLine = 0 } = {}) {
+  const ind = firstLine ? `<w:ind w:firstLine="${firstLine}"/>` : '';
+  return `<w:p><w:pPr><w:spacing w:before="${before}" w:after="${after}" w:line="240" w:lineRule="auto"/>${ind}<w:jc w:val="${align}"/></w:pPr>${content}</w:p>`;
+}
+
+// Matn bloki -> paragraflar (har bir qator alohida paragraf: xatboshi faqat
+// paragraf boshida, "right"/"center" tekislash har qatorga).
+const JC = { left: 'left', center: 'center', right: 'right', justify: 'both' };
+function blockXml(b) {
+  const lines = String(b.text).split('\n');
+  return lines
+    .map((line, i) =>
+      para(run(line, { bold: b.bold, size: b.size === 'large' ? 26 : 22 }), {
+        align: JC[b.align] || 'left',
+        before: i === 0 ? 120 : 0,
+        after: i === lines.length - 1 ? 120 : 0,
+        firstLine: b.indent ? 709 : 0,
+      })
+    )
+    .join('');
 }
 
 function cell(width, content, { vMerge, shade, vAlign = 'center' } = {}) {
@@ -124,6 +142,10 @@ export function buildDocumentXml({ header, fields, rows, logo }) {
     .join('');
   const dataTable = table([numW, ...fieldW], thRow + bodyRows);
 
+  const blocks = header.blocks || [];
+  const before = blocks.filter((b) => b.position === 'before').map(blockXml).join('');
+  const after = blocks.filter((b) => b.position === 'after').map(blockXml).join('');
+
   const sect =
     `<w:sectPr><w:pgSz w:w="${page.w}" w:h="${page.h}"${header.orientation === 'landscape' ? ' w:orient="landscape"' : ''}/>` +
     `<w:pgMar w:top="${MARGIN}" w:right="${MARGIN}" w:bottom="${MARGIN}" w:left="${MARGIN}" w:header="360" w:footer="360" w:gutter="0"/></w:sectPr>`;
@@ -134,7 +156,7 @@ export function buildDocumentXml({ header, fields, rows, logo }) {
     `xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ` +
     `xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">` +
     // Jadvallar orasida kichik bo'sh paragraf (aks holda Word ularni bitta jadvalga qo'shib yuboradi).
-    `<w:body>${headerTable}${para(run('', { size: 12 }))}${dataTable}${para(run('', { size: 4 }))}${sect}</w:body></w:document>`
+    `<w:body>${headerTable}${para(run('', { size: 12 }))}${before}${dataTable}${para(run('', { size: 4 }))}${after}${sect}</w:body></w:document>`
   );
 }
 

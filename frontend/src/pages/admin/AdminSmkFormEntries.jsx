@@ -83,7 +83,7 @@ export default function AdminSmkFormEntries() {
   if (!lab || !form) return <Loading />;
 
   const fields = form.fields || [];
-  const headerHtml = buildDocumentHtml({ form, lab, rows: [], logo }).headerHtml;
+  const { headerHtml, beforeHtml, afterHtml } = buildDocumentHtml({ form, lab, rows: [], logo });
 
   const runExport = async (kind) => {
     // Chop etish oynasi bosish paytida ochiladi (popup bloklanmasin).
@@ -139,7 +139,7 @@ export default function AdminSmkFormEntries() {
 
       {/* Hujjat shapkasi (Word/PDF'dagi bilan bir xil). HTML buildDocumentHtml'da esc() bilan tozalangan. */}
       <div className="mb-4 overflow-x-auto rounded-xl border border-border bg-white p-4">
-        <div data-testid="smk-header" className="min-w-[640px] text-black" dangerouslySetInnerHTML={{ __html: headerHtml }} />
+        <div data-testid="smk-header" className="min-w-[640px] text-black" dangerouslySetInnerHTML={{ __html: headerHtml + beforeHtml }} />
       </div>
       {fields.length === 0 ? (
         <EmptyState message={tr("Bu formaga hali ustunlar qo'shilmagan.")} />
@@ -195,6 +195,12 @@ export default function AdminSmkFormEntries() {
             )}
           </div>
           {data && !data.error && <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onChange={setPage} />}
+          {afterHtml && (
+            <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-white p-4">
+              {/* Jadvaldan keyingi matn bloklari (imzolar va h.k.); HTML esc() bilan tozalangan. */}
+              <div data-testid="smk-after" className="min-w-[640px] text-black" dangerouslySetInnerHTML={{ __html: afterHtml }} />
+            </div>
+          )}
         </>
       )}
 

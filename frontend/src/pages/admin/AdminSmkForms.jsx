@@ -7,7 +7,7 @@ import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr } from '../../i18n/tr.js';
-import { DEFAULT_HEADER, normalizeHeader, buildDocumentHtml, useFormLogo } from './smk/smkDocument.js';
+import { DEFAULT_HEADER, normalizeHeader, buildDocumentHtml, useFormLogo, BLOCK_PRESETS } from './smk/smkDocument.js';
 
 // SMK formalar kutubxonasi (SUPER_ADMIN). Har bir forma — jadval: ustunlar
 // (qo'shiladi, olib tashlanadi, tartiblanadi) va o'z shapkasi (logo hammasida
@@ -230,6 +230,9 @@ function FormEditor({ initial, onClose, onSaved }) {
     setForm((p) => ({ ...p, fields: [...p.fields, { key: newKey(p.fields), label: '', type: 'text', required: false, optionsText: '' }] }));
 
   const { orgLines, meta, orientation } = form.header;
+  const blocks = form.header.blocks || [];
+  const setBlocks = (next) => setHeader({ blocks: next });
+  const setBlock = (i, patch) => setBlocks(blocks.map((b, j) => (j === i ? { ...b, ...patch } : b)));
   const logo = useFormLogo();
 
   // Jonli ko'rinish: shapka + ustun sarlavhalari + 2 ta bo'sh qator.
@@ -366,6 +369,77 @@ function FormEditor({ initial, onClose, onSaved }) {
               )}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* --- Matn bloklari --- */}
+      <section className="mt-6 rounded-xl border border-border p-4" data-testid="smk-blocks">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <h4 className="font-semibold text-ink">{tr('Matn bloklari')} ({blocks.length})</h4>
+          <div className="flex flex-wrap gap-2">
+            {BLOCK_PRESETS().map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setBlocks([...blocks, { ...p.block }])}
+                className="rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-primary hover:border-primary/40"
+              >
+                + {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="mb-3 text-xs text-slate-400">
+          {tr("Shapkadan keyin yoki jadvaldan keyin chiqadigan matnlar: «Tasdiqlayman», akt matni, imzolar. Bo'sh joylar uchun ____ yozing.")}
+        </p>
+        {blocks.length === 0 && (
+          <p className="rounded-lg border border-dashed border-border px-4 py-4 text-center text-sm text-slate-400">
+            {tr("Matn bloki yo'q. Yuqoridagi tugmalar bilan qo'shing.")}
+          </p>
+        )}
+        <div className="space-y-3">
+          {blocks.map((b, i) => (
+            <div key={i} className="rounded-lg border border-border bg-slate-50 p-3">
+              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="w-6 font-semibold text-slate-400">{i + 1}.</span>
+                <select className="input-field !w-auto !py-1.5 text-xs" value={b.position} onChange={(e) => setBlock(i, { position: e.target.value })}>
+                  <option value="before">{tr('Jadvaldan oldin')}</option>
+                  <option value="after">{tr('Jadvaldan keyin')}</option>
+                </select>
+                <select className="input-field !w-auto !py-1.5 text-xs" value={b.align} onChange={(e) => setBlock(i, { align: e.target.value })}>
+                  <option value="left">{tr('Chapga')}</option>
+                  <option value="center">{tr('Markazga')}</option>
+                  <option value="right">{tr("O'ngga")}</option>
+                  <option value="justify">{tr('Ikki tomonga')}</option>
+                </select>
+                <select className="input-field !w-auto !py-1.5 text-xs" value={b.size} onChange={(e) => setBlock(i, { size: e.target.value })}>
+                  <option value="normal">{tr('Oddiy shrift')}</option>
+                  <option value="large">{tr('Katta shrift')}</option>
+                </select>
+                <label className="flex items-center gap-1.5 text-slate-600">
+                  <input type="checkbox" checked={!!b.bold} onChange={(e) => setBlock(i, { bold: e.target.checked })} className="h-4 w-4 rounded border-border text-primary" />
+                  {tr('Qalin')}
+                </label>
+                <label className="flex items-center gap-1.5 text-slate-600">
+                  <input type="checkbox" checked={!!b.indent} onChange={(e) => setBlock(i, { indent: e.target.checked })} className="h-4 w-4 rounded border-border text-primary" />
+                  {tr('Xatboshi')}
+                </label>
+                <div className="ml-auto flex items-center">
+                  <IconBtn onClick={() => setBlocks(moveIn(blocks, i, -1))} disabled={i === 0}><ArrowUp className="h-4 w-4" /></IconBtn>
+                  <IconBtn onClick={() => setBlocks(moveIn(blocks, i, 1))} disabled={i === blocks.length - 1}><ArrowDown className="h-4 w-4" /></IconBtn>
+                  <IconBtn danger onClick={() => setBlocks(blocks.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></IconBtn>
+                </div>
+              </div>
+              <textarea
+                rows={Math.min(8, Math.max(2, String(b.text || '').split('\n').length))}
+                className="input-field resize-y text-sm"
+                style={{ textAlign: b.align === 'justify' ? 'left' : b.align, fontWeight: b.bold ? 600 : 400 }}
+                placeholder={tr('Matn — qatorlar Enter bilan')}
+                value={b.text}
+                onChange={(e) => setBlock(i, { text: e.target.value })}
+              />
+            </div>
+          ))}
         </div>
       </section>
 
