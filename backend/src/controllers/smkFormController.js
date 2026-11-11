@@ -31,11 +31,6 @@ function normalizeFields(raw) {
     if (!FIELD_TYPES.has(type)) return { error: "Maydon turi noto'g'ri." };
     keys.add(key);
     const field = { key, label, type, required: Boolean(f.required) };
-    // Ustun guruhi (ikki qavatli sarlavha: ketma-ket bir xil guruhli ustunlar
-    // ustida umumiy katak) va bir xil qiymatli qatorlarni vertikal birlashtirish.
-    const group = str(f.group, 200);
-    if (group) field.group = group;
-    if (f.mergeSame) field.mergeSame = true;
     if (type === 'select') {
       const options = (Array.isArray(f.options) ? f.options : [])
         .map((o) => str(o, 200))
@@ -73,16 +68,7 @@ function normalizeHeader(raw) {
     }))
     .filter((b) => b.text.trim())
     .slice(0, 20);
-  // Yakuniy qatorlar ("Итого"): birinchi `labelSpan` ustun birlashtirilib matn
-  // yoziladi, `sums` dagi raqamli ustunlarda yig'indi avtomatik hisoblanadi.
-  const footer = (Array.isArray(h.footer) ? h.footer : [])
-    .map((r) => ({
-      label: str(r?.label, 200),
-      labelSpan: Math.min(101, Math.max(1, Math.trunc(Number(r?.labelSpan)) || 1)),
-      sums: [...new Set((Array.isArray(r?.sums) ? r.sums : []).map((k) => String(k)).filter((k) => /^[a-z0-9_]{1,40}$/.test(k)))].slice(0, 100),
-    }))
-    .slice(0, 5);
-  return { orgLines, meta, blocks, footer, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
+  return { orgLines, meta, blocks, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
 }
 
 function formData(body) {
@@ -274,25 +260,7 @@ const listEntries = asyncHandler(async (req, res) => {
     prisma.smkFormEntry.findMany({ where, include: entryInclude, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], skip: (page - 1) * take, take }),
     prisma.smkFormEntry.count({ where }),
   ]);
-  // Raqamli ustunlar yig'indisi (barcha qatorlar bo'yicha) — "Итого" qatori uchun.
-  const numKeys = (form.fields || []).filter((f) => f.type === 'number').map((f) => f.key);
-  const totals = {};
-  if (numKeys.length && total) {
-    const all = await prisma.smkFormEntry.findMany({ where, select: { data: true } });
-    for (const k of numKeys) {
-      let sum = 0;
-      let any = false;
-      for (const e of all) {
-        const v = e.data?.[k];
-        if (typeof v === 'number' && Number.isFinite(v)) {
-          sum += v;
-          any = true;
-        }
-      }
-      totals[k] = any ? Number(sum.toFixed(6)) : null;
-    }
-  }
-  res.json({ items, total, page, pageSize: take, totals });
+  res.json({ items, total, page, pageSize: take });
 });
 
 const createEntry = asyncHandler(async (req, res) => {
