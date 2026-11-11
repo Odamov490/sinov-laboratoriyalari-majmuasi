@@ -16,7 +16,7 @@ import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, 
 const PAGE_SIZE = 25;
 const fmtDate = (v) => (v ? String(v).slice(0, 10).split('-').reverse().join('.') : '');
 
-// Eksport uchun barcha qatorlar (eskidan yangiga — jurnal tartibi).
+// Eksport uchun barcha qatorlar (server jurnal tartibida beradi: eskidan yangiga).
 async function fetchAllRows(labId, formId) {
   const all = [];
   for (let page = 1; page < 200; page += 1) {
@@ -24,7 +24,7 @@ async function fetchAllRows(labId, formId) {
     all.push(...(d.items || []));
     if (all.length >= d.total || !(d.items || []).length) break;
   }
-  return all.reverse();
+  return all;
 }
 
 export default function AdminSmkFormEntries() {
@@ -167,8 +167,8 @@ export default function AdminSmkFormEntries() {
                 <tbody className="divide-y divide-border">
                   {data.items.map((e, i) => (
                     <tr key={e.id} className="hover:bg-bg-light/60">
-                      {/* Jurnal raqami (Word/PDF bilan bir xil): eng eskisi — 1. Ekranda yangisi tepada. */}
-                      <td className="px-4 py-3 text-slate-400">{data.total - ((page - 1) * PAGE_SIZE + i)}</td>
+                      {/* Jurnal raqami (Word/PDF bilan bir xil): 1, 2, 3 … */}
+                      <td className="px-4 py-3 text-slate-400">{(page - 1) * PAGE_SIZE + i + 1}</td>
                       {fields.map((f) => (
                         <td key={f.key} className="max-w-[260px] truncate px-4 py-3 text-ink" title={displayValue(f, e.data?.[f.key])}>
                           {displayValue(f, e.data?.[f.key]) || '—'}
@@ -205,8 +205,12 @@ export default function AdminSmkFormEntries() {
           entry={editing}
           onClose={() => setEditing(null)}
           onSaved={() => {
+            const isNew = !editing.id;
             setEditing(null);
-            load();
+            // Yangi qator jadval oxiriga qo'shiladi — oxirgi sahifaga o'tiladi.
+            const last = Math.max(1, Math.ceil(((data?.total || 0) + (isNew ? 1 : 0)) / PAGE_SIZE));
+            if (isNew && last !== page) setPage(last);
+            else load();
           }}
         />
       )}

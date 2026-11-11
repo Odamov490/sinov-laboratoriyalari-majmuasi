@@ -241,7 +241,8 @@ const listEntries = asyncHandler(async (req, res) => {
   const page = Math.max(Number(req.query.page) || 1, 1);
   const where = { formId, laboratoryId: labId };
   const [items, total] = await Promise.all([
-    prisma.smkFormEntry.findMany({ where, include: entryInclude, orderBy: { createdAt: 'desc' }, skip: (page - 1) * take, take }),
+    // Jurnal tartibi: eng eskisi birinchi (1, 2, 3 …) — Word/PDF bilan bir xil.
+    prisma.smkFormEntry.findMany({ where, include: entryInclude, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], skip: (page - 1) * take, take }),
     prisma.smkFormEntry.count({ where }),
   ]);
   res.json({ items, total, page, pageSize: take });
