@@ -1209,21 +1209,18 @@ model UserSession {
 }
 
 // ===== SMK (Sifat menejmenti, ISO/IEC 17025): elektron formalar =====
-// Formalar kutubxonasi (SUPER_ADMIN yuritadi). `fields` — maydonlar ro'yxati:
-// [{ key, label, type, required, options }], type: text | textarea | number |
-// date | select | checkbox | staff | file. templateUrl — asl shablon fayli
-// (Word/Excel/PDF), yuklab olish uchun.
+// Formalar kutubxonasi (SUPER_ADMIN yuritadi). Har bir forma — jadval:
+// `fields` — ustunlar [{ key, label, type, required, options }], type: text |
+// textarea | number | date | select | checkbox | staff. `header` — hujjat
+// shapkasi { orgLines: string[], meta: [{ label, value }], orientation }
+// (logo hammasida bir xil). Fayl yuklanmaydi — Word/PDF tizimda yasaladi.
 model SmkForm {
   id           String         @id @default(uuid())
   code         String         @unique
   title        String
   description  String?
   fields       Json           @default("[]")
-  templateUrl  String?
-  templateName String?
-  // OnlyOffice hujjat kaliti versiyasi: shablon yopilib saqlanganda yoki yangi fayl
-  // yuklanganda oshadi (kalit = <id>-v<versiya>).
-  templateVersion Int        @default(1)
+  header       Json           @default("{}")
   order        Int            @default(0)
   isActive     Boolean        @default(true)
   labs         SmkLabForm[]

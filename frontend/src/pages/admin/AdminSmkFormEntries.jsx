@@ -1,49 +1,30 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Download, Printer, ArrowLeft, FileText } from 'lucide-react';
-import { canOpenOnline, useOnlyOfficeStatus, ONLINE_DISABLED_MSG } from './AdminSmkTemplateEditor.jsx';
+import { Plus, Pencil, Trash2, Printer, ArrowLeft, FileText, FileDown, Loader2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext.jsx';
-import { adminSmk, uploadFiles } from '../../services/adminApi';
+import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Pagination } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
+import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument } from './smk/smkDocument.js';
 
-// /admin/sifat/:labSlug/:formId — laboratoriya tanlagan formaning yozuvlari:
-// yangi yozuv (forma maydonlari bo'yicha), tahrirlash, o'chirish, chop etish
-// va asl shablonni yuklab olish.
+// /admin/sifat/:labSlug/:formId — laboratoriya tanlagan forma: hujjat shapkasi
+// va jadval (qatorlar = yozuvlar). Qator qo'shish/tahrirlash/o'chirish; tayyor
+// jadvalni Word yoki PDF qilib yuklab olish, chop etish.
 
 const PAGE_SIZE = 25;
 const fmtDate = (v) => (v ? String(v).slice(0, 10).split('-').reverse().join('.') : '');
 
-// Ro'yxat va chop etish uchun qiymatning matn ko'rinishi.
-function displayValue(field, value) {
-  if (field.type === 'checkbox') return value ? tr('Ha') : tr("Yo'q");
-  if (value === null || value === undefined || value === '') return '';
-  if (field.type === 'date') return fmtDate(value);
-  if (field.type === 'file') return tr('Fayl');
-  return String(value);
-}
-
-const esc = (s) =>
-  String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-
-// Yangi oynada chop etish uchun sahifa (bitta yozuv yoki ro'yxat).
-function printHtml(title, body) {
-  const w = window.open('', '_blank');
-  if (!w) return;
-  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
-<style>
-  body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:24px}
-  h1{font-size:16px;margin:0 0 4px} .sub{color:#555;margin-bottom:16px}
-  table{border-collapse:collapse;width:100%} th,td{border:1px solid #999;padding:6px 8px;text-align:left;vertical-align:top}
-  th{background:#f1f1f1} .kv th{width:35%} td{white-space:pre-wrap}
-  .sign{margin-top:40px;display:flex;justify-content:space-between}
-</style></head><body>${body}</body></html>`);
-  w.document.close();
-  // Inline skript o'rniga shu yerdan (CSP inline skriptni bloklashi mumkin).
-  w.focus();
-  w.print();
+// Eksport uchun barcha qatorlar (eskidan yangiga — jurnal tartibi).
+async function fetchAllRows(labId, formId) {
+  const all = [];
+  for (let page = 1; page < 200; page += 1) {
+    const d = await adminSmk.entries(labId, formId, { page, pageSize: 500 });
+    all.push(...(d.items || []));
+    if (all.length >= d.total || !(d.items || []).length) break;
+  }
+  return all.reverse();
 }
 
 export default function AdminSmkFormEntries() {
@@ -56,7 +37,7 @@ export default function AdminSmkFormEntries() {
   const [page, setPage] = useState(1);
   const [editing, setEditing] = useState(null); // {id?, data}
   const [confirmDelete, setConfirmDelete] = useState(null);
-  const office = useOnlyOfficeStatus();
+  const [exporting, setExporting] = useState(null); // 'word' | 'pdf' | 'print'
 
   useEffect(() => {
     let alive = true;
@@ -101,32 +82,27 @@ export default function AdminSmkFormEntries() {
   if (!lab || !form) return <Loading />;
 
   const fields = form.fields || [];
-  const heading = `${form.code} — ${form.title}`;
+  const headerHtml = buildDocumentHtml({ form, lab, rows: [] }).headerHtml;
 
-  const printEntry = (entry) => {
-    const rows = fields
-      .map((f) => `<tr><th>${esc(f.label)}</th><td>${esc(displayValue(f, entry.data?.[f.key]))}</td></tr>`)
-      .join('');
-    printHtml(
-      heading,
-      `<h1>${esc(heading)}</h1><div class="sub">${esc(locName(lab))} · ${esc(fmtDate(entry.createdAt))}</div>
-       <table class="kv">${rows}</table>
-       <div class="sign"><span>${esc(tr("To'ldirdi"))}: ${esc(entry.createdBy?.fullName || '')} ____________</span><span>${esc(tr('Imzo'))}: ____________</span></div>`
-    );
+  const runExport = async (kind) => {
+    setExporting(kind);
+    try {
+      const rows = await fetchAllRows(lab.id, form.id);
+      const doc = { form, lab, rows };
+      if (kind === 'word') await exportWord(doc);
+      else if (kind === 'pdf') await exportPdf(doc);
+      else printDocument(doc);
+    } catch {
+      showToast(tr('Xatolik yuz berdi.'), 'error');
+    } finally {
+      setExporting(null);
+    }
   };
-
-  const printList = () => {
-    const head = `<tr><th>№</th>${fields.map((f) => `<th>${esc(f.label)}</th>`).join('')}<th>${esc(tr("To'ldirdi"))}</th></tr>`;
-    const body = (data?.items || [])
-      .map(
-        (e, i) =>
-          `<tr><td>${(page - 1) * PAGE_SIZE + i + 1}</td>${fields
-            .map((f) => `<td>${esc(displayValue(f, e.data?.[f.key]))}</td>`)
-            .join('')}<td>${esc(e.createdBy?.fullName || '')}</td></tr>`
-      )
-      .join('');
-    printHtml(heading, `<h1>${esc(heading)}</h1><div class="sub">${esc(locName(lab))}</div><table>${head}${body}</table>`);
-  };
+  const exportBtn = (kind, icon, label) => (
+    <button onClick={() => runExport(kind)} disabled={!!exporting} className="btn-secondary !py-2.5">
+      {exporting === kind ? <Loader2 className="h-4 w-4 animate-spin" /> : icon} {label}
+    </button>
+  );
 
   return (
     <div>
@@ -142,46 +118,27 @@ export default function AdminSmkFormEntries() {
           {form.description && <p className="mt-1 max-w-3xl whitespace-pre-line text-sm text-slate-500">{form.description}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {form.templateUrl &&
-            canOpenOnline(form.templateUrl) &&
-            (office?.available ? (
-              <Link to={`/admin/sifat/shablon/${form.id}`} className="btn-secondary !py-2.5">
-                <FileText className="h-4 w-4" /> {tr('Shablonni ochish')}
-              </Link>
-            ) : (
-              <button type="button" disabled title={ONLINE_DISABLED_MSG()} className="btn-secondary !py-2.5 cursor-not-allowed opacity-50">
-                <FileText className="h-4 w-4" /> {tr('Shablonni ochish')}
-              </button>
-            ))}
-          {form.templateUrl && (
-            <a href={form.templateUrl} download={form.templateName || undefined} className="btn-secondary !py-2.5">
-              <Download className="h-4 w-4" /> {tr('Shablonni yuklab olish')}
-            </a>
-          )}
-          {data?.items?.length > 0 && (
-            <button onClick={printList} className="btn-secondary !py-2.5">
-              <Printer className="h-4 w-4" /> {tr('Chop etish')}
-            </button>
+          {fields.length > 0 && (
+            <>
+              {exportBtn('word', <FileText className="h-4 w-4" />, 'Word')}
+              {exportBtn('pdf', <FileDown className="h-4 w-4" />, 'PDF')}
+              {exportBtn('print', <Printer className="h-4 w-4" />, tr('Chop etish'))}
+            </>
           )}
           {fields.length > 0 && (
             <button onClick={() => setEditing({ data: {} })} className="btn-primary !py-2.5">
-              <Plus className="h-4 w-4" /> {tr('Yangi yozuv')}
+              <Plus className="h-4 w-4" /> {tr("Qator qo'shish")}
             </button>
           )}
         </div>
       </div>
 
-      {form.templateUrl && canOpenOnline(form.templateUrl) && office && !office.available && (
-        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">{ONLINE_DISABLED_MSG()}</p>
-      )}
+      {/* Hujjat shapkasi (Word/PDF'dagi bilan bir xil). HTML buildDocumentHtml'da esc() bilan tozalangan. */}
+      <div className="mb-4 overflow-x-auto rounded-xl border border-border bg-white p-4">
+        <div data-testid="smk-header" className="min-w-[640px] text-black" dangerouslySetInnerHTML={{ __html: headerHtml }} />
+      </div>
       {fields.length === 0 ? (
-        <EmptyState
-          message={
-            form.templateUrl
-              ? tr("Bu forma tizimda to'ldirilmaydi — shablonni yuklab olib foydalaning.")
-              : tr("Bu formaga hali maydonlar qo'shilmagan.")
-          }
-        />
+        <EmptyState message={tr("Bu formaga hali ustunlar qo'shilmagan.")} />
       ) : (
         <>
           <div className="card overflow-x-auto">
@@ -190,7 +147,7 @@ export default function AdminSmkFormEntries() {
             ) : data.error ? (
               <div className="p-6"><ErrorState onRetry={load} /></div>
             ) : data.items.length === 0 ? (
-              <EmptyState message={tr("Hali yozuv yo'q.")} />
+              <EmptyState message={tr("Hali qator yo'q. Word/PDF'da bo'sh blank chiqadi.")} />
             ) : (
               <table className="w-full text-sm">
                 <thead>
@@ -206,16 +163,11 @@ export default function AdminSmkFormEntries() {
                 <tbody className="divide-y divide-border">
                   {data.items.map((e, i) => (
                     <tr key={e.id} className="hover:bg-bg-light/60">
-                      <td className="px-4 py-3 text-slate-400">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                      {/* Jurnal raqami (Word/PDF bilan bir xil): eng eskisi — 1. Ekranda yangisi tepada. */}
+                      <td className="px-4 py-3 text-slate-400">{data.total - ((page - 1) * PAGE_SIZE + i)}</td>
                       {fields.map((f) => (
-                        <td key={f.key} className="max-w-[260px] truncate px-4 py-3 text-ink">
-                          {f.type === 'file' && e.data?.[f.key] ? (
-                            <a href={e.data[f.key]} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                              {tr('Fayl')}
-                            </a>
-                          ) : (
-                            displayValue(f, e.data?.[f.key]) || '—'
-                          )}
+                        <td key={f.key} className="max-w-[260px] truncate px-4 py-3 text-ink" title={displayValue(f, e.data?.[f.key])}>
+                          {displayValue(f, e.data?.[f.key]) || '—'}
                         </td>
                       ))}
                       <td className="whitespace-nowrap px-4 py-3 text-slate-500">
@@ -224,9 +176,6 @@ export default function AdminSmkFormEntries() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-1">
-                          <button onClick={() => printEntry(e)} className="rounded-lg p-2 text-slate-500 hover:bg-bg-light" title={tr('Chop etish')}>
-                            <Printer className="h-4 w-4" />
-                          </button>
                           <button onClick={() => setEditing({ id: e.id, data: e.data || {} })} className="rounded-lg p-2 text-primary hover:bg-bg-light" title={tr('Tahrirlash')}>
                             <Pencil className="h-4 w-4" />
                           </button>
@@ -279,7 +228,6 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
     return v;
   });
   const [staff, setStaff] = useState(null);
-  const [uploading, setUploading] = useState(null);
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setValues((p) => ({ ...p, [k]: v }));
 
@@ -290,19 +238,6 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
       .then((d) => setStaff(d.items || []))
       .catch(() => setStaff([]));
   }, [fields]);
-
-  const upload = async (key, files) => {
-    if (!files?.length) return;
-    setUploading(key);
-    try {
-      const res = await uploadFiles(files);
-      set(key, res.files[0].url);
-    } catch (err) {
-      showToast(err?.response?.data?.error || tr('Fayl yuklashda xatolik.'), 'error');
-    } finally {
-      setUploading(null);
-    }
-  };
 
   const save = async () => {
     setSaving(true);
@@ -319,10 +254,10 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
   };
 
   return (
-    <Modal open onClose={onClose} title={`${form.code} — ${entry.id ? tr('Tahrirlash') : tr('Yangi yozuv')}`} size="lg">
+    <Modal open onClose={onClose} title={`${form.code} — ${entry.id ? tr('Tahrirlash') : tr("Qator qo'shish")}`} size="lg">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {fields.map((f) => {
-          const wide = f.type === 'textarea' || f.type === 'file';
+          const wide = f.type === 'textarea';
           return (
             <div key={f.key} className={wide ? 'sm:col-span-2' : ''}>
               {f.type !== 'checkbox' && (
@@ -356,17 +291,6 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
                   <input type="checkbox" checked={!!values[f.key]} onChange={(e) => set(f.key, e.target.checked)} className="h-5 w-5 rounded border-border text-primary" />
                   {f.label}
                 </label>
-              ) : f.type === 'file' ? (
-                <div>
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" onChange={(e) => upload(f.key, e.target.files)} className="text-sm" />
-                  {uploading === f.key && <p className="mt-1 text-xs text-primary">{tr('Yuklanmoqda, biroz kuting...')}</p>}
-                  {values[f.key] && uploading !== f.key && (
-                    <p className="mt-1 flex items-center gap-2 text-xs">
-                      <a href={values[f.key]} target="_blank" rel="noreferrer" className="text-primary hover:underline">{tr('Yuklangan fayl')}</a>
-                      <button type="button" onClick={() => set(f.key, '')} className="text-red-500">{tr("O'chirish")}</button>
-                    </p>
-                  )}
-                </div>
               ) : (
                 <input
                   type={f.type === 'number' ? 'number' : f.type === 'date' ? 'date' : 'text'}
@@ -382,8 +306,8 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
       </div>
       <div className="mt-6 flex justify-end gap-3">
         <button onClick={onClose} className="btn-secondary">{tr('Bekor qilish')}</button>
-        <button onClick={save} disabled={saving || !!uploading} className="btn-primary">
-          {uploading ? tr('Fayl yuklanmoqda...') : saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
+        <button onClick={save} disabled={saving} className="btn-primary">
+          {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
         </button>
       </div>
     </Modal>

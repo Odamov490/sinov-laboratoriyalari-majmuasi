@@ -190,8 +190,6 @@ export const adminSmk = {
   createForm: (data) => apiClient.post('/admin/smk/forms', data).then((r) => r.data),
   updateForm: (id, data) => apiClient.put(`/admin/smk/forms/${id}`, data).then((r) => r.data),
   removeForm: (id) => apiClient.delete(`/admin/smk/forms/${id}`).then((r) => r.data),
-  onlyofficeStatus: () => apiClient.get('/admin/smk/onlyoffice-status').then((r) => r.data),
-  editorConfig: (id, lang) => apiClient.get(`/admin/smk/forms/${id}/editor`, { params: { lang } }).then((r) => r.data),
   board: () => apiClient.get('/admin/smk/board').then((r) => r.data),
   staffOptions: () => apiClient.get('/admin/smk/staff-options').then((r) => r.data),
   setLabForms: (labId, formIds) => apiClient.put(`/admin/smk/labs/${labId}/forms`, { formIds }).then((r) => r.data),

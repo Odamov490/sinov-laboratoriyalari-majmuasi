@@ -34,10 +34,6 @@ services:
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
       CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID}
       CHAT_STORAGE_DIR: ${CHAT_STORAGE_DIR:-/app/chat-media}
-      # OnlyOffice (SMK shablonlarini onlayn tahrirlash). Qiymat ildizdagi .env faylida.
-      ONLYOFFICE_JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:-}
-      ONLYOFFICE_INTERNAL_URL: http://onlyoffice
-      BACKEND_INTERNAL_URL: http://backend:4000
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,27 +44,6 @@ services:
       - slm_uploads:/app/uploads
       # Chat media (alohida volume, ommaga statik berilmaydi) — zaxira nusxaga kiriting!
       - slm_chat_media:/app/chat-media
-
-  # Onlayn ofis muharriri (Word/Excel). Tashqariga port ochilmaydi — faqat
-  # frontend nginx orqali /onlyoffice/ yo'lida.
-  # Vaqtincha O'CHIQ (RAM yetmaydi: rasmiy talab alohida 4 GB RAM, 40 GB disk).
-  # Oddiy "docker compose up -d" uni ishga tushirmaydi. Yoqish:
-  #   docker compose --profile office up -d
-  onlyoffice:
-    image: onlyoffice/documentserver:8.2.2
-    profiles: ['office']
-    restart: unless-stopped
-    environment:
-      JWT_ENABLED: 'true'
-      JWT_SECRET: ${ONLYOFFICE_JWT_SECRET:-}
-      JWT_HEADER: Authorization
-      JWT_IN_BODY: 'true'
-      # Faylni ichki tarmoqdagi backend'dan yuklab olishga ruxsat.
-      ALLOW_PRIVATE_IP_ADDRESS: 'true'
-    volumes:
-      - slm_onlyoffice_data:/var/www/onlyoffice/Data
-      - slm_onlyoffice_lib:/var/lib/onlyoffice
-      - slm_onlyoffice_logs:/var/log/onlyoffice
 
   frontend:
     build:
@@ -83,6 +58,3 @@ volumes:
   slm_postgres_data:
   slm_uploads:
   slm_chat_media:
-  slm_onlyoffice_data:
-  slm_onlyoffice_lib:
-  slm_onlyoffice_logs:

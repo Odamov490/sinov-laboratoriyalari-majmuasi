@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, X as XIcon, Download, ArrowLeft, FilePen } from 'lucide-react';
-import { canOpenOnline, useOnlyOfficeStatus, ONLINE_DISABLED_MSG } from './AdminSmkTemplateEditor.jsx';
+import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, ArrowLeft, Copy } from 'lucide-react';
 import { useToast } from '../../context/ToastContext.jsx';
-import { adminSmk, uploadFiles } from '../../services/adminApi';
+import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr } from '../../i18n/tr.js';
+import { DEFAULT_HEADER, normalizeHeader, buildDocumentHtml } from './smk/smkDocument.js';
 
-// SMK formalar kutubxonasi (SUPER_ADMIN): forma = kod, nom, maydonlar ro'yxati
-// (tizimda to'ldirish uchun) va ixtiyoriy asl shablon fayli (yuklab olish uchun).
+// SMK formalar kutubxonasi (SUPER_ADMIN). Har bir forma — jadval: ustunlar
+// (qo'shiladi, olib tashlanadi, tartiblanadi) va o'z shapkasi (logo hammasida
+// bir xil). Fayl yuklanmaydi — tayyor jadval Word/PDF'ga tizimda chiqariladi.
 
 export const FIELD_TYPES = [
   { value: 'text', label: tr('Matn') },
@@ -20,20 +21,18 @@ export const FIELD_TYPES = [
   { value: 'select', label: tr("Ro'yxatdan tanlash") },
   { value: 'checkbox', label: tr("Ha / Yo'q") },
   { value: 'staff', label: tr('Xodim') },
-  { value: 'file', label: tr('Fayl') },
 ];
-const TYPE_LABEL = Object.fromEntries(FIELD_TYPES.map((t) => [t.value, t.label]));
-const TEMPLATE_ACCEPT = '.pdf,.doc,.docx,.xls,.xlsx';
 
-// Maydon kaliti bir marta beriladi va o'zgarmaydi (yozuvlardagi qiymat shu
-// kalit bilan saqlanadi), shuning uchun o'chirilgan maydon kaliti qayta ishlatilmaydi.
+// Ustun kaliti bir marta beriladi va o'zgarmaydi (yozuvlardagi qiymat shu
+// kalit bilan saqlanadi), shuning uchun o'chirilgan ustun kaliti qayta ishlatilmaydi.
 const newKey = (fields) => {
   let key;
   do key = `f${Date.now().toString(36)}${Math.floor(Math.random() * 1296).toString(36)}`;
   while (fields.some((f) => f.key === key));
   return key;
 };
-const emptyForm = () => ({ code: '', title: '', description: '', fields: [], templateUrl: '', templateName: '', order: 0, isActive: true });
+const emptyForm = () => ({ code: '', title: '', description: '', fields: [], header: DEFAULT_HEADER(), order: 0, isActive: true });
+const PREVIEW_LAB = { nameUz: '«Laboratoriya nomi»', nameRu: '«Название лаборатории»', nameEn: '«Laboratory name»', slug: 'lab' };
 
 export default function AdminSmkForms() {
   const { user } = useAuth();
@@ -43,7 +42,6 @@ export default function AdminSmkForms() {
 
 function FormsLibrary() {
   const { showToast } = useToast();
-  const office = useOnlyOfficeStatus();
   const [items, setItems] = useState(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState('');
@@ -72,6 +70,18 @@ function FormsLibrary() {
     }
   };
 
+  // Nusxa: shapka va ustunlar saqlanadi, kod/nom yangilanadi.
+  const duplicate = (f) =>
+    setEditing({
+      ...emptyForm(),
+      ...f,
+      id: undefined,
+      entryCount: 0,
+      code: `${f.code}-2`,
+      title: `${f.title} (${tr('nusxa')})`,
+      fields: (f.fields || []).map((x) => ({ ...x })),
+    });
+
   if (error) return <ErrorState onRetry={load} />;
   if (items === null) return <Loading />;
 
@@ -92,9 +102,6 @@ function FormsLibrary() {
         </button>
       </div>
 
-      {office && !office.available && (
-        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">{ONLINE_DISABLED_MSG()}</p>
-      )}
       <input
         type="search"
         value={query}
@@ -107,13 +114,12 @@ function FormsLibrary() {
         {items.length === 0 ? (
           <EmptyState message={tr("Formalar kutubxonasi hozircha bo'sh.")} />
         ) : (
-          <table className="w-full min-w-[760px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-4 py-3">{tr('Kod')}</th>
                 <th className="px-4 py-3">{tr('Nomi')}</th>
-                <th className="px-4 py-3">{tr('Maydonlar')}</th>
-                <th className="px-4 py-3">{tr('Shablon')}</th>
+                <th className="px-4 py-3">{tr('Ustunlar')}</th>
                 <th className="px-4 py-3">{tr('Laboratoriyalar')}</th>
                 <th className="px-4 py-3">{tr('Yozuvlar')}</th>
                 <th className="px-4 py-3">{tr('Holati')}</th>
@@ -124,33 +130,8 @@ function FormsLibrary() {
               {visible.map((f) => (
                 <tr key={f.id} className="hover:bg-bg-light/60">
                   <td className="px-4 py-3 font-semibold text-slate-600">{f.code}</td>
-                  <td className="max-w-[320px] px-4 py-3 text-ink">{f.title}</td>
+                  <td className="max-w-[360px] px-4 py-3 text-ink">{f.title}</td>
                   <td className="px-4 py-3">{(f.fields || []).length}</td>
-                  <td className="px-4 py-3">
-                    {f.templateUrl ? (
-                      <span className="flex flex-wrap items-center gap-3">
-                        {canOpenOnline(f.templateUrl) &&
-                          (office?.available ? (
-                            <Link to={`/admin/sifat/shablon/${f.id}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-                              <FilePen className="h-3.5 w-3.5" /> {tr('Ochish')}
-                            </Link>
-                          ) : (
-                            <span
-                              aria-disabled="true"
-                              title={ONLINE_DISABLED_MSG()}
-                              className="inline-flex cursor-not-allowed items-center gap-1 text-slate-300"
-                            >
-                              <FilePen className="h-3.5 w-3.5" /> {tr('Ochish')}
-                            </span>
-                          ))}
-                        <a href={f.templateUrl} download={f.templateName || undefined} className="inline-flex items-center gap-1 text-slate-500 hover:text-primary hover:underline">
-                          <Download className="h-3.5 w-3.5" /> {tr('Yuklab olish')}
-                        </a>
-                      </span>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
                   <td className="px-4 py-3">{f.labCount}</td>
                   <td className="px-4 py-3">{f.entryCount}</td>
                   <td className="px-4 py-3">
@@ -163,7 +144,10 @@ function FormsLibrary() {
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => duplicate(f)} className="rounded-lg p-2 text-slate-500 hover:bg-bg-light" title={tr('Nusxa olish')}>
+                        <Copy className="h-4 w-4" />
+                      </button>
                       <button onClick={() => setEditing({ ...emptyForm(), ...f })} className="rounded-lg p-2 text-primary hover:bg-bg-light" title={tr('Tahrirlash')}>
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -199,44 +183,57 @@ function FormsLibrary() {
   );
 }
 
+// Matn qatorlari ro'yxati (qo'shish / o'chirish / tartiblash) uchun yordamchilar.
+const moveIn = (list, i, d) => {
+  const j = i + d;
+  if (j < 0 || j >= list.length) return list;
+  const next = [...list];
+  [next[i], next[j]] = [next[j], next[i]];
+  return next;
+};
+
+function IconBtn({ onClick, disabled, title, danger, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className={`rounded p-1.5 hover:bg-white disabled:opacity-30 ${danger ? 'text-red-500' : 'text-slate-500'}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 function FormEditor({ initial, onClose, onSaved }) {
   const { showToast } = useToast();
   const [form, setForm] = useState(() => ({
     ...initial,
     description: initial.description || '',
-    templateUrl: initial.templateUrl || '',
-    templateName: initial.templateName || '',
+    header: normalizeHeader(initial.header),
     fields: (initial.fields || []).map((f) => ({ ...f, optionsText: (f.options || []).join('\n') })),
   }));
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const set = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+  const setHeader = (patch) => setForm((p) => ({ ...p, header: { ...p.header, ...patch } }));
   const setField = (i, patch) => setForm((p) => ({ ...p, fields: p.fields.map((f, j) => (j === i ? { ...f, ...patch } : f)) }));
   const addField = () =>
     setForm((p) => ({ ...p, fields: [...p.fields, { key: newKey(p.fields), label: '', type: 'text', required: false, optionsText: '' }] }));
-  const removeField = (i) => setForm((p) => ({ ...p, fields: p.fields.filter((_, j) => j !== i) }));
-  const moveField = (i, d) =>
-    setForm((p) => {
-      const fields = [...p.fields];
-      const j = i + d;
-      if (j < 0 || j >= fields.length) return p;
-      [fields[i], fields[j]] = [fields[j], fields[i]];
-      return { ...p, fields };
-    });
 
-  const uploadTemplate = async (files) => {
-    if (!files?.length) return;
-    setUploading(true);
-    try {
-      const res = await uploadFiles(files);
-      setForm((p) => ({ ...p, templateUrl: res.files[0].url, templateName: res.files[0].originalName || '' }));
-      showToast(tr('Fayl yuklandi.'), 'success');
-    } catch (err) {
-      showToast(err?.response?.data?.error || tr('Fayl yuklashda xatolik.'), 'error');
-    } finally {
-      setUploading(false);
-    }
-  };
+  const { orgLines, meta, orientation } = form.header;
+
+  // Jonli ko'rinish: shapka + ustun sarlavhalari + 2 ta bo'sh qator.
+  const previewHtml = useMemo(
+    () =>
+      buildDocumentHtml({
+        form: { ...form, title: form.title || tr('Forma nomi'), fields: form.fields.map((f) => ({ ...f, label: f.label || '…' })) },
+        lab: PREVIEW_LAB,
+        rows: [],
+        blankRows: 2,
+      }).html,
+    [form]
+  );
 
   const save = async () => {
     setSaving(true);
@@ -245,8 +242,7 @@ function FormEditor({ initial, onClose, onSaved }) {
         code: form.code,
         title: form.title,
         description: form.description,
-        templateUrl: form.templateUrl,
-        templateName: form.templateName,
+        header: form.header,
         order: Number(form.order) || 0,
         isActive: form.isActive,
         fields: form.fields.map(({ optionsText, ...f }) => ({
@@ -279,24 +275,9 @@ function FormEditor({ initial, onClose, onSaved }) {
           <label className="mb-1.5 block text-sm font-medium text-ink">{tr('Nomi')} *</label>
           <input className="input-field" value={form.title} onChange={(e) => set('title', e.target.value)} />
         </div>
-        <div className="sm:col-span-4">
+        <div className="sm:col-span-2">
           <label className="mb-1.5 block text-sm font-medium text-ink">{tr('Tavsif / ko\'rsatma')}</label>
           <textarea rows={2} className="input-field resize-none" value={form.description} onChange={(e) => set('description', e.target.value)} />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-sm font-medium text-ink">{tr('Asl shablon fayli (Word/Excel/PDF)')}</label>
-          <input type="file" accept={TEMPLATE_ACCEPT} onChange={(e) => uploadTemplate(e.target.files)} className="text-sm" />
-          {uploading && <p className="mt-1 text-xs text-primary">{tr('Yuklanmoqda, biroz kuting...')}</p>}
-          {form.templateUrl && !uploading && (
-            <p className="mt-1 flex items-center gap-2 text-xs text-slate-500">
-              <a href={form.templateUrl} download={form.templateName || undefined} className="truncate text-primary hover:underline">
-                {form.templateName || form.templateUrl}
-              </a>
-              <button type="button" onClick={() => setForm((p) => ({ ...p, templateUrl: '', templateName: '' }))} className="text-red-500">
-                <XIcon className="h-3.5 w-3.5" />
-              </button>
-            </p>
-          )}
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink">{tr('Tartib raqami')}</label>
@@ -308,16 +289,87 @@ function FormEditor({ initial, onClose, onSaved }) {
         </label>
       </div>
 
-      <div className="mt-6">
+      {/* --- Shapka --- */}
+      <section className="mt-6 rounded-xl border border-border p-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h4 className="font-semibold text-ink">{tr('Shapka')}</h4>
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-500">{tr('Sahifa')}:</span>
+            <select className="input-field !w-auto !py-1.5" value={orientation} onChange={(e) => setHeader({ orientation: e.target.value })}>
+              <option value="landscape">{tr('Albom (yotiq)')}</option>
+              <option value="portrait">{tr('Kitob (tik)')}</option>
+            </select>
+          </div>
+        </div>
+        <p className="mb-3 text-xs text-slate-400">
+          {tr('Logo hamma formalarda bir xil. Matnda {laboratoriya}, {kod}, {sana} yozsangiz, hujjatda avtomatik almashtiriladi.')}
+        </p>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-ink">{tr('Markaziy qatorlar (forma nomidan yuqorida)')}</p>
+            <div className="space-y-2">
+              {orgLines.map((line, i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <input
+                    className="input-field !py-2"
+                    value={line}
+                    onChange={(e) => setHeader({ orgLines: orgLines.map((l, j) => (j === i ? e.target.value : l)) })}
+                  />
+                  <IconBtn onClick={() => setHeader({ orgLines: moveIn(orgLines, i, -1) })} disabled={i === 0}><ArrowUp className="h-4 w-4" /></IconBtn>
+                  <IconBtn onClick={() => setHeader({ orgLines: moveIn(orgLines, i, 1) })} disabled={i === orgLines.length - 1}><ArrowDown className="h-4 w-4" /></IconBtn>
+                  <IconBtn danger onClick={() => setHeader({ orgLines: orgLines.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></IconBtn>
+                </div>
+              ))}
+              {orgLines.length < 6 && (
+                <button type="button" onClick={() => setHeader({ orgLines: [...orgLines, ''] })} className="text-sm font-medium text-primary hover:underline">
+                  + {tr("Qator qo'shish")}
+                </button>
+              )}
+            </div>
+          </div>
+          <div>
+            <p className="mb-1.5 text-sm font-medium text-ink">{tr("O'ng tomondagi rekvizitlar")}</p>
+            <div className="space-y-2">
+              {meta.map((m, i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <input
+                    className="input-field !w-2/5 !py-2"
+                    placeholder={tr('Nomi')}
+                    value={m.label}
+                    onChange={(e) => setHeader({ meta: meta.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })}
+                  />
+                  <input
+                    className="input-field !py-2"
+                    placeholder={tr('Qiymati')}
+                    value={m.value}
+                    onChange={(e) => setHeader({ meta: meta.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })}
+                  />
+                  <IconBtn onClick={() => setHeader({ meta: moveIn(meta, i, -1) })} disabled={i === 0}><ArrowUp className="h-4 w-4" /></IconBtn>
+                  <IconBtn onClick={() => setHeader({ meta: moveIn(meta, i, 1) })} disabled={i === meta.length - 1}><ArrowDown className="h-4 w-4" /></IconBtn>
+                  <IconBtn danger onClick={() => setHeader({ meta: meta.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></IconBtn>
+                </div>
+              ))}
+              {meta.length < 8 && (
+                <button type="button" onClick={() => setHeader({ meta: [...meta, { label: '', value: '' }] })} className="text-sm font-medium text-primary hover:underline">
+                  + {tr("Rekvizit qo'shish")}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- Ustunlar --- */}
+      <section className="mt-6">
         <div className="mb-2 flex items-center justify-between">
-          <h4 className="font-semibold text-ink">{tr('Maydonlar')} ({form.fields.length})</h4>
+          <h4 className="font-semibold text-ink">{tr('Ustunlar')} ({form.fields.length})</h4>
           <button type="button" onClick={addField} className="btn-secondary !py-2 text-sm">
-            <Plus className="h-4 w-4" /> {tr('Maydon qo\'shish')}
+            <Plus className="h-4 w-4" /> {tr("Ustun qo'shish")}
           </button>
         </div>
         {form.fields.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-slate-400">
-            {tr("Hali maydon yo'q. Forma tizimda to'ldirilishi uchun maydon qo'shing.")}
+            {tr("Hali ustun yo'q. Jadval ustunlarini qo'shing.")}
           </p>
         )}
         <div className="space-y-2">
@@ -327,7 +379,7 @@ function FormEditor({ initial, onClose, onSaved }) {
                 <span className="w-6 text-xs font-semibold text-slate-400">{i + 1}.</span>
                 <input
                   className="input-field !w-auto min-w-[200px] flex-1 !py-2"
-                  placeholder={tr('Maydon nomi')}
+                  placeholder={tr('Ustun nomi')}
                   value={f.label}
                   onChange={(e) => setField(i, { label: e.target.value })}
                 />
@@ -346,15 +398,9 @@ function FormEditor({ initial, onClose, onSaved }) {
                   {tr('Majburiy')}
                 </label>
                 <div className="ml-auto flex items-center">
-                  <button type="button" onClick={() => moveField(i, -1)} disabled={i === 0} className="rounded p-1.5 text-slate-500 hover:bg-white disabled:opacity-30">
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button type="button" onClick={() => moveField(i, 1)} disabled={i === form.fields.length - 1} className="rounded p-1.5 text-slate-500 hover:bg-white disabled:opacity-30">
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
-                  <button type="button" onClick={() => removeField(i)} className="rounded p-1.5 text-red-500 hover:bg-white">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <IconBtn onClick={() => set('fields', moveIn(form.fields, i, -1))} disabled={i === 0}><ArrowUp className="h-4 w-4" /></IconBtn>
+                  <IconBtn onClick={() => set('fields', moveIn(form.fields, i, 1))} disabled={i === form.fields.length - 1}><ArrowDown className="h-4 w-4" /></IconBtn>
+                  <IconBtn danger onClick={() => set('fields', form.fields.filter((_, j) => j !== i))}><Trash2 className="h-4 w-4" /></IconBtn>
                 </div>
               </div>
               {f.type === 'select' && (
@@ -371,19 +417,30 @@ function FormEditor({ initial, onClose, onSaved }) {
         </div>
         {initial.id && initial.entryCount > 0 && (
           <p className="mt-2 text-xs text-amber-600">
-            {tr("Bu formada yozuvlar bor: maydon o'chirilsa yoki turi o'zgarsa, eski yozuvlardagi shu qiymat keyingi saqlashda yo'qoladi.")}
+            {tr("Bu formada yozuvlar bor: ustun o'chirilsa yoki turi o'zgarsa, eski yozuvlardagi shu qiymat keyingi saqlashda yo'qoladi.")}
           </p>
         )}
-      </div>
+      </section>
+
+      {/* --- Ko'rinish --- */}
+      <section className="mt-6">
+        <h4 className="mb-2 font-semibold text-ink">{tr("Hujjat ko'rinishi")}</h4>
+        <div className="overflow-x-auto rounded-lg border border-border bg-white p-4">
+          <div
+            data-testid="smk-preview"
+            className="min-w-[640px] text-black"
+            // HTML smkDocument.buildDocumentHtml ichida esc() bilan tozalangan.
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
+        </div>
+      </section>
 
       <div className="mt-6 flex justify-end gap-3">
         <button onClick={onClose} className="btn-secondary">{tr('Bekor qilish')}</button>
-        <button onClick={save} disabled={saving || uploading} className="btn-primary">
-          {uploading ? tr('Fayl yuklanmoqda...') : saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
+        <button onClick={save} disabled={saving} className="btn-primary">
+          {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
         </button>
       </div>
     </Modal>
   );
 }
-
-export { TYPE_LABEL };

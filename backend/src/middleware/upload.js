@@ -11,14 +11,9 @@ const ALLOWED_MIME = new Set([
   'image/webp',
   'video/mp4',
   'video/webm',
-  // SMK forma shablonlari (Word/Excel).
-  'application/msword',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ]);
 
-const ALLOWED_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.mp4', '.webm', '.doc', '.docx', '.xls', '.xlsx']);
+const ALLOWED_EXT = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.mp4', '.webm']);
 
 // Magic-byte signatures to reduce risk of disguised executables. `offset`
 // defaults to 0; MP4 stores its "ftyp" box starting at byte 4, not 0.
@@ -30,10 +25,6 @@ const SIGNATURES = [
   { ext: '.webp', bytes: [0x52, 0x49, 0x46, 0x46], offset: 0 }, // RIFF....WEBP
   { ext: '.mp4', bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // ....ftyp
   { ext: '.webm', bytes: [0x1a, 0x45, 0xdf, 0xa3], offset: 0 }, // EBML header (webm/mkv)
-  { ext: '.docx', bytes: [0x50, 0x4b, 0x03, 0x04], offset: 0 }, // ZIP (Office Open XML)
-  { ext: '.xlsx', bytes: [0x50, 0x4b, 0x03, 0x04], offset: 0 },
-  { ext: '.doc', bytes: [0xd0, 0xcf, 0x11, 0xe0], offset: 0 }, // OLE2 (eski Office)
-  { ext: '.xls', bytes: [0xd0, 0xcf, 0x11, 0xe0], offset: 0 },
 ];
 
 function sanitizeFilename(name) {

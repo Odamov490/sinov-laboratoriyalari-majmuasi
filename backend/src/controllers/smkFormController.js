@@ -9,7 +9,7 @@ const { confinedLabId } = require('../utils/crudFactory');
 // Laboratoriyaga biriktirilgan (User.labId) SUPER_ADMIN bo'lmagan foydalanuvchi
 // faqat o'z laboratoriyasi bilan ishlaydi (crudFactory bilan bir xil qoida).
 
-const FIELD_TYPES = new Set(['text', 'textarea', 'number', 'date', 'select', 'checkbox', 'staff', 'file']);
+const FIELD_TYPES = new Set(['text', 'textarea', 'number', 'date', 'select', 'checkbox', 'staff']);
 const MAX_FIELDS = 100;
 const NOT_FOUND = { error: "Ma'lumot topilmadi." };
 
@@ -44,22 +44,31 @@ function normalizeFields(raw) {
   return { fields };
 }
 
+// Hujjat shapkasi: tashkilot qatorlari (markazda), o'ngdagi rekvizitlar
+// (Shakl kodi, Versiya, ...), sahifa yo'nalishi. Logo hammasida bir xil (frontend).
+function normalizeHeader(raw) {
+  const h = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const orgLines = (Array.isArray(h.orgLines) ? h.orgLines : []).map((l) => str(l, 300)).filter(Boolean).slice(0, 6);
+  const meta = (Array.isArray(h.meta) ? h.meta : [])
+    .map((m) => ({ label: str(m?.label, 100), value: str(m?.value, 200) }))
+    .filter((m) => m.label)
+    .slice(0, 8);
+  return { orgLines, meta, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
+}
+
 function formData(body) {
   const code = str(body.code, 40);
   const title = str(body.title, 300);
   if (!code || !title) return { error: 'Kod va nomi majburiy.' };
   const { fields, error } = normalizeFields(body.fields ?? []);
   if (error) return { error };
-  const templateUrl = str(body.templateUrl, 500);
-  if (templateUrl && !templateUrl.startsWith('/uploads/')) return { error: "Shablon fayli noto'g'ri." };
   return {
     data: {
       code,
       title,
       description: str(body.description, 4000) || null,
       fields,
-      templateUrl: templateUrl || null,
-      templateName: templateUrl ? str(body.templateName, 200) || null : null,
+      header: normalizeHeader(body.header),
       order: Number.isFinite(Number(body.order)) ? Math.trunc(Number(body.order)) : 0,
       isActive: body.isActive === undefined ? true : Boolean(body.isActive),
     },
@@ -96,14 +105,12 @@ const createForm = asyncHandler(async (req, res) => {
 });
 
 const updateForm = asyncHandler(async (req, res) => {
-  const existing = await prisma.smkForm.findUnique({ where: { id: req.params.id }, select: { id: true, templateUrl: true } });
+  const existing = await prisma.smkForm.findUnique({ where: { id: req.params.id }, select: { id: true } });
   if (!existing) return res.status(404).json(NOT_FOUND);
   const { data, error } = formData(req.body || {});
   if (error) return bad(res, error);
   const clash = await prisma.smkForm.findFirst({ where: { code: data.code, NOT: { id: req.params.id } }, select: { id: true } });
   if (clash) return res.status(409).json({ error: 'Bu kodli forma allaqachon bor.' });
-  // Yangi shablon fayli — OnlyOffice uchun yangi hujjat kaliti.
-  if ((existing.templateUrl || null) !== data.templateUrl) data.templateVersion = { increment: 1 };
   const item = await prisma.smkForm.update({ where: { id: req.params.id }, data });
   res.json(item);
 });
@@ -209,9 +216,6 @@ function normalizeEntry(form, raw) {
     } else if (f.type === 'select') {
       v = String(v);
       if (!(f.options || []).includes(v)) return { error: `"${f.label}" uchun variant noto'g'ri.` };
-    } else if (f.type === 'file') {
-      v = String(v).slice(0, 500);
-      if (!v.startsWith('/uploads/')) return { error: `"${f.label}" fayli noto'g'ri.` };
     } else {
       v = String(v).slice(0, f.type === 'textarea' ? 20000 : 1000);
     }
