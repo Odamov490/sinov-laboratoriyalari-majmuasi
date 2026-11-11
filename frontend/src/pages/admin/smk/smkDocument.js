@@ -106,57 +106,74 @@ export function displayValue(field, value) {
 export const esc = (s) =>
   String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-const B = 'border:1px solid #000;';
+// Har bir chiziq bir marta chiziladi: katak — o'ng va pastki, jadval — yuqori va
+// chap chegara (border-collapse'da qo'shni kataklar chizig'i ustma-ust tushib,
+// PDF'da qalin/qo'sh chiziq bo'lib qolardi).
+const B = 'border-right:1px solid #000;border-bottom:1px solid #000;';
+const TB = 'border-top:1px solid #000;border-left:1px solid #000;border-collapse:separate;border-spacing:0;';
 const FONT = "font-family:'Times New Roman',Times,serif;";
+const LH = 'line-height:1.35;';
+// Ustun enlari (px) — HTML va Word (docx) bir xil hisoblaydi.
+export const COL = { metaLabel: 120, metaValue: 130, num: 38 };
 
-// Shapka + jadval (inline uslublar — Word ham, html2canvas ham bir xil ko'radi).
-export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS }) {
+// Shapka ma'lumoti (HTML va Word uchun umumiy): tokenlar almashtirilgan.
+export function headerModel({ form, lab }) {
   const header = normalizeHeader(form.header);
   const ctx = { form, lab };
+  return {
+    orientation: header.orientation,
+    orgLines: header.orgLines.map((l) => resolveTokens(l, ctx).trim()).filter(Boolean),
+    title: form.title,
+    meta: header.meta
+      .filter((m) => String(m.label || '').trim())
+      .map((m) => ({ label: resolveTokens(m.label, ctx), value: resolveTokens(m.value, ctx) })),
+  };
+}
+
+// Shapka + jadval. Shapka — BITTA jadval (ichma-ich jadval yo'q, shuning uchun
+// qo'sh chiziq chiqmaydi): logo va markaz kataklari rekvizit qatorlari bo'ylab
+// birlashtiriladi. Ikkala jadval ham table-layout:fixed — uzun matn katakni
+// kengaytirmaydi, qatorga o'raladi.
+export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS }) {
+  const h = headerModel({ form, lab });
   const fields = form.fields || [];
-  const org = header.orgLines
-    .filter((l) => String(l).trim())
-    .map((l) => `<p style="margin:0;font-weight:bold;font-size:10.5pt">${esc(resolveTokens(l, ctx))}</p>`)
-    .join('');
-  const metaRows = header.meta
-    .filter((m) => String(m.label || '').trim())
-    .map(
-      (m) =>
-        `<tr><td style="${B}padding:3px 6px;font-size:9.5pt;white-space:nowrap">${esc(resolveTokens(m.label, ctx))}</td>` +
-        `<td style="${B}padding:3px 6px;font-size:9.5pt">${esc(resolveTokens(m.value, ctx))}&nbsp;</td></tr>`
-    )
-    .join('');
-
+  const n = Math.max(1, h.meta.length);
+  const logoW = logo.width + 14;
+  const org = h.orgLines.map((l) => `<p style="margin:0;font-weight:bold;font-size:10.5pt;${LH}">${esc(l)}</p>`).join('');
+  const metaCell = (t, extra = '') =>
+    `<td style="${B}padding:3px 6px;font-size:9.5pt;${LH}vertical-align:middle;overflow-wrap:anywhere;${extra}">${esc(t)}&nbsp;</td>`;
+  const metaRow = (m) => (m ? metaCell(m.label) + metaCell(m.value) : '');
+  const firstRow =
+    `<td rowspan="${n}" style="${B}padding:6px;text-align:center;vertical-align:middle">` +
+    `<img src="${esc(logo.src)}" width="${logo.width}" height="${logo.height}" alt="" style="display:inline-block;width:${logo.width}px;height:${logo.height}px;max-width:none"></td>` +
+    `<td rowspan="${n}" style="${B}padding:6px 10px;text-align:center;vertical-align:middle;overflow-wrap:anywhere">${org}` +
+    `<p style="margin:${org ? '6px' : '0'} 0 0;font-weight:bold;font-size:13pt;${LH}">${esc(h.title)}</p></td>` +
+    metaRow(h.meta[0]);
+  const restRows = h.meta.slice(1).map((m) => `<tr>${metaRow(m)}</tr>`).join('');
+  const cols =
+    `<col style="width:${logoW}px"><col>` + (h.meta.length ? `<col style="width:${COL.metaLabel}px"><col style="width:${COL.metaValue}px">` : '');
   const headerHtml =
-    `<table data-part="header" style="width:100%;border-collapse:collapse;${FONT}margin-bottom:10px"><tr>` +
-    `<td style="${B}width:${logo.width + 14}px;padding:6px;text-align:center;vertical-align:middle">` +
-    `<img src="${esc(logo.src)}" width="${logo.width}" height="${logo.height}" alt="" style="width:${logo.width}px;height:${logo.height}px;max-width:none"></td>` +
-    `<td style="${B}padding:6px 10px;text-align:center;vertical-align:middle">${org}` +
-    `<p style="margin:${org ? '6px' : '0'} 0 0;font-weight:bold;font-size:13pt">${esc(form.title)}</p></td>` +
-    (metaRows
-      ? `<td style="${B}width:230px;padding:0;vertical-align:middle"><table style="width:100%;border-collapse:collapse;${FONT}">${metaRows}</table></td>`
-      : '') +
-    `</tr></table>`;
+    `<table data-part="header" style="width:100%;${TB}table-layout:fixed;${FONT}margin-bottom:10px">` +
+    `<colgroup>${cols}</colgroup><tbody><tr>${firstRow}</tr>${restRows}</tbody></table>`;
 
-  const th = (t, extra = '') =>
-    `<th style="${B}padding:5px 6px;background:#f0f0f0;font-size:10pt;font-weight:bold;text-align:center;vertical-align:middle;${extra}">${esc(t)}</th>`;
-  const head = `<thead style="display:table-header-group"><tr style="mso-yfti-irow:-1;mso-yfti-firstrow:yes">${th('№', 'width:32px')}${fields
-    .map((f) => th(f.label))
-    .join('')}</tr></thead>`;
+  const th = (t) =>
+    `<th style="${B}padding:5px 6px;background:#f0f0f0;font-size:10pt;font-weight:bold;text-align:center;vertical-align:middle;${LH}overflow-wrap:anywhere">${esc(t)}</th>`;
+  const head = `<thead style="display:table-header-group"><tr>${th('№')}${fields.map((f) => th(f.label)).join('')}</tr></thead>`;
   const list = rows.length ? rows : Array.from({ length: blankRows }, () => null);
+  const td = (content, extra = '') =>
+    `<td style="${B}padding:4px 6px;font-size:10pt;${LH}vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;${extra}">${content}</td>`;
   const body = list
     .map(
       (r, i) =>
-        `<tr data-row="1"><td style="${B}padding:4px 6px;font-size:10pt;text-align:center">${r ? i + 1 : '&nbsp;'}</td>${fields
-          .map(
-            (f) =>
-              `<td style="${B}padding:4px 6px;font-size:10pt;vertical-align:top;white-space:pre-wrap">${r ? esc(displayValue(f, r.data?.[f.key])) : ''}&nbsp;</td>`
-          )
+        `<tr data-row="1">${td(r ? String(i + 1) : '&nbsp;', 'text-align:center')}${fields
+          .map((f) => td(`${r ? esc(displayValue(f, r.data?.[f.key])) : ''}&nbsp;`))
           .join('')}</tr>`
     )
     .join('');
-  const tableHtml = `<table data-part="table" style="width:100%;border-collapse:collapse;${FONT}">${head}<tbody>${body}</tbody></table>`;
-  return { headerHtml, tableHtml, html: headerHtml + tableHtml, orientation: header.orientation };
+  const tableHtml =
+    `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
+    `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}</tbody></table>`;
+  return { headerHtml, tableHtml, html: headerHtml + tableHtml, orientation: h.orientation };
 }
 
 const fileBase = (form, lab) =>
@@ -173,53 +190,23 @@ function saveBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function bytesToBase64(bytes) {
-  let bin = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  return btoa(bin).replace(/.{76}/g, '$&\r\n');
-}
-
-// Word: MHTML (.doc) — rasm (logo) fayl ichiga joylanadi, Word to'g'ridan-to'g'ri ochadi.
+// Word: haqiqiy .docx (smkDocx.js) — jadval enlari, chegaralar, logo va sahifa
+// yo'nalishi Word'ning o'z formatida, shuning uchun hech narsa siljimaydi.
 export async function exportWord({ form, lab, rows }) {
-  const logoInfo = await getFormLogo();
-  const logoRes = await fetch(logoInfo.src);
-  const logo = new Uint8Array(await logoRes.arrayBuffer());
-  const logoType = /jpe?g/i.test(logoRes.headers.get('content-type') || '') ? 'image/jpeg' : 'image/png';
-  const LOGO_LOC = `file:///C:/slm/logo.${logoType === 'image/jpeg' ? 'jpg' : 'png'}`;
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logo: { ...logoInfo, src: LOGO_LOC } });
-  const land = orientation === 'landscape';
-  const page = land
-    ? 'size:841.9pt 595.3pt;mso-page-orientation:landscape;margin:36pt 36pt 36pt 36pt;'
-    : 'size:595.3pt 841.9pt;margin:42pt 36pt 42pt 54pt;';
-  const doc =
-    `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">` +
-    `<head><meta charset="utf-8"><title>${esc(form.title)}</title>` +
-    `<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->` +
-    `<style>@page WordSection1{${page}} div.WordSection1{page:WordSection1;} table{mso-table-layout-alt:fixed;} td,th{mso-border-alt:solid windowtext .5pt;}</style>` +
-    `</head><body><div class="WordSection1">${html}</div></body></html>`;
-  const boundary = '----=_NextPart_SLM_SMK';
-  const mhtml = [
-    'MIME-Version: 1.0',
-    `Content-Type: multipart/related; boundary="${boundary}"; type="text/html"`,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/html; charset="utf-8"',
-    'Content-Transfer-Encoding: base64',
-    'Content-Location: file:///C:/slm/document.htm',
-    '',
-    bytesToBase64(new TextEncoder().encode(doc)),
-    '',
-    `--${boundary}`,
-    `Content-Type: ${logoType}`,
-    'Content-Transfer-Encoding: base64',
-    `Content-Location: ${LOGO_LOC}`,
-    '',
-    bytesToBase64(logo),
-    '',
-    `--${boundary}--`,
-    '',
-  ].join('\r\n');
-  saveBlob(new Blob([mhtml], { type: 'application/msword' }), `${fileBase(form, lab)}.doc`);
+  const logo = await getFormLogo();
+  const res = await fetch(logo.src);
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  const isJpeg = /jpe?g/i.test(res.headers.get('content-type') || '') || /\.jpe?g$/i.test(logo.src);
+  const { buildDocx } = await import('./smkDocx.js');
+  const blob = buildDocx({
+    header: headerModel({ form, lab }),
+    fields: form.fields || [],
+    rows: (rows.length ? rows : Array.from({ length: BLANK_ROWS }, () => null)).map((r) =>
+      r ? (form.fields || []).map((f) => displayValue(f, r.data?.[f.key])) : null
+    ),
+    logo: { bytes, ext: isJpeg ? 'jpeg' : 'png', width: logo.width, height: logo.height },
+  });
+  saveBlob(blob, `${fileBase(form, lab)}.docx`);
 }
 
 // PDF: hujjat ekrandan tashqarida chiziladi (html2canvas), sahifalarga qator
@@ -240,7 +227,19 @@ export async function exportPdf({ form, lab, rows }) {
     );
     // Brauzer canvas balandligi chegarali (~32k px): uzun jurnalda masshtab kichrayadi.
     const scale = Math.max(0.5, Math.min(2, 30000 / Math.max(1, box.scrollHeight)));
-    const canvas = await html2canvas(box, { scale, backgroundColor: '#ffffff' });
+    // Tailwind preflight `img{display:block}` html2canvas'ning shrift o'lchovini
+    // (u yashirin <img> bilan baseline'ni o'lchaydi) buzadi — matn kataklarda
+    // pastga surilib chiqadi. Chizish vaqtida ilova (#root) dan tashqaridagi
+    // elementlar uchun (o'lchov elementi va shu quti) inline-block qaytariladi.
+    const fix = document.createElement('style');
+    fix.textContent = 'body > div:not(#root) img{display:inline-block !important}';
+    document.head.appendChild(fix);
+    let canvas;
+    try {
+      canvas = await html2canvas(box, { scale, backgroundColor: '#ffffff' });
+    } finally {
+      fix.remove();
+    }
     const top0 = box.getBoundingClientRect().top;
     const px = (y) => Math.round((y - top0) * scale);
     const thead = box.querySelector('[data-part="table"] thead').getBoundingClientRect();
