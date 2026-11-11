@@ -54,11 +54,12 @@ function blockXml(b) {
     .join('');
 }
 
-function cell(width, content, { vMerge, shade, vAlign = 'center' } = {}) {
+function cell(width, content, { vMerge, shade, vAlign = 'center', gridSpan = 1 } = {}) {
   const merge = vMerge ? `<w:vMerge${vMerge === 'restart' ? ' w:val="restart"' : ''}/>` : '';
   const shd = shade ? `<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>` : '';
-  // Bo'sh katakda ham kamida bitta paragraf bo'lishi shart.
-  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${merge}${shd}<w:vAlign w:val="${vAlign}"/></w:tcPr>${content || para('')}</w:tc>`;
+  const gs = gridSpan > 1 ? `<w:gridSpan w:val="${gridSpan}"/>` : '';
+  // tcPr tartibi: tcW, gridSpan, vMerge, shd, vAlign. Bo'sh katakda ham paragraf shart.
+  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${gs}${merge}${shd}<w:vAlign w:val="${vAlign}"/></w:tcPr>${content || para('')}</w:tc>`;
 }
 
 function table(gridWidths, rowsXml) {
@@ -94,7 +95,8 @@ function split(total, n) {
   return Array.from({ length: n }, (_, i) => base + (i < total - base * n ? 1 : 0));
 }
 
-export function buildDocumentXml({ header, fields, rows, logo }) {
+export function buildDocumentXml({ header, model, logo }) {
+  const { fields } = model;
   const page = PAGE[header.orientation] || PAGE.landscape;
   const content = page.w - MARGIN * 2;
 
@@ -126,21 +128,56 @@ export function buildDocumentXml({ header, fields, rows, logo }) {
   // --- Jadval: № + ustunlar (teng taqsimlangan).
   const numW = COL.num * PX;
   const fieldW = split(content - numW, Math.max(1, fields.length));
-  const thRow =
-    `<w:tr><w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>` +
-    cell(numW, para(run('№', { bold: true }), { align: 'center' }), { shade: 'F0F0F0' }) +
-    fields.map((f, i) => cell(fieldW[i], para(run(f.label, { bold: true }), { align: 'center' }), { shade: 'F0F0F0' })).join('') +
-    `</w:tr>`;
-  const bodyRows = rows
+  const colW = [numW, ...fieldW];
+  const widthOf = (from, n) => colW.slice(from, from + n).reduce((a, b) => a + b, 0);
+  const thPara = (t) => para(run(t, { bold: true }), { align: 'center' });
+  const HEAD = { shade: 'F0F0F0' };
+  // Sarlavha: 1 yoki 2 qavat (guruh — gridSpan, guruhsiz ustun — ikki qavat bo'ylab vMerge).
+  let col = 0;
+  let row1 = '';
+  let row2 = '';
+  let subIdx = 0;
+  for (const c of model.top) {
+    const w = widthOf(col, c.colspan);
+    if (model.twoLevel && !c.group) {
+      row1 += cell(w, thPara(c.label), { ...HEAD, vMerge: 'restart' });
+      row2 += cell(w, '', { ...HEAD, vMerge: 'continue' });
+    } else {
+      row1 += cell(w, thPara(c.label), { ...HEAD, gridSpan: c.colspan });
+      if (c.group) {
+        for (let k = 0; k < c.colspan; k += 1) row2 += cell(colW[col + k], thPara(model.sub[subIdx++].label), HEAD);
+      }
+    }
+    col += c.colspan;
+  }
+  const hdrTr = (cells) => `<w:tr><w:trPr><w:cantSplit/><w:tblHeader/></w:trPr>${cells}</w:tr>`;
+  const headRowsXml = hdrTr(row1) + (model.twoLevel ? hdrTr(row2) : '');
+
+  const bodyRows = model.list
+    .map((r, i) => {
+      const cells = fields
+        .map((f, c) => {
+          const sp = model.spans[i][c];
+          const text = model.texts[i][c];
+          if (sp === 0) return cell(fieldW[c], '', { vMerge: 'continue', vAlign: 'center' });
+          if (sp > 1) return cell(fieldW[c], para(run(text)), { vMerge: 'restart', vAlign: 'center' });
+          return cell(fieldW[c], para(run(text)), { vAlign: 'top' });
+        })
+        .join('');
+      return `<w:tr><w:trPr><w:cantSplit/></w:trPr>${cell(numW, para(run(r ? String(i + 1) : ''), { align: 'center' }), { vAlign: 'top' })}${cells}</w:tr>`;
+    })
+    .join('');
+  // "Итого" qatorlari: birinchi `span` ustun birlashtirilgan.
+  const footRows = model.footer
     .map(
-      (r, i) =>
+      (fr) =>
         `<w:tr><w:trPr><w:cantSplit/></w:trPr>` +
-        cell(numW, para(run(r ? String(i + 1) : ''), { align: 'center' }), { vAlign: 'top' }) +
-        fields.map((f, j) => cell(fieldW[j], para(run(r ? r[j] : '')), { vAlign: 'top' })).join('') +
+        cell(widthOf(0, fr.span), para(run(fr.label, { bold: true })), { gridSpan: fr.span }) +
+        fr.cells.map((c, k) => cell(colW[fr.span + k], para(run(c.text, { bold: true })))).join('') +
         `</w:tr>`
     )
     .join('');
-  const dataTable = table([numW, ...fieldW], thRow + bodyRows);
+  const dataTable = table(colW, headRowsXml + bodyRows + footRows);
 
   const blocks = header.blocks || [];
   const before = blocks.filter((b) => b.position === 'before').map(blockXml).join('');
@@ -229,7 +266,7 @@ export function zipStore(files) {
   });
 }
 
-export function buildDocx({ header, fields, rows, logo }) {
+export function buildDocx({ header, model, logo }) {
   const ext = logo.ext === 'jpeg' ? 'jpeg' : 'png';
   return zipStore([
     {
@@ -260,7 +297,7 @@ export function buildDocx({ header, fields, rows, logo }) {
         `<Relationship Id="rIdLogo" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/logo.${ext}"/>` +
         '</Relationships>',
     },
-    { name: 'word/document.xml', data: buildDocumentXml({ header, fields, rows, logo }) },
+    { name: 'word/document.xml', data: buildDocumentXml({ header, model, logo }) },
     { name: `word/media/logo.${ext}`, data: logo.bytes },
   ]);
 }

@@ -7,7 +7,7 @@ import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx
 import { Pagination } from '../../components/UI.jsx';
 import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
-import { buildDocumentHtml, displayValue, exportWord, exportPdf, printDocument, useFormLogo } from './smk/smkDocument.js';
+import { buildDocumentHtml, exportWord, exportPdf, printDocument, useFormLogo, tableModel } from './smk/smkDocument.js';
 
 // /admin/sifat/:labSlug/:formId — laboratoriya tanlagan forma: hujjat shapkasi
 // va jadval (qatorlar = yozuvlar). Qator qo'shish/tahrirlash/o'chirish; tayyor
@@ -153,45 +153,13 @@ export default function AdminSmkFormEntries() {
             ) : data.items.length === 0 ? (
               <EmptyState message={tr("Hali qator yo'q. Word/PDF'da bo'sh blank chiqadi.")} />
             ) : (
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-bg-light text-left text-xs uppercase tracking-wide text-slate-500">
-                    <th className="px-4 py-3">№</th>
-                    {fields.map((f) => (
-                      <th key={f.key} className="whitespace-nowrap px-4 py-3">{f.label}</th>
-                    ))}
-                    <th className="whitespace-nowrap px-4 py-3">{tr("To'ldirdi")}</th>
-                    <th className="px-4 py-3 text-right">{tr('Amallar')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {data.items.map((e, i) => (
-                    <tr key={e.id} className="hover:bg-bg-light/60">
-                      {/* Jurnal raqami (Word/PDF bilan bir xil): 1, 2, 3 … */}
-                      <td className="px-4 py-3 text-slate-400">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                      {fields.map((f) => (
-                        <td key={f.key} className="max-w-[260px] truncate px-4 py-3 text-ink" title={displayValue(f, e.data?.[f.key])}>
-                          {displayValue(f, e.data?.[f.key]) || '—'}
-                        </td>
-                      ))}
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-500">
-                        {e.createdBy?.fullName || '—'}
-                        <span className="block text-xs text-slate-400">{fmtDate(e.createdAt)}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end gap-1">
-                          <button onClick={() => setEditing({ id: e.id, data: e.data || {} })} className="rounded-lg p-2 text-primary hover:bg-bg-light" title={tr('Tahrirlash')}>
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button onClick={() => setConfirmDelete(e.id)} className="rounded-lg p-2 text-red-500 hover:bg-red-50" title={tr("O'chirish")}>
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <EntriesTable
+                form={form}
+                data={data}
+                offset={(page - 1) * PAGE_SIZE}
+                onEdit={(e) => setEditing({ id: e.id, data: e.data || {} })}
+                onDelete={(e) => setConfirmDelete(e.id)}
+              />
             )}
           </div>
           {data && !data.error && <Pagination page={page} pageSize={PAGE_SIZE} total={data.total} onChange={setPage} />}
@@ -325,5 +293,91 @@ function EntryEditor({ lab, form, entry, onClose, onSaved }) {
         </button>
       </div>
     </Modal>
+  );
+}
+
+// Ekrandagi jadval — hujjat bilan bir xil model (tableModel): ikki qavatli
+// sarlavha (ustun guruhlari), bir xil qiymatli kataklarni birlashtirish (shu
+// sahifa doirasida) va "Итого" qatorlari (yig'indi — barcha qatorlar bo'yicha).
+function EntriesTable({ form, data, offset, onEdit, onDelete }) {
+  const tm = tableModel({ form, rows: data.items, totals: data.totals || {} });
+  const thCls = 'border-b border-border px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500';
+  return (
+    <table className="w-full border-collapse text-sm">
+      <thead className="bg-bg-light">
+        <tr>
+          {tm.top.map((c, k) => (
+            <th
+              key={k}
+              colSpan={c.colspan > 1 ? c.colspan : undefined}
+              rowSpan={c.rowspan > 1 ? c.rowspan : undefined}
+              className={`${thCls} ${c.group ? 'border-x text-center' : 'whitespace-nowrap'}`}
+            >
+              {c.label}
+            </th>
+          ))}
+          <th rowSpan={tm.twoLevel ? 2 : undefined} className={`${thCls} whitespace-nowrap`}>{tr("To'ldirdi")}</th>
+          <th rowSpan={tm.twoLevel ? 2 : undefined} className={`${thCls} text-right`}>{tr('Amallar')}</th>
+        </tr>
+        {tm.twoLevel && (
+          <tr>
+            {tm.sub.map((c, k) => (
+              <th key={k} className={`${thCls} whitespace-nowrap border-x`}>{c.label}</th>
+            ))}
+          </tr>
+        )}
+      </thead>
+      <tbody>
+        {data.items.map((e, i) => (
+          <tr key={e.id} className="border-b border-border hover:bg-bg-light/60">
+            {/* Jurnal raqami (Word/PDF bilan bir xil): 1, 2, 3 … */}
+            <td className="px-4 py-3 text-slate-400">{offset + i + 1}</td>
+            {tm.fields.map((f, c) => {
+              const sp = tm.spans[i][c];
+              if (sp === 0) return null;
+              const text = tm.texts[i][c];
+              return (
+                <td
+                  key={f.key}
+                  rowSpan={sp > 1 ? sp : undefined}
+                  className={`max-w-[260px] truncate px-4 py-3 text-ink ${sp > 1 ? 'border-x border-border bg-white align-middle' : ''}`}
+                  title={text}
+                >
+                  {text || '—'}
+                </td>
+              );
+            })}
+            <td className="whitespace-nowrap px-4 py-3 text-slate-500">
+              {e.createdBy?.fullName || '—'}
+              <span className="block text-xs text-slate-400">{fmtDate(e.createdAt)}</span>
+            </td>
+            <td className="px-4 py-3">
+              <div className="flex justify-end gap-1">
+                <button onClick={() => onEdit(e)} className="rounded-lg p-2 text-primary hover:bg-bg-light" title={tr('Tahrirlash')}>
+                  <Pencil className="h-4 w-4" />
+                </button>
+                <button onClick={() => onDelete(e)} className="rounded-lg p-2 text-red-500 hover:bg-red-50" title={tr("O'chirish")}>
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      {tm.footer.length > 0 && (
+        <tfoot data-testid="smk-footer">
+          {tm.footer.map((fr, k) => (
+            <tr key={k} className="border-b border-border bg-bg-light/70 font-semibold text-ink">
+              <td colSpan={fr.span} className="px-4 py-3">{fr.label}</td>
+              {fr.cells.map((c, j) => (
+                <td key={j} className="px-4 py-3">{c.text}</td>
+              ))}
+              <td />
+              <td />
+            </tr>
+          ))}
+        </tfoot>
+      )}
+    </table>
   );
 }

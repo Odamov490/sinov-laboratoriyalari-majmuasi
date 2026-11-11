@@ -85,9 +85,93 @@ export const normalizeHeader = (h) => {
     orgLines: Array.isArray(h.orgLines) ? h.orgLines : d.orgLines,
     meta: Array.isArray(h.meta) ? h.meta : d.meta,
     blocks: Array.isArray(h.blocks) ? h.blocks : [],
+    footer: Array.isArray(h.footer) ? h.footer : [],
     orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape',
   };
 };
+
+const fmtNum = (n) => (n === null || n === undefined || !Number.isFinite(Number(n)) ? '' : String(Number(Number(n).toFixed(6))));
+
+// Raqamli ustun yig'indisi (berilgan qatorlar bo'yicha); qiymat bo'lmasa null.
+export function sumField(rows, f) {
+  let sum = 0;
+  let any = false;
+  for (const r of rows) {
+    const v = r?.data?.[f.key];
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      sum += v;
+      any = true;
+    }
+  }
+  return any ? sum : null;
+}
+
+// Jadval modeli — ekran, HTML (PDF/chop etish) va Word bir xil ishlatadi:
+//  - head: 1 yoki 2 qavatli sarlavha (ustun guruhi — ketma-ket bir xil `group`);
+//  - body: kataklar matni va vertikal birlashtirish (mergeSame): span>1 — boshlanish
+//    (rowspan), 0 — yuqoridagi katak ichida;
+//  - breakAfter[i]: i-qatordan keyin sahifa bo'linishi mumkinmi (birlashma kesilmasin);
+//  - footer: "Итого" qatorlari (birinchi labelSpan ustun birlashtirilgan, yig'indilar).
+export function tableModel({ form, rows, blankRows = BLANK_ROWS, totals }) {
+  const fields = form.fields || [];
+  const header = normalizeHeader(form.header);
+  const nCols = fields.length + 1;
+  const groupOf = (f) => String(f.group || '').trim();
+  const twoLevel = fields.some((f) => groupOf(f));
+  const top = [{ label: '№', colspan: 1, rowspan: twoLevel ? 2 : 1 }];
+  const sub = [];
+  for (let i = 0; i < fields.length; ) {
+    const g = groupOf(fields[i]);
+    if (!g) {
+      top.push({ label: fields[i].label, colspan: 1, rowspan: twoLevel ? 2 : 1 });
+      i += 1;
+      continue;
+    }
+    let j = i;
+    while (j < fields.length && groupOf(fields[j]) === g) j += 1;
+    top.push({ label: g, colspan: j - i, rowspan: 1, group: true });
+    for (let k = i; k < j; k += 1) sub.push({ label: fields[k].label });
+    i = j;
+  }
+
+  const list = rows.length ? rows : Array.from({ length: blankRows }, () => null);
+  const texts = list.map((r) => fields.map((f) => (r ? displayValue(f, r.data?.[f.key]) : '')));
+  const spans = list.map(() => fields.map(() => 1));
+  fields.forEach((f, c) => {
+    if (!f.mergeSame) return;
+    let i = 0;
+    while (i < list.length) {
+      if (!list[i] || texts[i][c] === '') {
+        i += 1;
+        continue;
+      }
+      let j = i + 1;
+      while (j < list.length && list[j] && texts[j][c] === texts[i][c]) j += 1;
+      if (j - i > 1) {
+        spans[i][c] = j - i;
+        for (let k = i + 1; k < j; k += 1) spans[k][c] = 0;
+      }
+      i = j;
+    }
+  });
+  const breakAfter = list.map((_, i) => i === list.length - 1 || fields.every((_, c) => spans[i + 1][c] !== 0));
+
+  const footer = header.footer.map((fr) => {
+    const span = Math.min(nCols, Math.max(1, Number(fr.labelSpan) || 1));
+    const cells = [];
+    for (let col = span; col < nCols; col += 1) {
+      const f = fields[col - 1];
+      let text = '';
+      if (f.type === 'number' && (fr.sums || []).includes(f.key)) {
+        text = fmtNum(totals ? totals[f.key] : sumField(rows, f));
+      }
+      cells.push({ text });
+    }
+    return { label: fr.label || '', span, cells };
+  });
+
+  return { fields, nCols, twoLevel, top, sub, list, texts, spans, breakAfter, footer };
+}
 
 // Matn bloklari namunalari (formaga tez qo'shish uchun). Bo'sh joylar — "____".
 export const BLOCK_PRESETS = () => [
@@ -193,7 +277,7 @@ function blockHtml(b) {
 // qo'sh chiziq chiqmaydi): logo va markaz kataklari rekvizit qatorlari bo'ylab
 // birlashtiriladi. Ikkala jadval ham table-layout:fixed — uzun matn katakni
 // kengaytirmaydi, qatorga o'raladi.
-export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS }) {
+export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS, totals }) {
   const h = headerModel({ form, lab });
   const fields = form.fields || [];
   const n = Math.max(1, h.meta.length);
@@ -215,23 +299,40 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
     `<table data-part="header" style="width:100%;${TB}table-layout:fixed;${FONT}margin-bottom:10px">` +
     `<colgroup>${cols}</colgroup><tbody><tr>${firstRow}</tr>${restRows}</tbody></table>`;
 
-  const th = (t) =>
-    `<th style="${B}padding:5px 6px;background:#f0f0f0;font-size:10pt;font-weight:bold;text-align:center;vertical-align:middle;${LH}overflow-wrap:anywhere">${esc(t)}</th>`;
-  const head = `<thead style="display:table-header-group"><tr>${th('№')}${fields.map((f) => th(f.label)).join('')}</tr></thead>`;
-  const list = rows.length ? rows : Array.from({ length: blankRows }, () => null);
-  const td = (content, extra = '') =>
-    `<td style="${B}padding:4px 6px;font-size:10pt;${LH}vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;${extra}">${content}</td>`;
-  const body = list
+  const tm = tableModel({ form, rows, blankRows, totals });
+  const th = (t, span = '') =>
+    `<th${span} style="${B}padding:5px 6px;background:#f0f0f0;font-size:10pt;font-weight:bold;text-align:center;vertical-align:middle;${LH}overflow-wrap:anywhere">${esc(t)}</th>`;
+  const attrs = (c) => (c.colspan > 1 ? ` colspan="${c.colspan}"` : '') + (c.rowspan > 1 ? ` rowspan="${c.rowspan}"` : '');
+  const head =
+    `<thead style="display:table-header-group"><tr>${tm.top.map((c) => th(c.label, attrs(c))).join('')}</tr>` +
+    (tm.twoLevel ? `<tr>${tm.sub.map((c) => th(c.label)).join('')}</tr>` : '') +
+    `</thead>`;
+  const td = (content, extra = '', span = '') =>
+    `<td${span} style="${B}padding:4px 6px;font-size:10pt;${LH}vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;${extra}">${content}</td>`;
+  // data-row="1" — shu qatordan keyin sahifa bo'linishi mumkin (birlashma kesilmaydi).
+  const body = tm.list
     .map(
       (r, i) =>
-        `<tr data-row="1">${td(r ? String(i + 1) : '&nbsp;', 'text-align:center')}${fields
-          .map((f) => td(`${r ? esc(displayValue(f, r.data?.[f.key])) : ''}&nbsp;`))
+        `<tr data-row="${tm.breakAfter[i] ? 1 : 0}">${td(r ? String(i + 1) : '&nbsp;', 'text-align:center')}${tm.fields
+          .map((f, c) => {
+            const sp = tm.spans[i][c];
+            if (sp === 0) return '';
+            return td(`${esc(tm.texts[i][c])}&nbsp;`, sp > 1 ? 'vertical-align:middle' : '', sp > 1 ? ` rowspan="${sp}"` : '');
+          })
           .join('')}</tr>`
+    )
+    .join('');
+  const foot = tm.footer
+    .map(
+      (fr) =>
+        `<tr data-row="1">${td(esc(fr.label) || '&nbsp;', 'font-weight:bold', fr.span > 1 ? ` colspan="${fr.span}"` : '')}` +
+        fr.cells.map((c) => td(`${esc(c.text)}&nbsp;`, 'font-weight:bold')).join('') +
+        `</tr>`
     )
     .join('');
   const tableHtml =
     `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
-    `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}</tbody></table>`;
+    `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}${foot}</tbody></table>`;
   const beforeHtml = h.blocks.filter((b) => b.position === 'before').map(blockHtml).join('');
   const afterHtml = h.blocks.filter((b) => b.position === 'after').map(blockHtml).join('');
   const afterWrap = afterHtml ? `<div style="margin-top:12px">${afterHtml}</div>` : '';
@@ -269,10 +370,7 @@ export async function exportWord({ form, lab, rows }) {
   const { buildDocx } = await import('./smkDocx.js');
   const blob = buildDocx({
     header: headerModel({ form, lab }),
-    fields: form.fields || [],
-    rows: (rows.length ? rows : Array.from({ length: BLANK_ROWS }, () => null)).map((r) =>
-      r ? (form.fields || []).map((f) => displayValue(f, r.data?.[f.key])) : null
-    ),
+    model: tableModel({ form, rows }),
     logo: { bytes, ext: isJpeg ? 'jpeg' : 'png', width: logo.width, height: logo.height },
   });
   saveBlob(blob, `${fileBase(form, lab)}.docx`);
@@ -318,7 +416,7 @@ export async function exportPdf({ form, lab, rows }) {
     // Matn bloklari (jadvaldan keyingilari ham) ham yorilmaydi.
     const breaks = [
       px(thead.bottom),
-      ...[...box.querySelectorAll('tr[data-row], [data-block]')].map((el) => px(el.getBoundingClientRect().bottom)),
+      ...[...box.querySelectorAll('tr[data-row="1"], [data-block]')].map((el) => px(el.getBoundingClientRect().bottom)),
     ].sort((a, b) => a - b);
 
     const pdf = new jsPDF(land ? 'l' : 'p', 'mm', 'a4');
