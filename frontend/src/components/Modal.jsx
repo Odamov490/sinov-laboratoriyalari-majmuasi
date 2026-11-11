@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 export function Modal({ open, onClose, title, children, size = 'md' }) {
   if (!open) return null;
-  const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
+  const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl', full: 'max-w-[96vw]' };
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-primary/40 backdrop-blur-sm p-4">
       <div className={`w-full ${sizes[size]} rounded-xl bg-white shadow-2xl border border-border max-h-[90vh] flex flex-col`}>

@@ -278,7 +278,10 @@ function FormEditor({ initial, onClose, onSaved }) {
   };
 
   return (
-    <Modal open onClose={onClose} title={initial.id ? tr('Formani tahrirlash') : tr('Yangi forma')} size="xl">
+    <Modal open onClose={onClose} title={initial.id ? tr('Formani tahrirlash') : tr('Yangi forma')} size="full">
+      {/* Chapda tahrirlash, o'ngda hujjat ko'rinishi (yonma-yon; ko'rinish aylantirishda joyida qoladi). */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="min-w-0" data-testid="smk-editor-left">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-ink">{tr('Kod')} *</label>
@@ -506,10 +509,12 @@ function FormEditor({ initial, onClose, onSaved }) {
         )}
       </section>
 
-      {/* --- Ko'rinish --- */}
-      <section className="mt-6">
+      </div>
+
+      {/* --- Ko'rinish (o'ng ustun, sticky) --- */}
+      <aside className="min-w-0 lg:sticky lg:top-0 lg:self-start" data-testid="smk-preview-pane">
         <h4 className="mb-2 font-semibold text-ink">{tr("Hujjat ko'rinishi")}</h4>
-        <div className="overflow-x-auto rounded-lg border border-border bg-white p-4">
+        <div className="overflow-auto rounded-lg border border-border bg-white p-4 lg:max-h-[calc(90vh-12rem)]">
           <div
             data-testid="smk-preview"
             className="min-w-[640px] text-black"
@@ -517,9 +522,11 @@ function FormEditor({ initial, onClose, onSaved }) {
             dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
         </div>
-      </section>
+      </aside>
+      </div>
 
-      <div className="mt-6 flex justify-end gap-3">
+      {/* Tugmalar doim ko'rinadi (oyna pastida). */}
+      <div className="sticky -bottom-5 z-10 -mx-5 mt-6 flex justify-end gap-3 border-t border-border bg-white px-5 py-3">
         <button onClick={onClose} className="btn-secondary">{tr('Bekor qilish')}</button>
         <button onClick={save} disabled={saving} className="btn-primary">
           {saving ? tr('Saqlanmoqda...') : tr('Saqlash')}
