@@ -967,6 +967,7 @@
   "Pauza": "Пауза",
   "PDF export xatolik yuz berdi.": "Ошибка экспорта в PDF.",
   "PNG yoki JPG, {0} MB gacha. Kvadrat rasm yaxshi chiqadi (masalan 512×512).": "PNG или JPG, до {0} МБ. Лучше квадратное изображение (например, 512×512).",
+  "PNG yoki JPG, {0} MB gacha. Kvadrat yoki to'rtburchak — logo proporsiyasi saqlanadi.": "PNG или JPG, до {0} МБ. Квадратный или прямоугольный — пропорции логотипа сохраняются.",
   "Pozitsiya kodi": "Код позиции",
   "Profil rasmi": "Фото профиля",
   "Profil to'liq": "Профиль заполнен",

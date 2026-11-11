@@ -967,6 +967,7 @@
   "Pauza": "Pause",
   "PDF export xatolik yuz berdi.": "PDF export failed.",
   "PNG yoki JPG, {0} MB gacha. Kvadrat rasm yaxshi chiqadi (masalan 512×512).": "PNG or JPG, up to {0} MB. A square image works best (e.g. 512×512).",
+  "PNG yoki JPG, {0} MB gacha. Kvadrat yoki to'rtburchak — logo proporsiyasi saqlanadi.": "PNG or JPG, up to {0} MB. Square or rectangular — the logo keeps its proportions.",
   "Pozitsiya kodi": "Position code",
   "Profil rasmi": "Profile photo",
   "Profil to'liq": "Profile complete",

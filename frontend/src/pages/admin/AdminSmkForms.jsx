@@ -230,7 +230,7 @@ function FormEditor({ initial, onClose, onSaved }) {
     setForm((p) => ({ ...p, fields: [...p.fields, { key: newKey(p.fields), label: '', type: 'text', required: false, optionsText: '' }] }));
 
   const { orgLines, meta, orientation } = form.header;
-  const logoSrc = useFormLogo();
+  const logo = useFormLogo();
 
   // Jonli ko'rinish: shapka + ustun sarlavhalari + 2 ta bo'sh qator.
   const previewHtml = useMemo(
@@ -240,9 +240,9 @@ function FormEditor({ initial, onClose, onSaved }) {
         lab: PREVIEW_LAB,
         rows: [],
         blankRows: 2,
-        logoSrc,
+        logo,
       }).html,
-    [form, logoSrc]
+    [form, logo]
   );
 
   const save = async () => {

@@ -38,7 +38,7 @@ export default function AdminSmkFormEntries() {
   const [editing, setEditing] = useState(null); // {id?, data}
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [exporting, setExporting] = useState(null); // 'word' | 'pdf' | 'print'
-  const logoSrc = useFormLogo();
+  const logo = useFormLogo();
 
   useEffect(() => {
     let alive = true;
@@ -83,7 +83,7 @@ export default function AdminSmkFormEntries() {
   if (!lab || !form) return <Loading />;
 
   const fields = form.fields || [];
-  const headerHtml = buildDocumentHtml({ form, lab, rows: [], logoSrc }).headerHtml;
+  const headerHtml = buildDocumentHtml({ form, lab, rows: [], logo }).headerHtml;
 
   const runExport = async (kind) => {
     // Chop etish oynasi bosish paytida ochiladi (popup bloklanmasin).

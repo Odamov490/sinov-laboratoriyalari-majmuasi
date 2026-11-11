@@ -96,7 +96,7 @@ export default function AdminFormLogoSettings() {
             )}
           </div>
           <p className="text-xs text-slate-400">
-            {tr('PNG yoki JPG, {0} MB gacha. Kvadrat rasm yaxshi chiqadi (masalan 512×512).', MAX_MB)}
+            {tr("PNG yoki JPG, {0} MB gacha. Kvadrat yoki to'rtburchak — logo proporsiyasi saqlanadi.", MAX_MB)}
           </p>
         </div>
       </div>
@@ -107,8 +107,9 @@ export default function AdminFormLogoSettings() {
         <table className="w-full border-collapse text-black" style={{ fontFamily: "'Times New Roman', Times, serif" }}>
           <tbody>
             <tr>
-              <td className="border border-black p-1.5 text-center" style={{ width: 80 }}>
-                <img src={src} alt="" width="62" height="62" style={{ width: 62, height: 62, objectFit: 'contain' }} />
+              <td className="border border-black p-1.5 text-center" style={{ width: 1 }}>
+                {/* Proporsiya saqlanadi: balandligi 60, eni 180 gacha (smkDocument.fitLogo). */}
+                <img src={src} alt="" style={{ height: 60, width: 'auto', maxWidth: 180, objectFit: 'contain', display: 'inline-block' }} />
               </td>
               <td className="border border-black px-3 py-2 text-center text-sm font-bold">{tr('Forma nomi')}</td>
             </tr>

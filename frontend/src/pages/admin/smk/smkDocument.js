@@ -9,16 +9,42 @@ import { getSettings } from '../../../services/publicApi';
 export const LOGO_URL = '/logo.png'; // standart logo (sozlamada boshqasi tanlanmagan bo'lsa)
 export const FORM_LOGO_KEY = 'form_logo_url';
 
-// Forma logosi: Sozlamalar -> "Forma logosi" (SiteSetting form_logo_url), bo'lmasa standart.
+// Logo o'z proporsiyasini saqlaydi: balandligi LOGO_H, juda keng logo esa
+// LOGO_MAX_W ga sig'diriladi (to'rtburchak logolar siqilmaydi).
+const LOGO_H = 60;
+const LOGO_MAX_W = 180;
+export function fitLogo(naturalW, naturalH) {
+  if (!naturalW || !naturalH) return { width: LOGO_H, height: LOGO_H };
+  let width = Math.round((LOGO_H * naturalW) / naturalH);
+  let height = LOGO_H;
+  if (width > LOGO_MAX_W) {
+    width = LOGO_MAX_W;
+    height = Math.max(1, Math.round((LOGO_MAX_W * naturalH) / naturalW));
+  }
+  return { width, height };
+}
+export const DEFAULT_LOGO = { src: LOGO_URL, width: LOGO_H, height: LOGO_H };
+
+const naturalSize = (src) =>
+  new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(fitLogo(img.naturalWidth, img.naturalHeight));
+    img.onerror = () => resolve(fitLogo(0, 0));
+    img.src = src;
+  });
+
+// Forma logosi: Sozlamalar -> "Forma logosi" (SiteSetting form_logo_url), bo'lmasa
+// standart. Natija: { src, width, height } (shapkadagi o'lcham).
 let logoPromise = null;
-export function getFormLogoUrl() {
+export function getFormLogo() {
   if (!logoPromise) {
     logoPromise = getSettings()
       .then((s) => (/^\/uploads\/[\w.-]+\.(png|jpe?g)$/i.test(s?.[FORM_LOGO_KEY] || '') ? s[FORM_LOGO_KEY] : LOGO_URL))
       .catch(() => {
         logoPromise = null;
         return LOGO_URL;
-      });
+      })
+      .then(async (src) => ({ src, ...(await naturalSize(src)) }));
   }
   return logoPromise;
 }
@@ -27,15 +53,15 @@ export const resetFormLogoCache = () => {
   logoPromise = null;
 };
 export function useFormLogo() {
-  const [url, setUrl] = useState(LOGO_URL);
+  const [logo, setLogo] = useState(DEFAULT_LOGO);
   useEffect(() => {
     let alive = true;
-    getFormLogoUrl().then((u) => alive && setUrl(u));
+    getFormLogo().then((l) => alive && setLogo(l));
     return () => {
       alive = false;
     };
   }, []);
-  return url;
+  return logo;
 }
 export const BLANK_ROWS = 10; // yozuv yo'q bo'lsa — bo'sh blank uchun
 
@@ -84,7 +110,7 @@ const B = 'border:1px solid #000;';
 const FONT = "font-family:'Times New Roman',Times,serif;";
 
 // Shapka + jadval (inline uslublar — Word ham, html2canvas ham bir xil ko'radi).
-export function buildDocumentHtml({ form, lab, rows, logoSrc = LOGO_URL, blankRows = BLANK_ROWS }) {
+export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankRows = BLANK_ROWS }) {
   const header = normalizeHeader(form.header);
   const ctx = { form, lab };
   const fields = form.fields || [];
@@ -103,7 +129,8 @@ export function buildDocumentHtml({ form, lab, rows, logoSrc = LOGO_URL, blankRo
 
   const headerHtml =
     `<table data-part="header" style="width:100%;border-collapse:collapse;${FONT}margin-bottom:10px"><tr>` +
-    `<td style="${B}width:80px;padding:6px;text-align:center;vertical-align:middle"><img src="${esc(logoSrc)}" width="62" height="62" alt="" style="width:62px;height:62px"></td>` +
+    `<td style="${B}width:${logo.width + 14}px;padding:6px;text-align:center;vertical-align:middle">` +
+    `<img src="${esc(logo.src)}" width="${logo.width}" height="${logo.height}" alt="" style="width:${logo.width}px;height:${logo.height}px;max-width:none"></td>` +
     `<td style="${B}padding:6px 10px;text-align:center;vertical-align:middle">${org}` +
     `<p style="margin:${org ? '6px' : '0'} 0 0;font-weight:bold;font-size:13pt">${esc(form.title)}</p></td>` +
     (metaRows
@@ -154,11 +181,12 @@ function bytesToBase64(bytes) {
 
 // Word: MHTML (.doc) — rasm (logo) fayl ichiga joylanadi, Word to'g'ridan-to'g'ri ochadi.
 export async function exportWord({ form, lab, rows }) {
-  const logoRes = await fetch(await getFormLogoUrl());
+  const logoInfo = await getFormLogo();
+  const logoRes = await fetch(logoInfo.src);
   const logo = new Uint8Array(await logoRes.arrayBuffer());
   const logoType = /jpe?g/i.test(logoRes.headers.get('content-type') || '') ? 'image/jpeg' : 'image/png';
   const LOGO_LOC = `file:///C:/slm/logo.${logoType === 'image/jpeg' ? 'jpg' : 'png'}`;
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: LOGO_LOC });
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logo: { ...logoInfo, src: LOGO_LOC } });
   const land = orientation === 'landscape';
   const page = land
     ? 'size:841.9pt 595.3pt;mso-page-orientation:landscape;margin:36pt 36pt 36pt 36pt;'
@@ -199,7 +227,7 @@ export async function exportWord({ form, lab, rows }) {
 // har bir keyingi sahifada takrorlanadi.
 export async function exportPdf({ form, lab, rows }) {
   const [{ default: html2canvas }, { jsPDF }] = await Promise.all([import('html2canvas'), import('jspdf')]);
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: await getFormLogoUrl() });
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logo: await getFormLogo() });
   const land = orientation === 'landscape';
   const widthPx = land ? 1100 : 760;
   const box = document.createElement('div');
@@ -268,8 +296,8 @@ export async function exportPdf({ form, lab, rows }) {
 // oynani brauzer popup sifatida bloklashi mumkin.
 export async function printDocument({ form, lab, rows }, w) {
   if (!w) return;
-  const logo = await getFormLogoUrl();
-  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logoSrc: new URL(logo, window.location.origin).href });
+  const logo = await getFormLogo();
+  const { html, orientation } = buildDocumentHtml({ form, lab, rows, logo: { ...logo, src: new URL(logo.src, window.location.origin).href } });
   w.document.write(
     `<!doctype html><html><head><meta charset="utf-8"><title>${esc(form.title)}</title>` +
       `<style>@page{size:A4 ${orientation};margin:10mm} body{margin:0;color:#000} thead{display:table-header-group} tr{page-break-inside:avoid}</style>` +
