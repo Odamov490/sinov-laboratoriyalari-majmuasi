@@ -104,6 +104,30 @@ export const BLOCK_PRESETS = () => [
       position: 'before',
     },
   },
+  {
+    key: 'agreeApprove',
+    label: tr('«Kelishildi» + «Tasdiqlayman» (yonma-yon)'),
+    blocks: [
+      {
+        text: '«Согласовано»\nНачальник КИЛ\nГУ «Узбекский институт стандартов»\n\n_______________ Ф.И.О.\n«___» __________ 20___ г.',
+        align: 'center',
+        bold: true,
+        size: 'normal',
+        indent: false,
+        position: 'before',
+        layout: 'left',
+      },
+      {
+        text: '«Утверждаю»\n\n\n\n_______________ Ф.И.О.\n«___» __________ 20___ г.',
+        align: 'center',
+        bold: true,
+        size: 'normal',
+        indent: false,
+        position: 'before',
+        layout: 'right',
+      },
+    ],
+  },
   { key: 'title', label: tr('Sarlavha'), block: { text: 'Акт', align: 'center', bold: true, size: 'large', indent: false, position: 'before' } },
   {
     key: 'paragraph',
@@ -222,19 +246,54 @@ export function headerModel({ form, lab }) {
         size: b.size === 'large' ? 'large' : 'normal',
         indent: Boolean(b.indent),
         position: b.position === 'after' ? 'after' : 'before',
+        layout: b.layout === 'left' || b.layout === 'right' ? b.layout : 'full',
       })),
   };
 }
 
+// Bloklarni qatorlarga guruhlash: ketma-ket "left" + "right" — bitta qatorda
+// yonma-yon; yolg'iz yarim blok — o'z yarmida (ikkinchi yarmi bo'sh).
+export function groupBlocks(list) {
+  const out = [];
+  for (let i = 0; i < list.length; i += 1) {
+    const b = list[i];
+    if (b.layout === 'left' && list[i + 1]?.layout === 'right') {
+      out.push({ left: b, right: list[i + 1] });
+      i += 1;
+    } else if (b.layout === 'left') out.push({ left: b, right: null });
+    else if (b.layout === 'right') out.push({ left: null, right: b });
+    else out.push({ full: b });
+  }
+  return out;
+}
+
 // Matn bloki HTML'i. "right" blok — o'ng tomonda alohida ustun kabi (matn
 // qatorlari o'ngga tekislanadi), "justify" — ikki tomonga, xatboshi bilan.
-function blockHtml(b) {
+function blockHtml(b, mark = true) {
   const style =
     `margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35;` +
     `font-family:'Times New Roman',Times,serif;text-align:${b.align};` +
     `font-size:${b.size === 'large' ? '13pt' : '11pt'};font-weight:${b.bold ? 'bold' : 'normal'};` +
     (b.indent ? 'text-indent:1.25cm;' : '');
-  return `<div data-block="1" style="${style}">${esc(b.text)}</div>`;
+  return `<div${mark ? ' data-block="1"' : ''} style="${style}">${esc(b.text)}</div>`;
+}
+
+// Bir qator bloklar: to'liq blok yoki chegarasiz ikki ustunli jadval (yonma-yon).
+// data-block faqat butun qatorda — PDF sahifasi qator o'rtasidan bo'linmaydi.
+function blocksHtml(list) {
+  return groupBlocks(list)
+    .map((g) => {
+      if (g.full) return blockHtml(g.full);
+      const half = (b, side) =>
+        `<td style="width:50%;vertical-align:top;padding:0;padding-${side}:12px;border:none">${b ? blockHtml(b, false) : '&nbsp;'}</td>`;
+      return (
+        `<table data-block="1" style="width:100%;border-collapse:collapse;table-layout:fixed;margin:0"><tbody><tr>` +
+        half(g.left, 'right') +
+        half(g.right, 'left') +
+        `</tr></tbody></table>`
+      );
+    })
+    .join('');
 }
 
 // Shapka + jadval. Shapka — BITTA jadval (ichma-ich jadval yo'q, shuning uchun
@@ -290,8 +349,8 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
   const tableHtml =
     `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
     `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}${foot}</tbody></table>`;
-  const beforeHtml = h.blocks.filter((b) => b.position === 'before').map(blockHtml).join('');
-  const afterHtml = h.blocks.filter((b) => b.position === 'after').map(blockHtml).join('');
+  const beforeHtml = blocksHtml(h.blocks.filter((b) => b.position === 'before'));
+  const afterHtml = blocksHtml(h.blocks.filter((b) => b.position === 'after'));
   const afterWrap = afterHtml ? `<div style="margin-top:12px">${afterHtml}</div>` : '';
   return {
     headerHtml,

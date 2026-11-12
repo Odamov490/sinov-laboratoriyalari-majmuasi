@@ -67,6 +67,8 @@ function normalizeHeader(raw) {
       size: b?.size === 'large' ? 'large' : 'normal',
       indent: Boolean(b?.indent),
       position: b?.position === 'after' ? 'after' : 'before',
+      // full — butun kenglik; left/right — sahifa yarmi (ketma-ket chap+o'ng yonma-yon chiqadi).
+      layout: b?.layout === 'left' || b?.layout === 'right' ? b.layout : 'full',
     }))
     .filter((b) => b.text.trim())
     .slice(0, 20);

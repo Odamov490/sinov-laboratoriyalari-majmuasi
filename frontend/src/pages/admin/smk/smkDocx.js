@@ -3,7 +3,7 @@
 // Shapka va jadval Word'ning o'z jadvallari: ustun enlari qat'iy (fixed layout),
 // chegaralar bitta chiziq, jadval sarlavhasi har sahifada takrorlanadi, qator
 // sahifalarga bo'linmaydi, logo proporsiyasi saqlanadi.
-import { COL } from './smkDocument.js';
+import { COL, groupBlocks } from './smkDocument.js';
 
 const PX = 15; // 1 px = 15 twip (96 dpi)
 const EMU = 9525; // 1 px = 9525 EMU
@@ -62,9 +62,10 @@ function cell(width, content, { vMerge, shade, vAlign = 'center', gridSpan = 1 }
   return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/>${gs}${merge}${shd}<w:vAlign w:val="${vAlign}"/></w:tcPr>${content || para('')}</w:tc>`;
 }
 
-function table(gridWidths, rowsXml) {
+function table(gridWidths, rowsXml, { borders = true } = {}) {
   const total = gridWidths.reduce((a, b) => a + b, 0);
-  const border = (side) => `<w:${side} w:val="single" w:sz="6" w:space="0" w:color="000000"/>`;
+  const border = (side) =>
+    borders ? `<w:${side} w:val="single" w:sz="6" w:space="0" w:color="000000"/>` : `<w:${side} w:val="nil"/>`;
   return (
     // CT_TblPr elementlari tartibi qat'iy: tblW, jc, tblBorders, tblLayout, tblCellMar.
     `<w:tbl><w:tblPr><w:tblW w:w="${total}" w:type="dxa"/><w:jc w:val="center"/>` +
@@ -154,9 +155,23 @@ export function buildDocumentXml({ header, fields, rows, footer = [], logo }) {
     .join('');
   const dataTable = table(colW, thRow + bodyRows + footRows);
 
+  // Matn bloklari: yonma-yon juftlik — chegarasiz 2 ustunli jadval; undan keyin
+  // kichik paragraf (qo'shni jadvallar bitta jadvalga qo'shilib ketmasligi uchun).
+  const halfW = split(content, 2);
+  const blocksXml = (list) =>
+    groupBlocks(list)
+      .map((g) => {
+        if (g.full) return blockXml(g.full);
+        const half = (b, w) => cell(w, b ? blockXml(b) : '', { vAlign: 'top' });
+        return (
+          table(halfW, `<w:tr><w:trPr><w:cantSplit/></w:trPr>${half(g.left, halfW[0])}${half(g.right, halfW[1])}</w:tr>`, { borders: false }) +
+          para(run('', { size: 4 }))
+        );
+      })
+      .join('');
   const blocks = header.blocks || [];
-  const before = blocks.filter((b) => b.position === 'before').map(blockXml).join('');
-  const after = blocks.filter((b) => b.position === 'after').map(blockXml).join('');
+  const before = blocksXml(blocks.filter((b) => b.position === 'before'));
+  const after = blocksXml(blocks.filter((b) => b.position === 'after'));
 
   const sect =
     `<w:sectPr><w:pgSz w:w="${page.w}" w:h="${page.h}"${header.orientation === 'landscape' ? ' w:orient="landscape"' : ''}/>` +

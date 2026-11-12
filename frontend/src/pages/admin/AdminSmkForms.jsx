@@ -374,7 +374,7 @@ function FormEditor({ initial, onClose, onSaved }) {
               <button
                 key={p.key}
                 type="button"
-                onClick={() => setBlocks([...blocks, { ...p.block }])}
+                onClick={() => setBlocks([...blocks, ...(p.blocks || [p.block]).map((x) => ({ ...x }))])}
                 className="rounded-lg border border-border bg-white px-2.5 py-1.5 text-xs font-medium text-primary hover:border-primary/40"
               >
                 + {p.label}
@@ -383,7 +383,8 @@ function FormEditor({ initial, onClose, onSaved }) {
           </div>
         </div>
         <p className="mb-3 text-xs text-slate-400">
-          {tr("Shapkadan keyin yoki jadvaldan keyin chiqadigan matnlar: «Tasdiqlayman», akt matni, imzolar. Bo'sh joylar uchun ____ yozing.")}
+          {tr("Shapkadan keyin yoki jadvaldan keyin chiqadigan matnlar: «Tasdiqlayman», akt matni, imzolar. Bo'sh joylar uchun ____ yozing.")}{' '}
+          {tr("Ikki blokni yonma-yon qo'yish uchun birinchisini «Chap yarmi», undan keyingisini «O'ng yarmi» qiling.")}
         </p>
         {blocks.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-4 text-center text-sm text-slate-400">
@@ -398,6 +399,17 @@ function FormEditor({ initial, onClose, onSaved }) {
                 <select className="input-field !w-auto !py-1.5 text-xs" value={b.position} onChange={(e) => setBlock(i, { position: e.target.value })}>
                   <option value="before">{tr('Jadvaldan oldin')}</option>
                   <option value="after">{tr('Jadvaldan keyin')}</option>
+                </select>
+                <select
+                  className="input-field !w-auto !py-1.5 text-xs"
+                  value={b.layout || 'full'}
+                  onChange={(e) => setBlock(i, { layout: e.target.value })}
+                  title={tr("Chap yarmi + o'ng yarmi ketma-ket bo'lsa, yonma-yon chiqadi")}
+                  data-testid="smk-block-layout"
+                >
+                  <option value="full">{tr("To'liq kenglik")}</option>
+                  <option value="left">{tr('Chap yarmi')}</option>
+                  <option value="right">{tr("O'ng yarmi")}</option>
                 </select>
                 <select className="input-field !w-auto !py-1.5 text-xs" value={b.align} onChange={(e) => setBlock(i, { align: e.target.value })}>
                   <option value="left">{tr('Chapga')}</option>
