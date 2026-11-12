@@ -83,6 +83,8 @@ export default function AdminSmkFormEntries() {
   if (!lab || !form) return <Loading />;
 
   const fields = form.fields || [];
+  // Jadvalsiz forma: faqat shapka va matn bloklari — qatorlar yo'q, faqat yuklab olish.
+  const hasTable = form.header?.table !== false;
   const { headerHtml, beforeHtml, afterHtml } = buildDocumentHtml({ form, lab, rows: [], logo });
 
   const runExport = async (kind) => {
@@ -122,14 +124,14 @@ export default function AdminSmkFormEntries() {
           {form.description && <p className="mt-1 max-w-3xl whitespace-pre-line text-sm text-slate-500">{form.description}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {fields.length > 0 && (
+          {(fields.length > 0 || !hasTable) && (
             <>
               {exportBtn('word', <FileText className="h-4 w-4" />, 'Word')}
               {exportBtn('pdf', <FileDown className="h-4 w-4" />, 'PDF')}
               {exportBtn('print', <Printer className="h-4 w-4" />, tr('Chop etish'))}
             </>
           )}
-          {fields.length > 0 && (
+          {hasTable && fields.length > 0 && (
             <button onClick={() => setEditing({ data: {} })} className="btn-primary !py-2.5">
               <Plus className="h-4 w-4" /> {tr("Qator qo'shish")}
             </button>
@@ -139,9 +141,9 @@ export default function AdminSmkFormEntries() {
 
       {/* Hujjat shapkasi (Word/PDF'dagi bilan bir xil). HTML buildDocumentHtml'da esc() bilan tozalangan. */}
       <div className="mb-4 overflow-x-auto rounded-xl border border-border bg-white p-4">
-        <div data-testid="smk-header" className="min-w-[640px] text-black" dangerouslySetInnerHTML={{ __html: headerHtml + beforeHtml }} />
+        <div data-testid="smk-header" className="min-w-[640px] text-black" dangerouslySetInnerHTML={{ __html: headerHtml + beforeHtml + (hasTable ? '' : afterHtml) }} />
       </div>
-      {fields.length === 0 ? (
+      {!hasTable ? null : fields.length === 0 ? (
         <EmptyState message={tr("Bu formaga hali ustunlar qo'shilmagan.")} />
       ) : (
         <>

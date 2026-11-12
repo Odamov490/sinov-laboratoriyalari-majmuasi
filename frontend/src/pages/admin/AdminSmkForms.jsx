@@ -223,6 +223,7 @@ function FormEditor({ initial, onClose, onSaved }) {
   const setFooter = (next) => setHeader({ footer: next });
   const setFooterRow = (i, patch) => setFooter(footer.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const numericFields = form.fields.filter((f) => f.type === 'number' || f.type === 'money');
+  const hasTable = form.header.table !== false;
   const logo = useFormLogo();
 
   // Jonli ko'rinish: shapka + ustun sarlavhalari + 2 ta bo'sh qator.
@@ -450,12 +451,35 @@ function FormEditor({ initial, onClose, onSaved }) {
 
       {/* --- Ustunlar --- */}
       <section className="mt-6">
-        <div className="mb-2 flex items-center justify-between">
-          <h4 className="font-semibold text-ink">{tr('Ustunlar')} ({form.fields.length})</h4>
-          <button type="button" onClick={addField} className="btn-secondary !py-2 text-sm">
-            <Plus className="h-4 w-4" /> {tr("Ustun qo'shish")}
-          </button>
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h4 className="font-semibold text-ink">
+            {tr('Jadval')}
+            {hasTable && ` — ${tr('Ustunlar')} (${form.fields.length})`}
+          </h4>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Jadval kerak bo'lmagan formalar (akt, xat, ariza): faqat shapka va matn bloklari. */}
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600" data-testid="smk-table-toggle">
+              <input
+                type="checkbox"
+                checked={hasTable}
+                onChange={(e) => setHeader({ table: e.target.checked })}
+                className="h-4 w-4 rounded border-border text-primary"
+              />
+              {tr('Jadval bor')}
+            </label>
+            {hasTable && (
+              <button type="button" onClick={addField} className="btn-secondary !py-2 text-sm">
+                <Plus className="h-4 w-4" /> {tr("Ustun qo'shish")}
+              </button>
+            )}
+          </div>
         </div>
+        {!hasTable && (
+          <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-slate-400">
+            {tr("Jadvalsiz forma: hujjat faqat shapka va matn bloklaridan iborat bo'ladi. Jadval kerak bo'lsa, «Jadval bor» belgisini qo'ying.")}
+          </p>
+        )}
+        {hasTable && <>
         {form.fields.length === 0 && (
           <p className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-slate-400">
             {tr("Hali ustun yo'q. Jadval ustunlarini qo'shing.")}
@@ -509,9 +533,11 @@ function FormEditor({ initial, onClose, onSaved }) {
             {tr("Bu formada yozuvlar bor: ustun o'chirilsa yoki turi o'zgarsa, eski yozuvlardagi shu qiymat keyingi saqlashda yo'qoladi.")}
           </p>
         )}
+        </>}
       </section>
 
       {/* --- Yakuniy qatorlar (Итого) --- */}
+      {hasTable && (
       <section className="mt-6 rounded-xl border border-border p-4" data-testid="smk-footer-editor">
         <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
           <h4 className="font-semibold text-ink">{tr('Yakuniy qatorlar (Итого)')} ({footer.length})</h4>
@@ -578,6 +604,7 @@ function FormEditor({ initial, onClose, onSaved }) {
           ))}
         </div>
       </section>
+      )}
 
       </div>
 

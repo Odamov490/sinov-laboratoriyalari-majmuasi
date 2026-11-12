@@ -81,7 +81,8 @@ function normalizeHeader(raw) {
       sums: [...new Set((Array.isArray(r?.sums) ? r.sums : []).map((k) => String(k)).filter((k) => /^[a-z0-9_]{1,40}$/.test(k)))].slice(0, 100),
     }))
     .slice(0, 5);
-  return { orgLines, meta, blocks, footer, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape' };
+  // table: false — jadvalsiz forma (faqat shapka va matn bloklari).
+  return { orgLines, meta, blocks, footer, orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape', table: h.table !== false };
 }
 
 function formData(body) {

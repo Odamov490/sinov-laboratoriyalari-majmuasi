@@ -153,7 +153,8 @@ export function buildDocumentXml({ header, fields, rows, footer = [], logo }) {
         `</w:tr>`
     )
     .join('');
-  const dataTable = table(colW, thRow + bodyRows + footRows);
+  // Jadvalsiz forma: faqat shapka va matn bloklari.
+  const dataTable = header.table === false ? '' : table(colW, thRow + bodyRows + footRows);
 
   // Matn bloklari: yonma-yon juftlik — chegarasiz 2 ustunli jadval; undan keyin
   // kichik paragraf (qo'shni jadvallar bitta jadvalga qo'shilib ketmasligi uchun).

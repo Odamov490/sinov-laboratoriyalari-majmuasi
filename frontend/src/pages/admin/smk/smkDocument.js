@@ -87,6 +87,7 @@ export const normalizeHeader = (h) => {
     blocks: Array.isArray(h.blocks) ? h.blocks : [],
     footer: Array.isArray(h.footer) ? h.footer : [],
     orientation: h.orientation === 'portrait' ? 'portrait' : 'landscape',
+    table: h.table !== false, // false — jadvalsiz forma (faqat shapka va matn bloklari)
   };
 };
 
@@ -232,6 +233,7 @@ export function headerModel({ form, lab }) {
   const ctx = { form, lab };
   return {
     orientation: header.orientation,
+    table: header.table,
     orgLines: header.orgLines.map((l) => resolveTokens(l, ctx).trim()).filter(Boolean),
     title: form.title,
     meta: header.meta
@@ -346,12 +348,13 @@ export function buildDocumentHtml({ form, lab, rows, logo = DEFAULT_LOGO, blankR
           .join('')}</tr>`
     )
     .join('');
-  const tableHtml =
-    `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
+  const tableHtml = !h.table
+    ? ''
+    : `<table data-part="table" style="width:100%;${TB}table-layout:fixed;${FONT}">` +
     `<colgroup><col style="width:${COL.num}px">${fields.map(() => '<col>').join('')}</colgroup>${head}<tbody>${body}${foot}</tbody></table>`;
   const beforeHtml = blocksHtml(h.blocks.filter((b) => b.position === 'before'));
   const afterHtml = blocksHtml(h.blocks.filter((b) => b.position === 'after'));
-  const afterWrap = afterHtml ? `<div style="margin-top:12px">${afterHtml}</div>` : '';
+  const afterWrap = afterHtml && h.table ? `<div style="margin-top:12px">${afterHtml}</div>` : afterHtml;
   return {
     headerHtml,
     beforeHtml,
@@ -429,9 +432,12 @@ export async function exportPdf({ form, lab, rows }) {
     }
     const top0 = box.getBoundingClientRect().top;
     const px = (y) => Math.round((y - top0) * scale);
-    const thead = box.querySelector('[data-part="table"] thead').getBoundingClientRect();
+    // Jadvalsiz formada thead yo'q — takrorlanadigan sarlavha ham yo'q.
+    const theadEl = box.querySelector('[data-part="table"] thead') || box.querySelector('[data-part="header"]');
+    const thead = theadEl.getBoundingClientRect();
+    const hasThead = !!box.querySelector('[data-part="table"] thead');
     const theadTop = px(thead.top);
-    const theadH = px(thead.bottom) - theadTop;
+    const theadH = hasThead ? px(thead.bottom) - theadTop : 0;
     // Bo'linish mumkin bo'lgan nuqtalar: shapka va thead oxiri, har bir qator oxiri.
     // Matn bloklari (jadvaldan keyingilari ham) ham yorilmaydi.
     const breaks = [
