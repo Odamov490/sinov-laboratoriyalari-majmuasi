@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FlaskConical, Search, ArrowRight, FileText, ListPlus, Library, Layers, PenLine, Sparkles } from 'lucide-react';
+import { FlaskConical, Search, ArrowRight, FileText, ListPlus, Library, Layers, PenLine, Sparkles, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useToast } from '../../context/ToastContext.jsx';
 import { adminSmk } from '../../services/adminApi';
 import { Loading, EmptyState, ErrorState } from '../../components/StateViews.jsx';
-import { Modal } from '../../components/Modal.jsx';
+import { Modal, ConfirmDialog } from '../../components/Modal.jsx';
 import { tr, locName } from '../../i18n/tr.js';
 
 // Har bir laboratoriyaga o'z rangi (tartib raqami bo'yicha, barqaror).
@@ -172,6 +172,7 @@ export default function AdminSifat() {
             forms={active.forms.filter(match)}
             searching={!!q}
             onPick={() => setPicking(active)}
+            onChanged={load}
           />
         </div>
       )}
@@ -193,10 +194,24 @@ function Stat({ icon: Icon, value, label }) {
   );
 }
 
-function LabPanel({ lab, colors: [c1, c2], forms, searching, onPick }) {
+function LabPanel({ lab, colors: [c1, c2], forms, searching, onPick, onChanged }) {
+  const { showToast } = useToast();
+  const [removing, setRemoving] = useState(null); // forma
   const entries = lab.forms.reduce((a, f) => a + (f.entryCount || 0), 0);
+
+  // Formani laboratoriyadan ajratish (yozuvlari o'chmaydi — qayta tanlansa ko'rinadi).
+  const remove = async (form) => {
+    try {
+      await adminSmk.setLabForms(lab.id, lab.forms.filter((f) => f.id !== form.id).map((f) => f.id));
+      showToast(tr('Forma laboratoriyadan olib tashlandi.'), 'success');
+      onChanged();
+    } catch (err) {
+      showToast(err?.response?.data?.error || tr('Xatolik yuz berdi.'), 'error');
+    }
+  };
+
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-white shadow-card">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-border bg-white shadow-card">
       <header className="relative overflow-hidden px-6 py-5 text-white" style={{ background: `linear-gradient(120deg, ${c1}, ${c2})` }}>
         <FlaskConical className="pointer-events-none absolute -right-4 -top-6 h-36 w-36 rotate-12 text-white/10" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
@@ -234,10 +249,10 @@ function LabPanel({ lab, colors: [c1, c2], forms, searching, onPick }) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
             {forms.map((f) => (
+              <div key={f.id} className="group relative">
               <Link
-                key={f.id}
                 to={`/admin/sifat/${lab.slug}/${f.id}`}
-                className="group relative flex min-h-[150px] flex-col rounded-lg border border-border bg-white p-4 pr-8 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-card"
+                className="relative flex h-full min-h-[150px] flex-col rounded-lg border border-border bg-white p-4 pr-8 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-card"
               >
                 {/* buklangan burchak — hujjat varag'i */}
                 <span
@@ -258,10 +273,32 @@ function LabPanel({ lab, colors: [c1, c2], forms, searching, onPick }) {
                   </span>
                 </span>
               </Link>
+              <button
+                type="button"
+                onClick={() => setRemoving(f)}
+                title={tr('Laboratoriyadan olib tashlash')}
+                aria-label={tr('Laboratoriyadan olib tashlash')}
+                data-testid="sifat-remove-form"
+                className="absolute right-8 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-white text-slate-400 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              </div>
             ))}
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={!!removing}
+        onClose={() => setRemoving(null)}
+        onConfirm={() => remove(removing)}
+        title={tr('Laboratoriyadan olib tashlash')}
+        message={
+          removing
+            ? tr("«{0}» formasi shu laboratoriyadan olib tashlanadi. To'ldirilgan yozuvlari o'chmaydi — qayta tanlansa yana ko'rinadi.", `${removing.code} — ${removing.title}`)
+            : ''
+        }
+      />
     </section>
   );
 }
